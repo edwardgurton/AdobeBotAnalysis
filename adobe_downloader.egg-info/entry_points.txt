@@ -1,0 +1,2 @@
+[console_scripts]
+adobe-downloader = adobe_downloader.cli:main

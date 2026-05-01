@@ -1,0 +1,10 @@
+Metadata-Version: 2.4
+Name: adobe-downloader
+Version: 0.1.0
+Summary: Adobe Analytics report downloader and transformer
+Requires-Python: >=3.12
+Requires-Dist: click>=8.1
+Requires-Dist: httpx>=0.27
+Requires-Dist: pydantic>=2.7
+Requires-Dist: pyyaml>=6.0
+Requires-Dist: tenacity>=8.3
