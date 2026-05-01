@@ -15,11 +15,11 @@ Status legend: `☐ todo` · `🔄 in-progress` · `✅ done` · `⚠️ blocked
 
 ## Current State
 
-**Active step:** Step 4 — Request builder
+**Active step:** Step 5 — Basic download (single request)
 
-**Last commit:** `Step 3: core/rate_limiter.py — sliding-window limiter + 429 global pause + tenacity retry; wire into AdobeClient; 10 passing tests`
+**Last commit:** `Step 4.1: core/request_builder.py — build_request(); config/report_definitions.py — Pydantic schema + load_report_registry(); 8 report_definitions/*.yaml group files; 11 passing tests`
 
-**Next concrete action:** Begin Step 4. Implement `core/request_builder.py` — port the JS request-body construction logic to Python. Validate: generated request bodies match the test fixtures in `tests/fixtures/`.
+**Next concrete action:** Begin Step 5. Wire `build_request()` into the CLI's `download` command (or a new `run` command). Implement a single report download using `AdobeClient.get_report()`, save the JSON response to the output folder, and validate the downloaded JSON against the JS-generated equivalent for one report.
 
 **In-flight (uncommitted) work:** *(none)*
 
@@ -69,11 +69,11 @@ Status legend: `☐ todo` · `🔄 in-progress` · `✅ done` · `⚠️ blocked
 - **Validation:** 10 pytest tests pass: 4 sync (retryable classification) + 6 async (execute result, args, 50-request window, global pause delay, pause expiry, concurrency cap). `asyncio_mode = "auto"` added to `pyproject.toml`; `pytest-asyncio` added as dev dependency.
 - **Notes:** `_get()` and `_post()` private helpers wrap every `AdobeClient` call with rate limiter + tenacity retry (429/500/502/503, 5 attempts, exponential backoff). 429 triggers `set_pause(10s)` before the next tenacity sleep.
 
-### ☐ Step 4 — Request builder
-- **Started:** —
-- **Completed:** —
-- **Validation:** Generated request bodies are byte-identical to the JS-generated equivalents for all reports defined in `report_definitions/`.
-- **Notes:**
+### ✅ Step 4 — Request builder
+- **Started:** 2026-05-01
+- **Completed:** 2026-05-01
+- **Validation:** 11 pytest tests pass: 3 fixture-match tests (botInvestigationMetricsByBrowser, botFilterExcludeMetricsByMonth, toplineMetricsForRsidValidation) + 8 structural invariant tests. `load_report_registry()` loads 50 report definitions from 8 YAML files cleanly.
+- **Notes:** `ReportDefinitionInline.metrics` contains ADDITIONAL metrics only (not visitors/visits); builder always prepends visitors (sort:desc) and visits (sort:desc) as columnIds 0 and 1. `report_def.segments` = base/fixed segments; `segments` param to `build_request()` = runtime extra segments (e.g. a specific bot rule). `config/report_definitions.py` provides `ReportDefinitionFile` Pydantic model + `load_report_registry()` for resolving `report_ref`/`report_group` in Step 5+.
 
 ---
 
@@ -220,6 +220,13 @@ Status legend: `☐ todo` · `🔄 in-progress` · `✅ done` · `⚠️ blocked
 - **Done this session:** Created `adobe_downloader/core/rate_limiter.py` — `SlidingWindowRateLimiter` (12 req/6s sliding window, `asyncio.Semaphore` for concurrency cap, `set_pause()` for global 429 pause, `execute()` with 120s `asyncio.wait_for` timeout). `make_retry()` returns a `tenacity` decorator wired to call `set_pause(10s)` on 429 before retrying (5 attempts, exponential backoff 2–30s, retries on 429/500/502/503). Refactored `AdobeClient` to use `_get()` / `_post()` helpers that go through the limiter + retry; all 6 public methods updated. Added `pytest-asyncio` dev dependency; `asyncio_mode = "auto"` in `pyproject.toml`. 10 tests written and passing.
 - **Left in flight:** Nothing.
 - **Next action:** Step 4 — `core/request_builder.py`. Port JS request-body construction for ranked reports. Validate against fixtures in `tests/fixtures/`.
+
+### 2026-05-01 (session 5)
+- **Worked on:** Step 4
+- **Commits:** `Step 4.1: core/request_builder.py — build_request(); config/report_definitions.py — Pydantic schema + load_report_registry(); 8 report_definitions/*.yaml group files; 11 passing tests` (1 commit)
+- **Done this session:** Created `core/request_builder.py` — `build_request(report_def, date_range, rsid, segments)` always prepends visitors/visits (sort:desc) as columns 0/1, appends `report_def.metrics` from column 2, adds dateRange + base segments + runtime segments to globalFilters, conditionally includes dimension, sets full settings block. Created `config/report_definitions.py` — `ReportDefinitionFile` / `ReportEntry` / `ReportDefinitionDefaults` Pydantic models + `load_report_registry()` that scans `report_definitions/*.yaml` and resolves defaults inheritance. Created 8 `report_definitions/*.yaml` group files covering all 50 Legend reports ported from `legacy_js/config/client_configs/clientLegend.yaml` (bot_investigation, bot_investigation_unfiltered, bot_validation, final_bot_metrics, lookup, topline, segment_builder, clickouts). 21 total tests pass (11 new).
+- **Left in flight:** Nothing.
+- **Next action:** Step 5 — Basic download. Wire `build_request()` + `load_report_registry()` into a `run` CLI command. Implement single-request download, save JSON to output folder. Validate against JS-generated JSON for one report.
 
 ### 2026-05-01 (session 3)
 - **Worked on:** Step 2
