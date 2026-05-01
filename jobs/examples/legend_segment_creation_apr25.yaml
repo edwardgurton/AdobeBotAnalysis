@@ -1,0 +1,15 @@
+job_type: segment_creation
+client: Legend
+description: "Create Apr25 bot rule segments and share with Legend user"
+
+segment_creation:
+  input_csv: data/segment_creation_lists/Apr25-RoundFive.csv
+  share_with_users:
+    - "200419062"
+  test_mode_row: null
+
+output:
+  base_folder: "/Users/edwardgurton/Documents/Work/Adobe Downloads"
+  compare_list_path: data/bot_compare_lists/
+  validate_list_path: data/bot_rule_lists/
+  segment_list_path: data/segment_lists/Legend/

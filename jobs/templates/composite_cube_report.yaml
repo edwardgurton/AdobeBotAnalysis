@@ -1,0 +1,50 @@
+job_type: composite
+client: Legend
+description: "Cube report: create segments from one dimension, download across another"
+
+date_range:
+  from: "2025-01-01"
+  to: "2025-12-31"
+
+output:
+  base_folder: "/Users/edwardgurton/Documents/Work/Adobe Downloads"
+
+steps:
+  - step: dim_to_segments
+    id: create_channel_segments
+    dim_to_segments:
+      dimension: variables/marketingchannel.marketing-channel-attribution
+      rsid: trillioncoverscom
+      additional_segments:
+        - s3938_61bb0165a88ab931afa78e4c   # Master Bot Filter EXCLUDE
+      num_pairs: 1
+
+  - step: report_download
+    id: download_cube
+    report:
+      name: LegendClickoutsByGeoregionNAOnly
+      dimension: variables/georegion
+      row_limit: 500
+      segments:
+        - s3938_61bb0165a88ab931afa78e4c
+      metrics:
+        - cm3938_67877f0e25c74e65d1f3f449
+        - cm3938_68655d7318c56ac719c11a44
+      csv_headers: [id, region, raw_clickouts_linear_7d, raw_clickouts_participation_7d, fileName, fromDate, toDate]
+    rsids:
+      source: single
+      single: trillioncoverscom
+    segments:
+      source: step_output
+      step_id: create_channel_segments
+      output_key: segment_list_file
+    interval: month
+    file_name_extra: "MCRunV1"
+
+  - step: transform_concat
+    id: transform
+    depends_on: download_cube
+    transform:
+      type: standard
+      source_pattern: ".*MCRunV1.*\\.json$"
+      concat: true

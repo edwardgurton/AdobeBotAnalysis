@@ -1,0 +1,34 @@
+job_type: composite
+client: Legend
+description: "Country investigation: generate RSID×country matrix, then download by country"
+
+date_range:
+  from: "2025-01-01"
+  to: "2025-03-31"
+
+output:
+  base_folder: "/Users/edwardgurton/Documents/Work/Adobe Downloads"
+
+steps:
+  - step: generate_country_matrix
+    id: matrix
+    rsids:
+      source: file
+      file: data/rsid_lists/legend_investigation.txt
+    visit_threshold: 500
+
+  - step: report_download
+    id: download_by_country
+    report_group: bot_investigation
+    rsids:
+      source: step_output
+      step_id: matrix
+      output_key: matrix_file
+    interval: month
+
+  - step: transform_concat
+    id: transform
+    depends_on: download_by_country
+    transform:
+      type: bot_investigation
+      concat: true

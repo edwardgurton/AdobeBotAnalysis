@@ -1,0 +1,36 @@
+job_type: composite
+client: Legend
+description: "Update RSID lists then immediately run bot investigation"
+
+date_range:
+  from: "2025-01-01"
+  to: "2025-03-31"
+
+output:
+  base_folder: "/Users/edwardgurton/Documents/Work/Adobe Downloads"
+
+steps:
+  - step: rsid_update
+    id: update_rsids
+    rsid_update:
+      investigation_threshold: 1000
+      validation_threshold: 1000
+      include_virtual: false
+
+  - step: report_download
+    id: download_investigation
+    depends_on: update_rsids
+    report_group: bot_investigation
+    rsids:
+      source: step_output
+      step_id: update_rsids
+      output_key: investigation_list
+      batch_size: 12
+    interval: month
+
+  - step: transform_concat
+    id: transform
+    depends_on: download_investigation
+    transform:
+      type: bot_investigation
+      concat: true

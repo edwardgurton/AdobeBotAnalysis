@@ -1,0 +1,11 @@
+job_type: rsid_update
+client: Legend
+description: "Refresh Legend RSID lists (investigation + validation) — run before each new investigation"
+
+rsid_update:
+  investigation_threshold: 1000
+  validation_threshold: 1000
+  include_virtual: false
+
+output:
+  base_folder: data/rsid_lists/

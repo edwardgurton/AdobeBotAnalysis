@@ -1,0 +1,20 @@
+job_type: transform_concat
+client: Legend
+description: "Standalone transform + concat of existing JSON files"
+
+transform:
+  enabled: true
+  type: bot_investigation        # standard | bot_investigation | bot_rule_compare | bot_validation | final_bot_metrics | summary_total
+  source_pattern: ".*Coverscom-FullRun.*\\.json$"
+  source_folder: null            # null = default JSON folder for this client
+  output_subfolder: "Coverscom-FullRun"
+  concat: true
+
+concat:
+  enabled: true
+  file_pattern: ".*\\.csv$"
+  custom_headers:
+    # 1: OverrideColumnName     # uncomment to override header by column index (1-based)
+
+output:
+  base_folder: "/Users/edwardgurton/Documents/Work/Adobe Downloads"

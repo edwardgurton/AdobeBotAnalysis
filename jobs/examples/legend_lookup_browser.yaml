@@ -1,0 +1,17 @@
+job_type: lookup_generation
+client: Legend
+description: "Generate browser dimension lookup for trillioncoverscom (Jan 2025)"
+
+lookup_generation:
+  dimension: variables/browser
+  rsid: trillioncoverscom
+  segments:
+    - s3938_61bb0165a88ab931afa78e4c   # Master Bot Filter EXCLUDE
+  output_file: null
+
+date_range:
+  from: "2025-01-01"
+  to: "2025-01-31"
+
+output:
+  base_folder: "/Users/edwardgurton/Documents/Work/Adobe Downloads"

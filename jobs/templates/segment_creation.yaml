@@ -1,0 +1,15 @@
+job_type: segment_creation
+client: Legend
+description: "Create and share segments from a bot rule CSV list"
+
+segment_creation:
+  input_csv: data/segment_creation_lists/<segment-creation-list>.csv
+  share_with_users:
+    - "200419062"              # Adobe user ID to share with
+  test_mode_row: null          # set to a row number (1-based) to test a single row
+
+output:
+  base_folder: "/Users/edwardgurton/Documents/Work/Adobe Downloads"
+  compare_list_path: data/bot_compare_lists/
+  validate_list_path: data/bot_rule_lists/
+  segment_list_path: data/segment_lists/Legend/

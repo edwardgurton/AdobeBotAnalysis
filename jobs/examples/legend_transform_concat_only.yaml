@@ -1,0 +1,17 @@
+job_type: transform_concat
+client: Legend
+description: "Re-transform existing JSON files for Legend bot investigation (Q1 2025 re-run)"
+
+transform:
+  enabled: true
+  type: bot_investigation
+  source_pattern: ".*botInvestigationMetricsByBrowser.*2025-01.*\\.json$"
+  source_folder: null
+  concat: true
+
+concat:
+  enabled: true
+  file_pattern: ".*\\.csv$"
+
+output:
+  base_folder: "/Users/edwardgurton/Documents/Work/Adobe Downloads"

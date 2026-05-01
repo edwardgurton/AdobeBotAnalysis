@@ -1,0 +1,30 @@
+job_type: composite
+client: Legend
+description: "Final bot metrics flow: download using validated segment list → transform"
+
+date_range:
+  from: "2025-01-01"
+  to: "2025-12-31"
+
+output:
+  base_folder: "/Users/edwardgurton/Documents/Work/Adobe Downloads"
+
+steps:
+  - step: report_download
+    id: download_final
+    report_group: final_bot_metrics
+    rsids:
+      source: file
+      file: data/rsid_lists/legend_all.txt
+      batch_size: 12
+    segments:
+      source: segment_list_file
+      file: data/segment_lists/Legend/<validated-segment-list>.json
+    interval: full
+
+  - step: transform_concat
+    id: transform
+    depends_on: download_final
+    transform:
+      type: final_bot_metrics
+      concat: true

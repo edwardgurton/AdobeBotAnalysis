@@ -1,0 +1,17 @@
+job_type: lookup_generation
+client: Legend
+description: "Generate a dimension lookup file (dimension value → numeric item ID)"
+
+lookup_generation:
+  dimension: variables/browser        # Adobe dimension variable
+  rsid: trillioncoverscom
+  segments:
+    - s3938_61bb0165a88ab931afa78e4c  # Master Bot Filter EXCLUDE (optional)
+  output_file: null                   # null = auto-named in data/lookups/
+
+date_range:
+  from: "2025-01-01"
+  to: "2025-03-31"
+
+output:
+  base_folder: "/Users/edwardgurton/Documents/Work/Adobe Downloads"

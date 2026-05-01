@@ -1,0 +1,30 @@
+job_type: report_download
+client: Legend
+description: "Bot investigation report group download across all RSIDs"
+
+report_group: bot_investigation
+
+rsids:
+  source: file
+  file: data/rsid_lists/legend_investigation.txt
+  batch_size: 12
+
+interval: month
+
+date_range:
+  from: "2025-01-01"
+  to: today
+
+transform:
+  enabled: true
+  type: bot_investigation
+  concat: true
+
+post_processing:
+  delete_json_after_transform: false
+  zip_csvs_after_concat: true
+
+resume: true
+
+output:
+  base_folder: "/Users/edwardgurton/Documents/Work/Adobe Downloads"

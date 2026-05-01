@@ -1,0 +1,34 @@
+job_type: report_download
+client: Legend
+description: "Bot validation report download driven by a bot rules list"
+
+report_group: bot_validation
+
+rsids:
+  source: file
+  file: data/rsid_lists/legend_validation.txt
+  batch_size: 12
+
+bot_rules:
+  source: file
+  file: data/bot_rule_lists/<bot-rule-list>.csv
+
+segments:
+  source: segment_list_file
+  file: data/segment_lists/Legend/<segment-list>.json
+
+interval: month
+
+date_range:
+  from: "2025-01-01"
+  to: "2025-03-31"
+
+transform:
+  enabled: true
+  type: bot_validation
+  concat: true
+
+resume: true
+
+output:
+  base_folder: "/Users/edwardgurton/Documents/Work/Adobe Downloads"

@@ -1,0 +1,25 @@
+job_type: report_download
+client: Legend
+description: "Download a single named report for one RSID over a date range"
+
+report_ref: <report-name>   # e.g. botInvestigationMetricsByBrowser
+
+rsids:
+  source: single
+  single: <rsid>             # e.g. trillioncoverscom
+
+interval: full               # full | month | day
+
+date_range:
+  from: "2025-01-01"
+  to: "2025-03-31"
+
+transform:
+  enabled: true
+  type: standard             # standard | bot_investigation | bot_rule_compare | bot_validation | final_bot_metrics | summary_total
+  concat: true
+
+resume: true
+
+output:
+  base_folder: "/Users/edwardgurton/Documents/Work/Adobe Downloads"
