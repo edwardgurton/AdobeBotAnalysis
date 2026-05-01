@@ -1,5 +1,6 @@
 """CLI entry point for adobe-downloader."""
 
+import asyncio
 import sys
 from pathlib import Path
 
@@ -72,9 +73,31 @@ def validate(config: Path, check_credentials: bool) -> None:
 @main.command("list-users")
 @click.option("--client", "-c", required=True, help="Client name (matches credentials file).")
 def list_users(client: str) -> None:
-    """List Adobe users for a client. (Requires Step 2 — auth not yet implemented.)"""
-    click.secho("Not yet implemented. Requires Step 2 (auth + API client).", fg="yellow")
-    sys.exit(1)
+    """List Adobe Analytics users for a client."""
+    from adobe_downloader.core.api_client import AdobeClient
+
+    async def _run() -> list[dict]:  # type: ignore[type-arg]
+        ac = AdobeClient(client)
+        try:
+            return await ac.get_users()
+        finally:
+            await ac.close()
+
+    try:
+        users = asyncio.run(_run())
+    except FileNotFoundError as exc:
+        click.secho(str(exc), fg="red", bold=True)
+        sys.exit(1)
+    except Exception as exc:
+        click.secho(f"Error: {exc}", fg="red", bold=True)
+        sys.exit(1)
+
+    click.echo(f"Found {len(users)} user(s):")
+    for user in users:
+        login = user.get("login", "")
+        first = user.get("firstName", "")
+        last = user.get("lastName", "")
+        click.echo(f"  {login}  {first} {last}".rstrip())
 
 
 @main.command()
