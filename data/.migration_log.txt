@@ -1,0 +1,190 @@
+
+[1] RSID list JS files -> data/rsid_lists/
+  write data\rsid_lists\rsidList.txt
+  write data\rsid_lists\rsidListIterateCountries.txt
+  write data\rsid_lists\rsidListOneReportOnly.txt
+  write data\rsid_lists\rsidListTesting.txt
+  write data\rsid_lists\botValidationRsidList.txt
+  write data\rsid_lists\botInvestigationMinThresholdVisits.txt
+  write data\rsid_lists\excludedRsidCleanNames.txt
+  write data\rsid_lists\StringsForCountries.txt
+
+[2] Object-array JS files -> JSON
+  write data\country_segment_lookup.json
+  write data\rsid_country_thresholds\botInvestigationRsidCountriesMinThreshold.json
+
+[3] Header JS files -> data/report_headers/
+  write data\report_headers\botFilterExcludeMetricsByMonth.yaml
+  write data\report_headers\botFilterExcludexBotRuleMetricsByMonth.yaml
+  write data\report_headers\botFilterExcludexBotRuleMetricsByPageUrl.yaml
+  write data\report_headers\botFilterExcludexBotRuleXDesktopMetricsByMonth.yaml
+  write data\report_headers\botFilterExcludexBotRuleXSuspiciousMarketingChannelsMetricsByMonth.yaml
+  write data\report_headers\botFilterIncludeMetricsByMonth.yaml
+  write data\report_headers\botFilterIncludexBotRuleMetricsByMonth.yaml
+  write data\report_headers\botInvestigationMetricsByBrowser.yaml
+  write data\report_headers\botInvestigationMetricsByBrowserType.yaml
+  write data\report_headers\botInvestigationMetricsByDay.yaml
+  write data\report_headers\botInvestigationMetricsByDevice.yaml
+  write data\report_headers\botInvestigationMetricsByDomain.yaml
+  write data\report_headers\botInvestigationMetricsByHourOfDay.yaml
+  write data\report_headers\botInvestigationMetricsByMarketingChannel.yaml
+  write data\report_headers\botInvestigationMetricsByMobileManufacturer.yaml
+  write data\report_headers\botInvestigationMetricsByMonitorResolution.yaml
+  write data\report_headers\botInvestigationMetricsByOperatingSystem.yaml
+  write data\report_headers\botInvestigationMetricsByPageURL.yaml
+  write data\report_headers\botInvestigationMetricsByRegion.yaml
+  write data\report_headers\botInvestigationMetricsByUserAgent.yaml
+  write data\report_headers\botInvestigationUnfilteredMetricsByBrowser.yaml
+  write data\report_headers\botInvestigationUnfilteredMetricsByBrowserType.yaml
+  write data\report_headers\botInvestigationUnfilteredMetricsByDay.yaml
+  write data\report_headers\botInvestigationUnfilteredMetricsByDevice.yaml
+  write data\report_headers\botInvestigationUnfilteredMetricsByDomain.yaml
+  write data\report_headers\botInvestigationUnfilteredMetricsByHourOfDay.yaml
+  write data\report_headers\botInvestigationUnfilteredMetricsByMarketingChannel.yaml
+  write data\report_headers\botInvestigationUnfilteredMetricsByMobileManufacturer.yaml
+  write data\report_headers\botInvestigationUnfilteredMetricsByMonitorResolution.yaml
+  write data\report_headers\botInvestigationUnfilteredMetricsByOperatingSystem.yaml
+  write data\report_headers\botInvestigationUnfilteredMetricsByPageURL.yaml
+  write data\report_headers\botInvestigationUnfilteredMetricsByRegion.yaml
+  write data\report_headers\botInvestigationUnfilteredMetricsByUserAgent.yaml
+  write data\report_headers\JustSegmentMetricsByMonth.yaml
+  write data\report_headers\LegendClickoutsAdCloudMetrics.yaml
+  write data\report_headers\LegendClickoutsByGeoregionNAOnly.yaml
+  write data\report_headers\LegendFinalBotMetricsCurrentIncludeByYear.yaml
+  write data\report_headers\LegendFinalBotMetricsDevelopmentIncludeByYear.yaml
+  write data\report_headers\LegendFinalBotMetricsUnfilteredVisitsByYear.yaml
+  write data\report_headers\LegendTestBrowserTypes.yaml
+  write data\report_headers\Lookupvariablesbrowsertype.yaml
+  write data\report_headers\Lookupvariablesgeoregion.yaml
+  write data\report_headers\Lookupvariablesmarketingchannel.yaml
+  write data\report_headers\Lookupvariablesmonitorresolution.yaml
+  write data\report_headers\SegmentsBuilderCountry50.yaml
+  write data\report_headers\SegmentsBuildervariablesgeoregion.yaml
+  write data\report_headers\SegmentsBuildervariablesmarketingchannelmarketing-channel-attribution.yaml
+  write data\report_headers\toplineMetricsForRsidValidation.yaml
+  copy  legacy_js\config\headers\VisitsConversionsByGeoRegion\Capita.js  ->  data\report_headers\_archive\VisitsConversionsByGeoRegion_Capita.js
+
+[4] Segment list JSONs -> data/segment_lists/Legend/
+  copy  legacy_js\config\segmentLists\Legend\Apr25ValidatedList-Aug25Additions.json  ->  data\segment_lists\Legend\Apr25ValidatedList-Aug25Additions.json
+  copy  legacy_js\config\segmentLists\Legend\Apr25ValidatedList.json  ->  data\segment_lists\Legend\Apr25ValidatedList.json
+  copy  legacy_js\config\segmentLists\Legend\Legend_tribecasinoorg.test_variablesgeocountry_segments_2024-10-14.json  ->  data\segment_lists\Legend\Legend_tribecasinoorg.test_variablesgeocountry_segments_2024-10-14.json
+  copy  legacy_js\config\segmentLists\Legend\Legend_tribecasinoorg.test_variablesgeocountry_segments_2024-10-29.json  ->  data\segment_lists\Legend\Legend_tribecasinoorg.test_variablesgeocountry_segments_2024-10-29.json
+  copy  legacy_js\config\segmentLists\Legend\Legend_tribecasinoorg.test_variablesgeocountry_segments_2025-01-10.json  ->  data\segment_lists\Legend\Legend_tribecasinoorg.test_variablesgeocountry_segments_2025-01-10.json
+  copy  legacy_js\config\segmentLists\Legend\Legend_tribecasinoorg.test_variablesgeocountry_segments_2025-04-04.json  ->  data\segment_lists\Legend\Legend_tribecasinoorg.test_variablesgeocountry_segments_2025-04-04.json
+  copy  legacy_js\config\segmentLists\Legend\Legend_tribecasinoorg.test_variablesmarketingchannel.marketing-channel-attribution_segments_2025-07-02.json  ->  data\segment_lists\Legend\Legend_tribecasinoorg.test_variablesmarketingchannel.marketing-channel-attribution_segments_2025-07-02.json
+  copy  legacy_js\config\segmentLists\Legend\Legend_trihybridsportsbookreviewcom_variablesgeocountry_segments_2024-10-14.json  ->  data\segment_lists\Legend\Legend_trihybridsportsbookreviewcom_variablesgeocountry_segments_2024-10-14.json
+  copy  legacy_js\config\segmentLists\Legend\Legend_trihybridsportsbookreviewcom_variablesgeocountry_segments_2024-10-29.json  ->  data\segment_lists\Legend\Legend_trihybridsportsbookreviewcom_variablesgeocountry_segments_2024-10-29.json
+  copy  legacy_js\config\segmentLists\Legend\Legend_trihybridsportsbookreviewcom_variablesgeocountry_segments_2025-01-10.json  ->  data\segment_lists\Legend\Legend_trihybridsportsbookreviewcom_variablesgeocountry_segments_2025-01-10.json
+  copy  legacy_js\config\segmentLists\Legend\Legend_trihybridsportsbookreviewcom_variablesgeocountry_segments_2025-04-04.json  ->  data\segment_lists\Legend\Legend_trihybridsportsbookreviewcom_variablesgeocountry_segments_2025-04-04.json
+  copy  legacy_js\config\segmentLists\Legend\Legend_trillioncoverscom_variablesgeocountry_segments_2024-10-14.json  ->  data\segment_lists\Legend\Legend_trillioncoverscom_variablesgeocountry_segments_2024-10-14.json
+  copy  legacy_js\config\segmentLists\Legend\Legend_trillioncoverscom_variablesgeocountry_segments_2024-10-29.json  ->  data\segment_lists\Legend\Legend_trillioncoverscom_variablesgeocountry_segments_2024-10-29.json
+  copy  legacy_js\config\segmentLists\Legend\Legend_trillioncoverscom_variablesgeocountry_segments_2025-01-10.json  ->  data\segment_lists\Legend\Legend_trillioncoverscom_variablesgeocountry_segments_2025-01-10.json
+  copy  legacy_js\config\segmentLists\Legend\Legend_trillioncoverscom_variablesgeocountry_segments_2025-04-04.json  ->  data\segment_lists\Legend\Legend_trillioncoverscom_variablesgeocountry_segments_2025-04-04.json
+  copy  legacy_js\config\segmentLists\Legend\Legend_trimoneyprod_variablesgeocountry_segments_2024-10-14.json  ->  data\segment_lists\Legend\Legend_trimoneyprod_variablesgeocountry_segments_2024-10-14.json
+  copy  legacy_js\config\segmentLists\Legend\Legend_trimoneyprod_variablesgeocountry_segments_2024-10-29.json  ->  data\segment_lists\Legend\Legend_trimoneyprod_variablesgeocountry_segments_2024-10-29.json
+  copy  legacy_js\config\segmentLists\Legend\Legend_trimoneyprod_variablesgeocountry_segments_2025-01-10.json  ->  data\segment_lists\Legend\Legend_trimoneyprod_variablesgeocountry_segments_2025-01-10.json
+  copy  legacy_js\config\segmentLists\Legend\Legend_trimoneyprod_variablesgeocountry_segments_2025-04-04.json  ->  data\segment_lists\Legend\Legend_trimoneyprod_variablesgeocountry_segments_2025-04-04.json
+  copy  legacy_js\config\segmentLists\Legend\Legend_trimotoroddspediacom_variablesgeocountry_segments_2024-10-14.json  ->  data\segment_lists\Legend\Legend_trimotoroddspediacom_variablesgeocountry_segments_2024-10-14.json
+  copy  legacy_js\config\segmentLists\Legend\Legend_trimotoroddspediacom_variablesgeocountry_segments_2024-10-29.json  ->  data\segment_lists\Legend\Legend_trimotoroddspediacom_variablesgeocountry_segments_2024-10-29.json
+  copy  legacy_js\config\segmentLists\Legend\Legend_trimotoroddspediacom_variablesgeocountry_segments_2025-01-10.json  ->  data\segment_lists\Legend\Legend_trimotoroddspediacom_variablesgeocountry_segments_2025-01-10.json
+  copy  legacy_js\config\segmentLists\Legend\Legend_trimotoroddspediacom_variablesgeocountry_segments_2025-04-04.json  ->  data\segment_lists\Legend\Legend_trimotoroddspediacom_variablesgeocountry_segments_2025-04-04.json
+  copy  legacy_js\config\segmentLists\Legend\Legend_trioletcardschatcom.test_variablesgeocountry_segments_2024-10-14.json  ->  data\segment_lists\Legend\Legend_trioletcardschatcom.test_variablesgeocountry_segments_2024-10-14.json
+  copy  legacy_js\config\segmentLists\Legend\Legend_trioletcardschatcom.test_variablesgeocountry_segments_2024-10-29.json  ->  data\segment_lists\Legend\Legend_trioletcardschatcom.test_variablesgeocountry_segments_2024-10-29.json
+  copy  legacy_js\config\segmentLists\Legend\Legend_trioletcardschatcom.test_variablesgeocountry_segments_2025-01-10.json  ->  data\segment_lists\Legend\Legend_trioletcardschatcom.test_variablesgeocountry_segments_2025-01-10.json
+  copy  legacy_js\config\segmentLists\Legend\Legend_trioletcardschatcom.test_variablesgeocountry_segments_2025-04-04.json  ->  data\segment_lists\Legend\Legend_trioletcardschatcom.test_variablesgeocountry_segments_2025-04-04.json
+
+[5] Dimension lookup files -> data/lookups/
+  copy  legacy_js\usefulInfo\Legend\variablesbrowsertype\lookup.txt  ->  data\lookups\variablesbrowsertype\lookup.txt
+  copy  legacy_js\usefulInfo\Legend\variablesmarketingchannel\lookup.txt  ->  data\lookups\variablesmarketingchannel\lookup.txt
+  copy  legacy_js\usefulInfo\Legend\variablesmonitorresolution\lookup.txt  ->  data\lookups\variablesmonitorresolution\lookup.txt
+  copy  legacy_js\usefulInfo\Legend\variablesgeoregion\lookup.txt  ->  data\lookups\variablesgeoregion\lookup.txt
+
+[6] Saved segment JSONs -> data/saved_segments/
+  copy  legacy_js\usefulInfo\Legend\Segments\DualConditionSegment.json  ->  data\saved_segments\DualConditionSegment.json
+  copy  legacy_js\usefulInfo\Legend\Segments\s3938_66843aaa4e73b6231c8a7556.json  ->  data\saved_segments\s3938_66843aaa4e73b6231c8a7556.json
+  copy  legacy_js\usefulInfo\Legend\Segments\s3938_66fe79408ff02713f66ed76b.json  ->  data\saved_segments\s3938_66fe79408ff02713f66ed76b.json
+  copy  legacy_js\usefulInfo\Legend\Segments\SingleConditionSegment.json  ->  data\saved_segments\SingleConditionSegment.json
+
+[7] User list JSONs -> data/user_lists/
+  copy  legacy_js\usefulInfo\Legend\userLists\userList-2026-01-02.json  ->  data\user_lists\userList-2026-01-02.json
+
+[8] Report suite lists -> data/report_suite_lists/
+  copy  legacy_js\usefulInfo\Legend\ReportSuiteLists\legendReportSuites20250601.txt  ->  data\report_suite_lists\legendReportSuites20250601.txt
+  copy  legacy_js\usefulInfo\Legend\ReportSuiteLists\legendReportSuites20250612.txt  ->  data\report_suite_lists\legendReportSuites20250612.txt
+  copy  legacy_js\usefulInfo\Legend\ReportSuiteLists\legendReportSuites20250613.txt  ->  data\report_suite_lists\legendReportSuites20250613.txt
+  copy  legacy_js\usefulInfo\Legend\ReportSuiteLists\legendReportSuites20250616.txt  ->  data\report_suite_lists\legendReportSuites20250616.txt
+  copy  legacy_js\usefulInfo\Legend\ReportSuiteLists\legendReportSuites20250617.txt  ->  data\report_suite_lists\legendReportSuites20250617.txt
+  copy  legacy_js\usefulInfo\Legend\ReportSuiteLists\legendReportSuites20250619.txt  ->  data\report_suite_lists\legendReportSuites20250619.txt
+  copy  legacy_js\usefulInfo\Legend\ReportSuiteLists\legendReportSuites20250704.txt  ->  data\report_suite_lists\legendReportSuites20250704.txt
+  copy  legacy_js\usefulInfo\Legend\ReportSuiteLists\legendReportSuites20251111.txt  ->  data\report_suite_lists\legendReportSuites20251111.txt
+  copy  legacy_js\usefulInfo\Legend\ReportSuiteLists\legendReportSuites20251204.txt  ->  data\report_suite_lists\legendReportSuites20251204.txt
+  copy  legacy_js\usefulInfo\Legend\ReportSuiteLists\legendReportSuites20260105.txt  ->  data\report_suite_lists\legendReportSuites20260105.txt
+  copy  legacy_js\usefulInfo\Legend\legendReportSuites.txt  ->  data\report_suite_lists\_archive\legendReportSuites.txt
+
+[9] LegendUsefulIds.txt -> data/
+  copy  legacy_js\usefulInfo\Legend\LegendUsefulIds.txt  ->  data\Legend_useful_ids.txt
+
+[10] Job input CSVs -> jobs/inputs/
+  copy  legacy_js\usefulInfo\Legend\BotRuleLists\Apr25ValidatedList-Aug25Additions.csv  ->  jobs\inputs\bot_rule_lists\Apr25ValidatedList-Aug25Additions.csv
+  copy  legacy_js\usefulInfo\Legend\BotRuleLists\Apr25ValidatedList.csv  ->  jobs\inputs\bot_rule_lists\Apr25ValidatedList.csv
+  copy  legacy_js\usefulInfo\Legend\BotRuleLists\Aug25-Lauran-Ad-Hoc-Domains.csv  ->  jobs\inputs\bot_rule_lists\Aug25-Lauran-Ad-Hoc-Domains.csv
+  copy  legacy_js\usefulInfo\Legend\BotRuleLists\BotRuleCompareFebMay25.csv  ->  jobs\inputs\bot_rule_lists\BotRuleCompareFebMay25.csv
+  copy  legacy_js\usefulInfo\Legend\BotRuleLists\coversSuspiciousPromoCodeURLs.csv  ->  jobs\inputs\bot_rule_lists\coversSuspiciousPromoCodeURLs.csv
+  copy  legacy_js\usefulInfo\Legend\BotRuleLists\exampleBotRuleList.csv  ->  jobs\inputs\bot_rule_lists\exampleBotRuleList.csv
+  copy  legacy_js\usefulInfo\Legend\BotRuleLists\FebMay25List copy.csv  ->  jobs\inputs\bot_rule_lists\FebMay25List copy.csv
+  copy  legacy_js\usefulInfo\Legend\BotRuleLists\FebMay25List.csv  ->  jobs\inputs\bot_rule_lists\FebMay25List.csv
+  copy  legacy_js\usefulInfo\Legend\BotRuleLists\FebMay25ListRoundTwo.csv  ->  jobs\inputs\bot_rule_lists\FebMay25ListRoundTwo.csv
+  copy  legacy_js\usefulInfo\Legend\BotRuleLists\FebMay25RoundFour_validate.csv  ->  jobs\inputs\bot_rule_lists\FebMay25RoundFour_validate.csv
+  copy  legacy_js\usefulInfo\Legend\BotRuleLists\FebMay25RoundThree_validate.csv  ->  jobs\inputs\bot_rule_lists\FebMay25RoundThree_validate.csv
+  copy  legacy_js\usefulInfo\Legend\BotRuleLists\Nov25-CasinoUS-China.csv  ->  jobs\inputs\bot_rule_lists\Nov25-CasinoUS-China.csv
+  copy  legacy_js\usefulInfo\Legend\BotRuleLists\Nov25-CasinoUS-China_RoundTwo.csv  ->  jobs\inputs\bot_rule_lists\Nov25-CasinoUS-China_RoundTwo.csv
+  copy  legacy_js\usefulInfo\Legend\BotRuleLists\Oddspedia-AdHoc-Jan26-RoundFive_validate.csv  ->  jobs\inputs\bot_rule_lists\Oddspedia-AdHoc-Jan26-RoundFive_validate.csv
+  copy  legacy_js\usefulInfo\Legend\BotRuleLists\Oddspedia-AdHoc-Jan26-RoundSix_validate.csv  ->  jobs\inputs\bot_rule_lists\Oddspedia-AdHoc-Jan26-RoundSix_validate.csv
+  copy  legacy_js\usefulInfo\Legend\BotRuleLists\Oddspedia-AdHoc-Jan26-RoundThree_validate.csv  ->  jobs\inputs\bot_rule_lists\Oddspedia-AdHoc-Jan26-RoundThree_validate.csv
+  copy  legacy_js\usefulInfo\Legend\BotRuleLists\Oddspedia-AdHoc-Jan26-RoundTwo_validate.csv  ->  jobs\inputs\bot_rule_lists\Oddspedia-AdHoc-Jan26-RoundTwo_validate.csv
+  copy  legacy_js\usefulInfo\Legend\BotRuleLists\Sep25-OddspediaAlekseyKisyakov.csv  ->  jobs\inputs\bot_rule_lists\Sep25-OddspediaAlekseyKisyakov.csv
+  copy  legacy_js\usefulInfo\Legend\BotCompareLists\AdHoc-Bing_compare.csv  ->  jobs\inputs\bot_compare_lists\AdHoc-Bing_compare.csv
+  copy  legacy_js\usefulInfo\Legend\BotCompareLists\AdHoc-Navigator-Webdriver_compare.csv  ->  jobs\inputs\bot_compare_lists\AdHoc-Navigator-Webdriver_compare.csv
+  copy  legacy_js\usefulInfo\Legend\BotCompareLists\BotRuleCompareFebMay25.csv  ->  jobs\inputs\bot_compare_lists\BotRuleCompareFebMay25.csv
+  copy  legacy_js\usefulInfo\Legend\BotCompareLists\BotRuleCompareFebMay25RoundTwo.csv  ->  jobs\inputs\bot_compare_lists\BotRuleCompareFebMay25RoundTwo.csv
+  copy  legacy_js\usefulInfo\Legend\BotCompareLists\BotRuleCompareJunAugRoundOne.csv  ->  jobs\inputs\bot_compare_lists\BotRuleCompareJunAugRoundOne.csv
+  copy  legacy_js\usefulInfo\Legend\BotCompareLists\FebMay25RoundFour_compare.csv  ->  jobs\inputs\bot_compare_lists\FebMay25RoundFour_compare.csv
+  copy  legacy_js\usefulInfo\Legend\BotCompareLists\FebMay25RoundThree_compare copy.csv  ->  jobs\inputs\bot_compare_lists\FebMay25RoundThree_compare copy.csv
+  copy  legacy_js\usefulInfo\Legend\BotCompareLists\FebMay25RoundThree_compare.csv  ->  jobs\inputs\bot_compare_lists\FebMay25RoundThree_compare.csv
+  copy  legacy_js\usefulInfo\Legend\BotCompareLists\Oddspedia-AdHoc-Jan26-RoundFive-MoneyPillar_compare.csv  ->  jobs\inputs\bot_compare_lists\Oddspedia-AdHoc-Jan26-RoundFive-MoneyPillar_compare.csv
+  copy  legacy_js\usefulInfo\Legend\BotCompareLists\Oddspedia-AdHoc-Jan26-RoundFive_compare.csv  ->  jobs\inputs\bot_compare_lists\Oddspedia-AdHoc-Jan26-RoundFive_compare.csv
+  copy  legacy_js\usefulInfo\Legend\BotCompareLists\Oddspedia-AdHoc-Jan26-RoundFiveV2_compare.csv  ->  jobs\inputs\bot_compare_lists\Oddspedia-AdHoc-Jan26-RoundFiveV2_compare.csv
+  copy  legacy_js\usefulInfo\Legend\BotCompareLists\Oddspedia-AdHoc-Jan26-RoundFiveV3_compare.csv  ->  jobs\inputs\bot_compare_lists\Oddspedia-AdHoc-Jan26-RoundFiveV3_compare.csv
+  copy  legacy_js\usefulInfo\Legend\BotCompareLists\Oddspedia-AdHoc-Jan26-RoundFour_compare.csv  ->  jobs\inputs\bot_compare_lists\Oddspedia-AdHoc-Jan26-RoundFour_compare.csv
+  copy  legacy_js\usefulInfo\Legend\BotCompareLists\Oddspedia-AdHoc-Jan26-RoundSix_compare.csv  ->  jobs\inputs\bot_compare_lists\Oddspedia-AdHoc-Jan26-RoundSix_compare.csv
+  copy  legacy_js\usefulInfo\Legend\BotCompareLists\Oddspedia-AdHoc-Jan26-RoundThree_compare.csv  ->  jobs\inputs\bot_compare_lists\Oddspedia-AdHoc-Jan26-RoundThree_compare.csv
+  copy  legacy_js\usefulInfo\Legend\BotCompareLists\Oddspedia-AdHoc-Jan26-RoundTwo_compare.csv  ->  jobs\inputs\bot_compare_lists\Oddspedia-AdHoc-Jan26-RoundTwo_compare.csv
+  copy  legacy_js\usefulInfo\Legend\BotCompareLists\Oddspedia-AdHoc-Jan26_compare.csv  ->  jobs\inputs\bot_compare_lists\Oddspedia-AdHoc-Jan26_compare.csv
+  copy  legacy_js\usefulInfo\Legend\segmentCreationLists\AdHoc-Bing.csv  ->  jobs\inputs\segment_creation_lists\AdHoc-Bing.csv
+  copy  legacy_js\usefulInfo\Legend\segmentCreationLists\AdHoc-Navigator-Webdriver.csv  ->  jobs\inputs\segment_creation_lists\AdHoc-Navigator-Webdriver.csv
+  copy  legacy_js\usefulInfo\Legend\segmentCreationLists\FebMay25RoundFourTest.csv  ->  jobs\inputs\segment_creation_lists\FebMay25RoundFourTest.csv
+  copy  legacy_js\usefulInfo\Legend\segmentCreationLists\FebMay25RoundThree.csv  ->  jobs\inputs\segment_creation_lists\FebMay25RoundThree.csv
+  copy  legacy_js\usefulInfo\Legend\segmentCreationLists\Oddspedia-AdHoc-Jan26-RoundFive-MoneyPillar.csv  ->  jobs\inputs\segment_creation_lists\Oddspedia-AdHoc-Jan26-RoundFive-MoneyPillar.csv
+  copy  legacy_js\usefulInfo\Legend\segmentCreationLists\Oddspedia-AdHoc-Jan26-RoundFive.csv  ->  jobs\inputs\segment_creation_lists\Oddspedia-AdHoc-Jan26-RoundFive.csv
+  copy  legacy_js\usefulInfo\Legend\segmentCreationLists\Oddspedia-AdHoc-Jan26-RoundFiveV2.csv  ->  jobs\inputs\segment_creation_lists\Oddspedia-AdHoc-Jan26-RoundFiveV2.csv
+  copy  legacy_js\usefulInfo\Legend\segmentCreationLists\Oddspedia-AdHoc-Jan26-RoundFiveV3.csv  ->  jobs\inputs\segment_creation_lists\Oddspedia-AdHoc-Jan26-RoundFiveV3.csv
+  copy  legacy_js\usefulInfo\Legend\segmentCreationLists\Oddspedia-AdHoc-Jan26-RoundFour.csv  ->  jobs\inputs\segment_creation_lists\Oddspedia-AdHoc-Jan26-RoundFour.csv
+  copy  legacy_js\usefulInfo\Legend\segmentCreationLists\Oddspedia-AdHoc-Jan26-RoundSix.csv  ->  jobs\inputs\segment_creation_lists\Oddspedia-AdHoc-Jan26-RoundSix.csv
+  copy  legacy_js\usefulInfo\Legend\segmentCreationLists\Oddspedia-AdHoc-Jan26-RoundThree.csv  ->  jobs\inputs\segment_creation_lists\Oddspedia-AdHoc-Jan26-RoundThree.csv
+  copy  legacy_js\usefulInfo\Legend\segmentCreationLists\Oddspedia-AdHoc-Jan26-RoundTwo.csv  ->  jobs\inputs\segment_creation_lists\Oddspedia-AdHoc-Jan26-RoundTwo.csv
+  copy  legacy_js\usefulInfo\Legend\segmentCreationLists\Oddspedia-AdHoc-Jan26.csv  ->  jobs\inputs\segment_creation_lists\Oddspedia-AdHoc-Jan26.csv
+  copy  legacy_js\usefulInfo\Legend\segmentCreationLists\segmentCreationTemplate.csv  ->  jobs\inputs\segment_creation_lists\segmentCreationTemplate.csv
+  copy  legacy_js\usefulInfo\Legend\segmentCreationLists\testOne.csv  ->  jobs\inputs\segment_creation_lists\testOne.csv
+  copy  legacy_js\usefulInfo\Legend\segmentCreationLists\testTwo.csv  ->  jobs\inputs\segment_creation_lists\testTwo.csv
+
+[11] Client config template -> jobs/templates/
+  copy  legacy_js\config\client_configs\clientTemplate.yaml  ->  jobs\templates\client_config_template.yaml
+
+[12] Legend credentials -> credentials/
+  copy  legacy_js\config\client_configs\clientLegend.yaml  ->  credentials\clientLegend.yaml
+
+[13] General reference docs -> docs/reference/
+  copy  legacy_js\usefulInfo\General\CommonMetrics  ->  docs\reference\common_metrics.md
+  copy  legacy_js\usefulInfo\General\CommonDimensions  ->  docs\reference\common_dimensions.md
+
+Done. Migration complete.

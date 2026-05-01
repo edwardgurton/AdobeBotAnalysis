@@ -1,0 +1,30 @@
+To find these, use the debug mode in Adobe Analytics Workspace
+
+Segments
+
+Master Bot Filter EXCLUDE: s3938_61bb0165a88ab931afa78e4c
+Master Bot Filter INCLUDE: s3938_64b141c647aa8c3cec5a1a95
+Master Bot Filter EXCLUDE (TESTING): s3938_66fe79408ff02713f66ed76b
+Engagement Visit: cm3938_602b915cb99757640284234e
+Bot Rule Validation: Marketing Channel is Internal or Direct: s3938_67c09bc9b1a3887faa7d3844
+Bot Rule Validation: Mobile Device Type is Other: s3938_67c09bfb5bc6d048a2295f86
+
+Metrics
+
+Engaged Visits (Visit Level): cm3938_602b915cb99757640284234e
+Engagement Rate (Visit Level): cm3938_5fcf3ee998b6d77a9d7167ad
+Partner Clickouts (Raw Count): metrics/event3
+First Time Visits: cm3938_66d0bfba05c95b4eca739eb4
+Raw Clickouts (Linear, 7 Day): cm3938_67877f0e25c74e65d1f3f449
+Raw Clickouts (Participation, 7 Day):cm3938_68655d7318c56ac719c11a44
+Unique Visit Clickouts (Linear, 7 Day): cm3938_68655dd05c74c471e8de44d0
+Unique Visit Clickouts (Participation, 7 Day): cm3938_68655e0b18c56ac719c11a47
+Adobe Advertising Cost: metrics/amo_cost
+Adobe Advertising Clicks: metrics/amo_clicks
+Adobe Advertising Impressions: metrics/amo_impressions
+
+Dimensions
+
+Page URL: variables/evar2
+User Agent: variables/evar23
+Marketing Channel Attribution: variables/marketingchannel.marketing-channel-attribution

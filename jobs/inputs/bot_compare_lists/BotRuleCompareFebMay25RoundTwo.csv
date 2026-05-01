@@ -1,0 +1,5 @@
+﻿dimSegmentId,botRuleName,reportToIgnore
+s3938_693bfab362fb9877ebbab60f,11-BotCompare-FebMay25-RoundTwo-OperatingSystem-Android-1600,OperatingSystem
+s3938_693bfae362fb9877ebbab611,12-BotCompare-FebMay25-RoundTwo-User-Agent,UserAgent
+s3938_693bfb1762fb9877ebbab614,13-BotCompare-FebMay25-RoundTwo-User-Agent,UserAgent
+s3938_693bfb3c4126b825f3794f32,14-BotCompare-FebMay25-RoundTwo-Domain-amazonawscom,Domain

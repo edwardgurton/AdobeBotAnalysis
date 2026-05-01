@@ -1,0 +1,4 @@
+metrics/itemtimespent
+metrics/visitors
+metrics/visits
+metrics/pageviews

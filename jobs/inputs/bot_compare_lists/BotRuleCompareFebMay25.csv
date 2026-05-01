@@ -1,0 +1,11 @@
+﻿dimSegmentId,botRuleName,reportToIgnore
+s3938_6932b7194126b825f3792a2d,01-BotCompare-FebMay25-CasinoSpielede-User-Agent,UserAgent
+s3938_6932b7494126b825f3792a30,02-BotCompare-FebMay25-CasinoSpielede-User-Agent,UserAgent
+s3938_6932b7774126b825f3792a33,03-BotCompare-FebMay25-GuruDE-User-Agent,UserAgent
+s3938_6932b7a962fb9877ebba919f,04-BotCompare-FebMay25-Apuestasdeportivascom-Region-Sachsen-(Germany),Region
+s3938_6932b7cf4126b825f3792a39,05-BotCompare-FebMay25-OnlineCasinoscom-User-Agent,UserAgent
+s3938_6932b7f162fb9877ebba91a2,06-BotCompare-FebMay25-OnlineCasinoscom-Monitor-Resolution-360-x-720,MonitorResolution
+s3938_6932b85a4126b825f3792a40,07-BotCompare-FebMay25-OnlineCasinoscom-User-Agent,UserAgent
+s3938_6932b88252a9a23e6a8909a1,08-BotCompare-FebMay25-Cardschatcom-MonitorResolution-432-x-736,MonitorResolution
+s3938_6932b8bbdcd11c4a874fd956,09-BotCompare-FebMay25-OnlineGamblingca-User-Agent,UserAgent
+s3938_6932b8f842b33f386318b27c,10-BotCompare-FebMay25-Apuestasdeportivascom-User-Agent,UserAgent

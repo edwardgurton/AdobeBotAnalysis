@@ -1,0 +1,9 @@
+report_name: LegendTestBrowserTypes
+columns:
+  - id
+  - variablesbrowsertype
+  - unique_visitors
+  - visits
+  - fileName
+  - fromDate
+  - toDate

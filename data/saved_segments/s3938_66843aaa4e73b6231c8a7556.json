@@ -1,0 +1,33 @@
+{
+  "name": "Bing",
+  "description": "",
+  "definition": {
+    "container": {
+      "func": "container",
+      "context": "hits",
+      "pred": {
+        "val": {
+          "func": "attr",
+          "name": "variables/referringdomain"
+        },
+        "description": "Referring Domain",
+        "func": "streq-in",
+        "list": [
+          "bing.com"
+        ]
+      }
+    },
+    "func": "segment",
+    "version": [
+      1,
+      0,
+      0
+    ]
+  },
+  "id": "s3938_66843aaa4e73b6231c8a7556",
+  "isPostShardId": true,
+  "rsid": "tribecasinoorg.test",
+  "owner": {
+    "id": 200419062
+  }
+}

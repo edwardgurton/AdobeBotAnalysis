@@ -1,0 +1,34 @@
+[
+  {
+    "id": "s3938_670d91722f80af0aca995433",
+    "name": "variables/geocountry = United States"
+  },
+  {
+    "id": "s3938_670d9172c9ad30681f19f573",
+    "name": "variables/geocountry = Canada"
+  },
+  {
+    "id": "s3938_670d91735c7f8444ab6ee275",
+    "name": "variables/geocountry = United Kingdom"
+  },
+  {
+    "id": "s3938_670d91732f80af0aca995434",
+    "name": "variables/geocountry = Bermuda"
+  },
+  {
+    "id": "s3938_670d9173c9ad30681f19f574",
+    "name": "variables/geocountry = Australia"
+  },
+  {
+    "id": "s3938_670d9174c9ad30681f19f575",
+    "name": "variables/geocountry = Singapore"
+  },
+  {
+    "id": "s3938_670d9174c9ad30681f19f576",
+    "name": "variables/geocountry = Philippines"
+  },
+  {
+    "id": "s3938_670d91772f80af0aca995435",
+    "name": "variables/geocountry = New Zealand"
+  }
+]

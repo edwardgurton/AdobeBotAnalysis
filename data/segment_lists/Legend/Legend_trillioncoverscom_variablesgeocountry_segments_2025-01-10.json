@@ -1,0 +1,50 @@
+[
+  {
+    "id": "s3938_6780ffa98e0db45770364aff",
+    "name": "variables/geocountry = United States"
+  },
+  {
+    "id": "s3938_6780ffaaf59dc203d2ddcf76",
+    "name": "variables/geocountry = Canada"
+  },
+  {
+    "id": "s3938_6780ffabf59dc203d2ddcf77",
+    "name": "variables/geocountry = Venezuela"
+  },
+  {
+    "id": "s3938_6780ffacc2c7cd260a4a8b7e",
+    "name": "variables/geocountry = Dominican Republic"
+  },
+  {
+    "id": "s3938_6780ffacf59dc203d2ddcf79",
+    "name": "variables/geocountry = Mexico"
+  },
+  {
+    "id": "s3938_6780ffad8e0db45770364b00",
+    "name": "variables/geocountry = Philippines"
+  },
+  {
+    "id": "s3938_6780ffadc2c7cd260a4a8b7f",
+    "name": "variables/geocountry = Sweden"
+  },
+  {
+    "id": "s3938_6780ffae8e0db45770364b01",
+    "name": "variables/geocountry = South Korea"
+  },
+  {
+    "id": "s3938_6780ffafc2c7cd260a4a8b80",
+    "name": "variables/geocountry = Australia"
+  },
+  {
+    "id": "s3938_6780ffb08e0db45770364b02",
+    "name": "variables/geocountry = Taiwan region"
+  },
+  {
+    "id": "s3938_6780ffb08e0db45770364b03",
+    "name": "variables/geocountry = United Kingdom"
+  },
+  {
+    "id": "s3938_6780ffb1c2c7cd260a4a8b81",
+    "name": "variables/geocountry = Chile"
+  }
+]

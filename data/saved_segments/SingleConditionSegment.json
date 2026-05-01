@@ -1,0 +1,31 @@
+{
+  "name": "BOTCOMPARE_FebMay25RoundThree_14: Coverscom - OperatingSystem = Linux ",
+  "description": "",
+  "definition": {
+    "container": {
+      "func": "container",
+      "context": "visits",
+      "pred": {
+        "str": "Linux",
+        "val": {
+          "func": "attr",
+          "name": "variables/operatingsystem"
+        },
+        "description": "Operating Systems",
+        "func": "streq"
+      }
+    },
+    "func": "segment",
+    "version": [
+      1,
+      0,
+      0
+    ]
+  },
+  "id": "s3938_69455abf4126b825f3796cc1",
+  "isPostShardId": true,
+  "rsid": "triadsonlinebetting.com",
+  "owner": {
+    "id": 200419062
+  }
+}

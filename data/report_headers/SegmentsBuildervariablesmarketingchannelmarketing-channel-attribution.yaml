@@ -1,0 +1,9 @@
+report_name: SegmentsBuildervariablesmarketingchannelmarketing-channel-attribution
+columns:
+  - id
+  - variablesmarketingchannelmarketing-channel-attribution
+  - unique_visitors
+  - visits
+  - fileName
+  - fromDate
+  - toDate

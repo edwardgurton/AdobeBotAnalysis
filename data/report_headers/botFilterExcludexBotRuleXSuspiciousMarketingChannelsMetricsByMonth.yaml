@@ -1,0 +1,13 @@
+report_name: botFilterExcludexBotRuleXSuspiciousMarketingChannelsMetricsByMonth
+columns:
+  - id
+  - month
+  - unique_visitors
+  - visits
+  - raw_clickouts
+  - engaged_visits
+  - engagement_rate
+  - fileName
+  - requestName
+  - botRuleName
+  - rsidName

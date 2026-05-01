@@ -1,0 +1,14 @@
+report_name: botInvestigationUnfilteredMetricsByDomain
+columns:
+  - id
+  - domain
+  - unique_visitors
+  - visits
+  - Raw_Clickouts
+  - Engaged_Visits
+  - First_Time_Visits
+  - Total_Seconds_Spent
+  - Page_Views
+  - fileName
+  - fromDate
+  - toDate

@@ -1,0 +1,30 @@
+/**
+ * Lookup Table for variables/browsertype
+ * 
+ * Maps string values to their numeric IDs for use in Adobe Analytics segments.
+ * 
+ * Client: Legend
+ * RSID: trillioncoverscom
+ * Date Range: 2024-12-22 to 2025-12-22
+ * Last Updated: 2025-12-22
+ * 
+ * Format: stringValue|numericId
+ */
+
+Google|8
+Apple|6
+Microsoft|2
+Samsung|24
+Mozilla|7
+Other|1
+Opera|5
+Amazon|9
+Unspecified|0
+Yandex|23
+UC Web|22
+QQ Browser|18
+AOL|4
+Netscape|3
+Nokia|15
+Hewlett-Packard|12
+BlackBerry|10

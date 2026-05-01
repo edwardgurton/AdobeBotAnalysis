@@ -1,0 +1,7 @@
+report_name: toplineMetricsForRsidValidation
+columns:
+  - unique_visitors
+  - visits
+  - fileName
+  - fromDate
+  - toDate

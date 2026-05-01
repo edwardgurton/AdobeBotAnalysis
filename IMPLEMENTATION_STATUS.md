@@ -15,15 +15,15 @@ Status legend: `☐ todo` · `🔄 in-progress` · `✅ done` · `⚠️ blocked
 
 ## Current State
 
-**Active step:** Step 0.5 — Data migration
+**Active step:** Step 0.75 — Capture test fixtures
 
-**Last commit:** `Step 0: File inventory and disposition`
+**Last commit:** `Step 0.5: Data migration script and guide`
 
-**Next concrete action:** Begin Step 0.5 — Data migration. Run `scripts/migrate_data.py` to copy all `data-migrate` files from `legacy_js/` to their target locations (`data/`, `jobs/inputs/`, `jobs/templates/`, `docs/reference/`). Produce `docs/data_migration_guide.md`.
+**Next concrete action:** Begin Step 0.75 — Capture test fixtures. For each transform type, capture a representative input JSON and expected output CSV from actual production runs. Also capture compiled request bodies for all report types. Place in `tests/fixtures/`.
 
 **In-flight (uncommitted) work:** *(none)*
 
-**Blockers:** *(none)*
+**Blockers:** Need access to actual downloaded JSON files from past production runs to capture fixtures. If no local copies exist, this step may need to defer fixture capture to after Step 5 (first live download).
 
 ---
 
@@ -35,11 +35,11 @@ Status legend: `☐ todo` · `🔄 in-progress` · `✅ done` · `⚠️ blocked
 - **Validation:** `docs/file_inventory.md` exists and lists all 68 JS files + ~115 non-JS files with disposition tags.
 - **Notes:** `legacy_js/` is the authoritative source (replaces `Full__Repo_XML` project knowledge reference); CLAUDE.md and IMPLEMENTATION_STATUS.md updated to reflect this.
 
-### ☐ Step 0.5 — Data migration
-- **Started:** —
-- **Completed:** —
-- **Validation:** `scripts/migrate_data.py` runs cleanly; migrated files exist in the new locations per §15.6 of the plan; `docs/data_migration_guide.md` exists.
-- **Notes:**
+### ✅ Step 0.5 — Data migration
+- **Started:** 2026-05-01
+- **Completed:** 2026-05-01
+- **Validation:** `scripts/migrate_data.py` runs cleanly (no warnings); migrated files verified in `data/`, `jobs/inputs/`, `jobs/templates/`, `credentials/`, `docs/reference/`; `docs/data_migration_guide.md` exists.
+- **Notes:** Fixed a header-extraction bug (commented example was being picked up instead of active header string). Script is idempotent — safe to re-run.
 
 ### ☐ Step 0.75 — Capture test fixtures
 - **Started:** —
@@ -201,8 +201,8 @@ Status legend: `☐ todo` · `🔄 in-progress` · `✅ done` · `⚠️ blocked
 -->
 
 ### 2026-05-01
-- **Worked on:** Step 0
-- **Commits:** `Step 0: File inventory and disposition` (1 commit)
-- **Done this session:** Updated CLAUDE.md and IMPLEMENTATION_STATUS.md to replace `Full__Repo_XML` reference with `legacy_js/` directory. Inventoried all 68 JS files (28 root + 40 utils) and ~115 non-JS files (headers, configs, segment lists, lookup data, run input CSVs, temp/output files). Produced `docs/file_inventory.md` with disposition tags cross-referenced against the §3 module design.
+- **Worked on:** Steps 0 and 0.5
+- **Commits:** `Step 0: File inventory and disposition`, `Step 0.5: Data migration script and guide` (2 commits)
+- **Done this session:** Updated CLAUDE.md and IMPLEMENTATION_STATUS.md to replace `Full__Repo_XML` reference with `legacy_js/` directory. Inventoried all 68 JS files and ~115 non-JS files with disposition tags (`docs/file_inventory.md`). Wrote `scripts/migrate_data.py` which converts JS arrays to plain text/JSON, extracts header definitions to YAML, and copies all data files to their target locations. Fixed a comment-line regex bug in header extraction. Produced `docs/data_migration_guide.md` documenting all migrations and exclusions.
 - **Left in flight:** Nothing.
-- **Next action:** Step 0.5 — Data migration. Write `scripts/migrate_data.py` to copy all `data-migrate` files to their target paths; produce `docs/data_migration_guide.md`.
+- **Next action:** Step 0.75 — Capture test fixtures. Need to confirm whether local production JSON files exist; if not, fixture capture defers to after Step 5.

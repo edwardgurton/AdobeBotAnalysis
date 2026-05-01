@@ -1,0 +1,9 @@
+report_name: SegmentsBuildervariablesgeoregion
+columns:
+  - id
+  - variablesgeoregion
+  - unique_visitors
+  - visits
+  - fileName
+  - fromDate
+  - toDate

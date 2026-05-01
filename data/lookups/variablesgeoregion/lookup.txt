@@ -1,0 +1,3893 @@
+/**
+ * Lookup Table for variables/georegion
+ * 
+ * Maps string values to their numeric IDs for use in Adobe Analytics segments.
+ * 
+ * Client: Legend
+ * RSID: trillioncoverscom
+ * Date Range: 2025-01-07 to 2026-01-07
+ * Last Updated: 2026-01-07
+ * 
+ * Format: stringValue|numericId
+ */
+
+New York (United States)|559513462
+California (United States)|3079065919
+Illinois (United States)|1306663276
+Florida (United States)|1224301364
+Texas (United States)|2001442266
+Virginia (United States)|2917455683
+Ontario (Canada)|415047047
+Zulia (Venezuela)|1552123925
+Massachusetts (United States)|3093359886
+Georgia (United States)|1114917567
+Arizona (United States)|2132464050
+Pennsylvania (United States)|1109551779
+New Jersey (United States)|574405396
+Nevada (United States)|696672378
+Ohio (United States)|3518645861
+Central (Singapore)|4099227888
+Distrito Federal (Venezuela)|3991174722
+Falcon (Venezuela)|2394251717
+Distrito Nacional (Dominican Republic)|3414711511
+Indiana (United States)|2731628864
+Santo Domingo (Dominican Republic)|1001136408
+North Carolina (United States)|3314523626
+Miranda (Venezuela)|3380323938
+Michigan (United States)|2316519576
+Colorado (United States)|2586981792
+Washington (United States)|272362305
+British Columbia (Canada)|3755004453
+Carabobo (Venezuela)|4111704605
+Hawaii (United States)|1917046955
+Alabama (United States)|1743459307
+Minnesota (United States)|646193428
+Maryland (United States)|2711558028
+Tennessee (United States)|2026224079
+Aragua (Venezuela)|4249717265
+Alberta (Canada)|3545260151
+Quebec (Canada)|3971764992
+South Carolina (United States)|3996527012
+Louisiana (United States)|3126967626
+Missouri (United States)|1940955767
+Wisconsin (United States)|3858102121
+Santiago (Dominican Republic)|2256573333
+National Capital Region (Philippines)|83904199
+Kentucky (United States)|2031676494
+Connecticut (United States)|1095755562
+Ciudad De Mexico (Mexico)|450840676
+Lara (Venezuela)|1422825245
+La Guaira (Venezuela)|564475737
+Iowa (United States)|3193218183
+Barahona (Dominican Republic)|938163216
+Mississippi (United States)|829188720
+Sucre (Venezuela)|1207964239
+Kansas (United States)|2652673381
+Manitoba (Canada)|3451503915
+Baja California (Mexico)|904186982
+Oklahoma (United States)|999312859
+Oregon (United States)|1057375099
+Anzoategui (Venezuela)|3637153416
+New South Wales (Australia)|230353265
+La Altagracia (Dominican Republic)|2195167882
+Nova Scotia (Canada)|1590628345
+Region Metro De Santiago (Chile)|1780653345
+Nebraska (United States)|3586169501
+Bolivar (Venezuela)|479963404
+Mexico (Mexico)|3128801092
+Hessen (Germany)|2259545465
+Utah (United States)|1997017490
+Arkansas (United States)|3028339854
+Delaware (United States)|2652676175
+Chihuahua (Mexico)|690176375
+Guarico (Venezuela)|2676928652
+Nueva Esparta (Venezuela)|3197958730
+District of Columbia (United States)|2982101706
+Seoul-Teukbyeolsi (South Korea)|3782087567
+San Cristobal (Dominican Republic)|4279047401
+West Virginia (United States)|1266909713
+New Hampshire (United States)|510980507
+Rhode Island (United States)|3929422535
+New Providence (Bahamas)|952332252
+Gyeonggi-DO (South Korea)|437533699
+San Pedro De Macoris (Dominican Republic)|2994481672
+Taipei City (Taiwan region)|3507119034
+New Mexico (United States)|2407413319
+La Vega (Dominican Republic)|1307854692
+Nuevo Leon (Mexico)|68679747
+Sonora (Mexico)|133538533
+London (United Kingdom)|4244773280
+Merida (Venezuela)|3334752774
+Taichung City (Taiwan region)|3446242077
+Monagas (Venezuela)|2936423488
+Tachira (Venezuela)|3104567803
+Maine (United States)|2669863746
+Barinas (Venezuela)|885895992
+Victoria (Australia)|2215668253
+Uusimaa (Finland)|2900728155
+Saskatchewan (Canada)|1680766575
+Yaracuy (Venezuela)|3811361583
+Puerto Plata (Dominican Republic)|563948901
+Portuguesa (Venezuela)|1334563015
+Trujillo (Venezuela)|1844498642
+Distrito Capital (Colombia)|2218770330
+Idaho (United States)|3398803562
+La Romana (Dominican Republic)|2763912071
+Madrid (Spain)|2085566062
+Jalisco (Mexico)|2833000450
+Panama (Panama)|3287911274
+Puerto Rico (Puerto Rico)|1479888611
+Apure (Venezuela)|2538568766
+Antioquia (Colombia)|3532027069
+Cojedes (Venezuela)|505420358
+South Dakota (United States)|88831951
+New Taipei City (Taiwan region)|2421813083
+Lima (Peru)|739032208
+Sinaloa (Mexico)|3230427543
+United States (United States)|1563555445
+Metropolitana De Lima (Peru)|1402429026
+Espaillat (Dominican Republic)|1830142958
+New Brunswick (Canada)|2212789701
+Tokyo (Japan)|1249287352
+Monte Plata (Dominican Republic)|2152887759
+Duarte (Dominican Republic)|2844057321
+Noord-Holland (Netherlands)|231586874
+Sao Paulo (Brazil)|2970408709
+Hong Kong (Hong Kong SAR of China)|3874015982
+Monsenor Nouel (Dominican Republic)|3653642562
+Ile-De-France (France)|726437090
+Newfoundland and Labrador (Canada)|3207374753
+Queensland (Australia)|1833183959
+Curacao (Curacao)|3950462598
+Quintana Roo (Mexico)|1079346263
+Peravia (Dominican Republic)|1734620644
+Auckland (New Zealand)|3946610563
+Vermont (United States)|3560686038
+Montana (United States)|498751056
+Stockholms Lan (Sweden)|3457554817
+Wyoming (United States)|95445889
+Cebu (Philippines)|239087142
+Singapore (Singapore)|2972671411
+North Dakota (United States)|2454634221
+Sanchez Ramirez (Dominican Republic)|373126889
+Tamaulipas (Mexico)|1490816434
+Mazowieckie (Poland)|786984118
+Barcelona (Spain)|1630850907
+United Kingdom (United Kingdom)|2314232973
+Azua (Dominican Republic)|696344244
+Kaohsiung City (Taiwan region)|3178419502
+Valparaiso (Chile)|4152180251
+Guanajuato (Mexico)|2389725048
+Lagos (Nigeria)|1452075941
+San Juan (Dominican Republic)|3086336749
+Pichincha (Ecuador)|1192970316
+Dublin (Ireland)|1312539964
+Korea - South (South Korea)|421632714
+Tainan City (Taiwan region)|2242657756
+Coahuila (Mexico)|3866401163
+Lisboa (Portugal)|767010109
+Busan-Gwangyeoksi (South Korea)|1516813874
+Alaska (United States)|1390695885
+Atlantico (Colombia)|3476385526
+Ho Chi Minh (Viet Nam)|3225947983
+Attiki (Greece)|1054276985
+Valverde (Dominican Republic)|2265112578
+Capital Federal (Argentina)|1639191808
+Maharashtra (India)|469713309
+Guayas (Ecuador)|2222816861
+South Australia (Australia)|4129921371
+Rizal (Philippines)|4019280908
+Taoyuan County (Taiwan region)|2942963429
+Oslo (Norway)|3843318834
+Gyeongsangnam-DO (South Korea)|1329845016
+Western Australia (Australia)|145546342
+Veracruz (Mexico)|1584591057
+Gyeongsangbuk-DO (South Korea)|1061541664
+Samana (Dominican Republic)|1097806159
+Prince Edward Island (Canada)|1253763283
+Incheon-Gwangyeoksi (South Korea)|2425467825
+Maria Trinidad Sanchez (Dominican Republic)|2917628604
+Queretaro (Mexico)|614760837
+Zuid-Holland (Netherlands)|4126153618
+Puebla (Mexico)|2780040095
+Dominican Republic (Dominican Republic)|2974838360
+Cavite (Philippines)|4115042125
+Buenos Aires (Argentina)|1046556978
+Davao Del Sur (Philippines)|2995177228
+Chungcheongnam-DO (South Korea)|405210107
+Aruba (Aruba)|4190792799
+Daegu-Gwangyeoksi (South Korea)|2529814913
+Berlin (Germany)|1013897467
+Gauteng (South Africa)|2300360652
+Bulacan (Philippines)|1897988947
+Hovedstaden (Denmark)|3209955277
+Chungcheongbuk-DO (South Korea)|1902266574
+Hato Mayor (Dominican Republic)|1910195422
+Bayern (Germany)|4112456020
+Iloilo (Philippines)|372038365
+Yucatan (Mexico)|1416894031
+Baja California Sur (Mexico)|2753302492
+Vilniaus (Lithuania)|2858060985
+Jeollabuk-DO (South Korea)|336748591
+Bucuresti (Romania)|230894738
+Valle Del Cauca (Colombia)|1929263527
+Krung Thep Maha Nakhon Bangkok (Thailand)|2477813735
+Monte Cristi (Dominican Republic)|2157073338
+San Jose (Costa Rica)|3796187227
+Nordrhein-Westfalen (Germany)|2250523768
+Germany (Germany)|2380727926
+Hamerkaz (Israel)|3109048345
+Philippines (Philippines)|1975708917
+Parana (Brazil)|2250010301
+Bolivar (Colombia)|1178599465
+Belgrade (Serbia)|140021774
+Pampanga (Philippines)|2852469806
+Michoacan (Mexico)|265814644
+Pangasinan (Philippines)|3462975051
+Cundinamarca (Colombia)|2304063288
+Negros Occidental (Philippines)|3622228183
+San Luis Potosi (Mexico)|942956740
+Hermanas Mirabal (Dominican Republic)|825582011
+Budapest (Hungary)|2484108902
+Francisco Morazan (Honduras)|2835483030
+Rio De Janeiro (Brazil)|4167465680
+Maule (Chile)|698285910
+Libertador Gen B O'higgins (Chile)|640041544
+Daejeon-Gwangyeoksi (South Korea)|3358967962
+Milano (Italy)|2587972295
+Praha (Czech Republic)|2231008562
+Laguna (Philippines)|1858362229
+Dajabon (Dominican Republic)|3558110141
+British Virgin Islands (British Virgin Islands)|4114386540
+Changhua County (Taiwan region)|1837321391
+Gwangju-Gwangyeoksi (South Korea)|578880828
+Bio-Bio (Chile)|2464199102
+Wien (Austria)|2781392917
+Gangwon-DO (South Korea)|2456573626
+Baoruco (Dominican Republic)|1064392178
+Luanda (Angola)|3885886236
+El Seibo (Dominican Republic)|1363705142
+Coquimbo (Chile)|4279483031
+Guangdong Sheng (China)|1918205669
+Tel Aviv (Israel)|2262343936
+Freeport (Bahamas)|3721216
+La Guajira (Colombia)|617336164
+Sachsen (Germany)|2589536859
+Durango (Mexico)|3541399275
+Grad Zagreb (Croatia)|3010219291
+Jeollanam-DO (South Korea)|890679875
+Beijing Shi (China)|1117552699
+Bruxelles-Capitale (Belgium)|1880390825
+Bermuda (Bermuda)|3004693124
+Santa Catarina (Brazil)|747080333
+South Cotabato (Philippines)|483896222
+Sofia-Grad (Bulgaria)|115018761
+Spain (Spain)|3878930875
+Aguascalientes (Mexico)|1143800396
+Delta Amacuro (Venezuela)|316947665
+Santiago Rodriguez (Dominican Republic)|2269127915
+Antofagasta (Chile)|1858988578
+Batangas (Philippines)|1114130008
+Sint Maarten (Sint Maarten)|1734681645
+Magdalena (Colombia)|943960781
+Guerrero (Mexico)|3542676615
+Porto (Portugal)|1762871477
+Rio Grande Do Sul (Brazil)|495556117
+France (France)|133822272
+Camden (United Kingdom)|1197570286
+Zurich (Switzerland)|2554875807
+US Virgin Islands (US Virgin Islands)|2810003948
+Ulsan-Gwangyeoksi (South Korea)|4066147946
+Delhi (India)|117116872
+Nueva Ecija (Philippines)|3742547660
+Los Lagos (Chile)|1012642094
+Greater Accra (Ghana)|3228696485
+Hsinchu County (Taiwan region)|1493825739
+Roma (Italy)|3945134782
+Bratislavsky Kraj (Slovakia (Slovak Republic))|2600981588
+Santander (Colombia)|3409252010
+Morelos (Mexico)|1841918927
+Hidalgo (Mexico)|3859803976
+Benguet (Philippines)|1317863145
+Pingtung County (Taiwan region)|3181173830
+Misamis Oriental (Philippines)|1520859138
+Valencia (Spain)|1839497730
+Wilayah Persekutuan Kuala Lumpur (Malaysia)|415284590
+Shanghai Shi (China)|3820300862
+Saint John (Antigua and Barbuda)|3264926474
+El Callao (Peru)|3854264519
+San Jose De Ocoa (Dominican Republic)|4116412202
+Nayarit (Mexico)|2452535699
+Norte De Santander (Colombia)|3638359363
+Istanbul (Turkey)|126745086
+Riga (Latvia)|1785115678
+Jeju-Teukbyeoljachido (South Korea)|3308525161
+Venezuela (Venezuela)|2625285013
+Harjumaa (Estonia)|4128483780
+Israel (Israel)|312066197
+Kyiv (Ukraine)|1685795190
+Nairobi City (Kenya)|159016032
+Managua (Nicaragua)|1591933405
+Poland (Poland)|1108609108
+Australian Capital Territory (Australia)|719942850
+Arequipa (Peru)|3453182087
+Niedersachsen (Germany)|3116012284
+Hauts-De-France (France)|3492698018
+Kingston (Jamaica)|1206622586
+Occitanie (France)|1834937716
+Grand-Est (France)|749659860
+Federacija Bosna I Hercegovina (Bosnia and Herzegovina)|2138154419
+Leyte (Philippines)|3375726735
+Baden-Wurttemberg (Germany)|272753028
+Panama Oeste (Panama)|854517287
+Noord-Brabant (Netherlands)|1053658224
+Chiapas (Mexico)|3793864836
+Slaskie (Poland)|219394604
+Minas Gerais (Brazil)|2092231261
+Quezon (Philippines)|1211954572
+Abuja (Fct) (Nigeria)|3187014422
+Viken (Norway)|1815034629
+Tamil Nadu (India)|3079659377
+Gujarat (India)|2007736383
+Ica (Peru)|3035708664
+Centar (Macedonia)|2810518906
+La Libertad (Peru)|2762549540
+Junin (Peru)|395506729
+Tabasco (Mexico)|2120269623
+Amazonas (Brazil)|3256362313
+Araucania (Chile)|1212121134
+Ha Noi (Viet Nam)|2363422688
+Jakarta Raya (Indonesia)|3927085678
+Piura (Peru)|2293958612
+Punjab (Pakistan)|1493528411
+Roraima (Brazil)|2794820801
+Karnataka (India)|3305405804
+Elias Pina (Dominican Republic)|763110940
+Zhejiang Sheng (China)|692204758
+Hsinchu City (Taiwan region)|1127141712
+Tarlac (Philippines)|4198344271
+Western Cape (South Africa)|3021282009
+Risaralda (Colombia)|1384665762
+Zamboanga Del Sur (Philippines)|384138592
+Manchester (United Kingdom)|470202377
+Chiayi City (Taiwan region)|3595623913
+Hadarom (Israel)|130872168
+Manabi (Ecuador)|86210987
+Phnom Penh (Cambodia)|3459526138
+Provence-Alpes-Cote-D'azur (France)|2637759739
+Ogun (Nigeria)|1707416399
+Cordoba (Colombia)|3826286409
+Greater Wellington (New Zealand)|3646184479
+Malopolskie (Poland)|4289823360
+Bukidnon (Philippines)|4269472094
+Uttar Pradesh (India)|4104060624
+Dhaka (Bangladesh)|2990924934
+Guatemala (Guatemala)|2903456959
+Dubai (United Arab Emirates)|3439592040
+Moskva (Russian Federation)|1218844435
+Dolnoslaskie (Poland)|2660823800
+Alicante (Spain)|3986480158
+Edinburgh (United Kingdom)|3710006249
+Auvergne-Rhone-Alpes (France)|2513459023
+Antwerpen (Belgium)|733074011
+Independencia (Dominican Republic)|2452368712
+Cardiff (United Kingdom)|791815149
+Kentriki Makedonia (Greece)|2966355741
+Vastra Gotalands Lan (Sweden)|330554568
+Malaga (Spain)|3762662813
+Miaoli County (Taiwan region)|1243193806
+Netherlands (Netherlands)|831229380
+Nouvelle-Aquitaine (France)|1305133467
+Italy (Italy)|2566535116
+Wielkopolskie (Poland)|2157969938
+Azuay (Ecuador)|659645654
+Pedernales (Dominican Republic)|2983468660
+Oaxaca (Mexico)|3091070036
+Ljubljana (Slovenia)|2406199062
+Santa Cruz De Tenerife (Spain)|105516849
+China (China)|1411602313
+Juznobacki Okrug (Serbia)|2003025489
+Keelung City (Taiwan region)|1707335388
+Davao Del Norte (Philippines)|1132104651
+Zacatecas (Mexico)|425787075
+Islington (United Kingdom)|3011543577
+Colima (Mexico)|995044251
+Tarapaca (Chile)|1912128635
+Bohol (Philippines)|797059897
+Finland (Finland)|2923597287
+Cesar (Colombia)|2270445739
+Las Palmas (Spain)|1683969919
+Leeds (United Kingdom)|4101014742
+Jiangsu Sheng (China)|156695674
+Maguindanao Del Norte (Philippines)|1006269923
+Croydon (United Kingdom)|1485880501
+Tower Hamlets (United Kingdom)|3606586351
+Manawatu-Whanganui (New Zealand)|4051110799
+Yilan County (Taiwan region)|1923488950
+Denmark (Denmark)|1286932293
+Podlaskie (Poland)|2088852377
+Canterbury (New Zealand)|2532660862
+Yunlin County (Taiwan region)|2616819229
+Tbilisi (Georgia)|236099447
+Dnipropetrovs'ka Oblast' (Ukraine)|2860291605
+Skane Lan (Sweden)|439845466
+Lodzkie (Poland)|2148248469
+Pomorskie (Poland)|2895577039
+Atacama (Chile)|4073348956
+Chile (Chile)|2141739
+Hazafon (Israel)|1758384406
+Cordoba (Argentina)|2096765492
+Telangana (India)|929156774
+Zambales (Philippines)|2216525295
+Amazonas (Venezuela)|2412095185
+Isabela (Philippines)|4007716727
+Negros Oriental (Philippines)|2277426142
+Macau (Macau SAR of China)|3193558444
+Abidjan (Cote D Ivoire)|3487362946
+Selangor (Malaysia)|2715547365
+Cagayan (Philippines)|1550420485
+Dependencias Federales (Venezuela)|2293492342
+Nuble (Chile)|2195415358
+Syddanmark (Denmark)|2263328964
+South West (Singapore)|2980217596
+Chiayi County (Taiwan region)|616731587
+Timis (Romania)|3628751258
+Cocle (Panama)|1997330229
+Sevilla (Spain)|1295417211
+Arica Y Parinacota (Chile)|3109244441
+Tarragona (Spain)|1274709386
+Asturias (Spain)|1943021942
+Alajuela (Costa Rica)|3939641577
+Setubal (Portugal)|4276820232
+Al Qahirah (Egypt)|1164476918
+Pays-De-La-Loire (France)|1016109013
+Japan (Japan)|2564574320
+Ancash (Peru)|2261472922
+Toledo (Spain)|3035906255
+Hertfordshire (United Kingdom)|2846917737
+North Cotabato (Philippines)|209198622
+La Union (Philippines)|2561078817
+La Coruna (Spain)|3058457455
+Cuzco (Peru)|2498555765
+Hamburg (Germany)|2028891927
+Horad Minsk (Belarus)|1911396141
+Kauno (Lithuania)|3090960050
+Chiriqui (Panama)|1503236625
+Bahia (Brazil)|1908784013
+Mato Grosso (Brazil)|2656079594
+Campeche (Mexico)|3928018910
+Puno (Peru)|3854329259
+Sucre (Colombia)|1294405129
+Sindh - South (Pakistan)|2150605636
+Presovsky Kraj (Slovakia (Slovak Republic))|1594849527
+Pernambuco (Brazil)|778665681
+Agusan Del Norte (Philippines)|3628198521
+Nantou County (Taiwan region)|1682131296
+Camarines Sur (Philippines)|3608984511
+Tolima (Colombia)|49789493
+Lefkosia (Cyprus)|3272636990
+Montevideo (Uruguay)|1377624621
+Los Rios (Chile)|1211743610
+Central (Uganda)|1024642557
+Midtjylland (Denmark)|3619093355
+Puntarenas (Costa Rica)|3113391587
+Schleswig-Holstein (Germany)|3682047080
+Boyaca (Colombia)|2464415799
+North East (Singapore)|531099349
+Ulaanbaatar (Mongolia)|3595154099
+West Grand Bahama (Bahamas)|1192595868
+Hofudborgarsvaedi (Iceland)|1450375420
+Limburg (Netherlands)|2436764946
+Turks and Caicos Islands (Turks and Caicos Islands)|2095027231
+Albay (Philippines)|3431538826
+Zamboanga Del Norte (Philippines)|70523060
+Tasmania (Australia)|798942728
+Birmingham (United Kingdom)|2760606963
+Colon (Panama)|3236815160
+Oyo (Nigeria)|2155309015
+Waikato (New Zealand)|3176311920
+Capiz (Philippines)|2407648042
+Kwazulu-Natal (South Africa)|2482306416
+Quindio (Colombia)|828338470
+Pontevedra (Spain)|2391689103
+Hefa (Israel)|4110991261
+Aklan (Philippines)|200286550
+Dar-Es-Salaam (Tanzania)|4158429454
+Harare (Zimbabwe)|671309691
+Rivers (Nigeria)|3394741570
+Osun (Nigeria)|2858209271
+Pirkanmaa (Finland)|447972856
+Sjaelland (Denmark)|1577225749
+Murcia (Spain)|3796014181
+Exuma (Bahamas)|412259169
+Primorsko-Goranska (Croatia)|1897500595
+Lanao Del Norte (Philippines)|2908738883
+Hounslow (United Kingdom)|3131240184
+Rheinland-Pfalz (Germany)|639877295
+Kent (United Kingdom)|1765183349
+Southwest Finland (Finland)|3625871244
+Podkarpackie (Poland)|2183491299
+Lambayeque (Peru)|876156962
+Santa Fe (Argentina)|3708315731
+Palawan (Philippines)|1299887154
+Ostergotlands Lan (Sweden)|506001340
+Aveiro (Portugal)|204272996
+Splitsko-Dalmatinska (Croatia)|4209713207
+Gelderland (Netherlands)|2396083213
+Dong Nai (Viet Nam)|796307710
+West Bengal (India)|3577821683
+Heredia (Costa Rica)|3108245195
+Belize (Belize)|3066299524
+Osaka (Japan)|3394691526
+Ciudad Real (Spain)|1175905602
+Girona (Spain)|235244148
+Jawa Barat (Indonesia)|659618540
+Ceara (Brazil)|1216076371
+Imbabura (Ecuador)|503405259
+Liverpool (United Kingdom)|2124958912
+Nitriansky Kraj (Slovakia (Slovak Republic))|921464990
+Islas Baleares (Spain)|2864752125
+South East (Singapore)|2056547212
+Pest (Hungary)|409519023
+Tlaxcala (Mexico)|3687309985
+Los Rios (Ecuador)|1251665051
+El Oro (Ecuador)|405491260
+Caldas (Colombia)|995066473
+Zaragoza (Spain)|3082123049
+Stredocesky Kraj (Czech Republic)|1881761613
+Jawa Timur (Indonesia)|3027199015
+Plovdiv (Bulgaria)|2681523226
+Northwest Territories (Canada)|983090028
+Northern Ostrobothnia (Finland)|1756176424
+Oost-Vlaanderen (Belgium)|1591133104
+Hualien County (Taiwan region)|3987742548
+Demerara-Mahaica (Guyana)|1798466620
+Distrito Federal (Brazil)|2025803828
+Tirane (Albania)|1563775458
+Kerala (India)|3168353518
+Unspecified|0
+Greenwich (United Kingdom)|3689142537
+Westminster (United Kingdom)|437511427
+Cuenca (Spain)|835092611
+Canada (Canada)|2379100339
+Saint Michael (Barbados)|3532007202
+Republika Srpska (Bosnia and Herzegovina)|1419364033
+Centre-Val De Loire (France)|2302350752
+Beirut (Lebanon)|450054113
+Kanagawa (Japan)|3834372194
+Barnet (United Kingdom)|321977011
+Fujian Sheng (China)|661152946
+Bataan (Philippines)|4293248491
+Utrecht (Netherlands)|141805716
+Haryana (India)|1266051915
+Osjecko-Baranjska (Croatia)|2278479009
+Podgorica (Montenegro)|1623805668
+Madhya Pradesh (India)|1533465309
+Saarland (Germany)|3698164727
+Glasgow City (United Kingdom)|546139133
+Kujawsko-Pomorskie (Poland)|747119207
+Norrbottens Lan (Sweden)|1244913455
+Ilocos Sur (Philippines)|974574067
+Sorsogon (Philippines)|278306816
+Bretagne (France)|3825538945
+Bali (Indonesia)|541480859
+Shanxi Sheng (China)|3729943868
+Guam (Guam)|1182855459
+Kiambu (Kenya)|1134274372
+West-Vlaanderen (Belgium)|235155599
+Grodnenskaja Oblast' (Belarus)|269441796
+Bahamas (Bahamas)|1965440524
+Overijssel (Netherlands)|2173233145
+India (India)|4087804530
+La Paz (Bolivia)|2870895838
+San Salvador (El Salvador)|3223875733
+Ayacucho (Peru)|1597170271
+Kriti (Greece)|1363646191
+Sichuan Sheng (China)|1155084454
+Braga (Portugal)|3361924481
+Lubelskie (Poland)|4008041029
+Bizkaia (Spain)|1414599560
+Slovenia (Slovenia)|888652262
+Jerusalem (Israel)|287426053
+Shandong Sheng (China)|3164382716
+Surrey (United Kingdom)|1248901556
+Cayman Islands (Cayman Islands)|1851194918
+Essex (United Kingdom)|1939316699
+Andhra Pradesh (India)|239741449
+Punjab (India)|779646872
+Chimborazo (Ecuador)|2689398229
+Bristol (United Kingdom)|1139626669
+Bay of Plenty (New Zealand)|2157854076
+Nizhegorodskaya Oblast (Russian Federation)|1764019626
+Edo (Nigeria)|3951332392
+Delta (Nigeria)|1773746899
+Ad Dawhah (Qatar)|1935388162
+Granada (Spain)|2457979405
+Napoli (Italy)|3054409012
+Central Abaco (Bahamas)|2879644098
+Cadiz (Spain)|3373605113
+Rajasthan (India)|3038955750
+Leiria (Portugal)|163107941
+Peloponnisos (Greece)|3522895873
+Casablanca-Settat (Morocco)|440360375
+Meta (Colombia)|1542840667
+Davao Oriental (Philippines)|182394186
+Goias (Brazil)|3806627449
+Gipuzkoa (Spain)|3928172160
+Cauca (Colombia)|3445560056
+Surigao Del Sur (Philippines)|3189453874
+Wandsworth (United Kingdom)|4242480322
+Jihomoravsky Kraj (Czech Republic)|1149446609
+Huancavelica (Peru)|1809467771
+Leon (Spain)|3298901812
+Putumayo (Colombia)|2788780387
+Al Jizah (Egypt)|3370170751
+Okinawa (Japan)|3551511255
+Yukon Territory (Canada)|284073427
+Hampshire (United Kingdom)|3927022508
+Almeria (Spain)|3659461467
+Vestland (Norway)|1973689411
+Ilocos Norte (Philippines)|3183087599
+Enfield (United Kingdom)|2096143134
+Bourgogne-Franche-Comte (France)|132075805
+Misamis Occidental (Philippines)|3683543381
+Bagmati (Nepal)|696502385
+Hunan Sheng (China)|1818116756
+Notio Aigaio (Greece)|3050505230
+Varna (Bulgaria)|3211637886
+Northumberland (United Kingdom)|2217490809
+Brandenburg (Germany)|4232749071
+Tacna (Peru)|842064980
+Moskovskaya Oblast (Russian Federation)|2010813782
+Zagrebacka (Croatia)|729539100
+Valladolid (Spain)|1281929190
+Free State (South Africa)|4246943819
+Bexley (United Kingdom)|2845368551
+Agusan Del Sur (Philippines)|3584847282
+Cork (Ireland)|2944168447
+Central Finland (Finland)|4212435918
+Tungurahua (Ecuador)|3568584587
+Nisavski Okrug (Serbia)|2175797931
+Baki (Azerbaijan)|4153161060
+Southwark (United Kingdom)|2415895003
+Hebei Sheng (China)|1376353690
+Ashanti (Ghana)|4074312087
+Vasterbottens Lan (Sweden)|1277363592
+Haringey (United Kingdom)|2302852369
+Eastern Cape (South Africa)|3086222069
+Dytiki Ellada (Greece)|420055366
+Luxemburg (Luxembourg)|1352572906
+Anambra (Nigeria)|3205527255
+Kosicky Kraj (Slovakia (Slovak Republic))|4051348715
+Kyivs'ka Oblast' (Ukraine)|3061379652
+Western Samar (Philippines)|2845243009
+Lusaka (Zambia)|3025116113
+Mindoro Oriental (Philippines)|651842560
+Friesland (Netherlands)|385632721
+Moravskoslezsky Kraj (Czech Republic)|712257818
+Avila (Spain)|3682264737
+Sheffield (United Kingdom)|865744722
+Songkhla (Thailand)|3786493356
+Taitung County (Taiwan region)|1680816009
+Nueva Vizcaya (Philippines)|1108670936
+Chiang Mai (Thailand)|3014272788
+Chhattisgarh (India)|1436379384
+Antique (Philippines)|3403837426
+Chaguanas (Trinidad and Tobago)|3194393245
+Kaduna (Nigeria)|3842117120
+Torino (Italy)|3763738937
+Zachodniopomorskie (Poland)|1278548920
+Belfast (United Kingdom)|929798225
+Brazil (Brazil)|574743004
+Johor (Malaysia)|3954212951
+Guanacaste (Costa Rica)|1263751997
+Anhui Sheng (China)|2250000045
+Jiangxi Sheng (China)|3236238170
+Cordoba (Spain)|2536553822
+Moquegua (Peru)|4039981176
+Jaen (Spain)|1841140650
+Addis Ababa (Ethiopia)|1317362394
+Norway (Norway)|1849096087
+San Martin (Peru)|3275815343
+Oxfordshire (United Kingdom)|4094408426
+Veraguas (Panama)|2720046422
+Lapland (Finland)|982922028
+Hubei Sheng (China)|3796468911
+Niederosterreich (Austria)|218023860
+Ealing (United Kingdom)|2664467554
+Castellon (Spain)|3724589325
+Cantabria (Spain)|3580723689
+Bern (Switzerland)|3567413256
+Istarska (Croatia)|2126795803
+Trenciansky Kraj (Slovakia (Slovak Republic))|3439183939
+Klaipedos (Lithuania)|1739146893
+Ostrobothnia (Finland)|2835293703
+West Sussex (United Kingdom)|3107669313
+Galway (Ireland)|3710718461
+Mato Grosso Do Sul (Brazil)|4040357592
+Surigao Del Norte (Philippines)|2743678114
+Paramaribo (Suriname)|246301566
+Sachsen-Anhalt (Germany)|2848860020
+Viet Nam (Viet Nam)|128859216
+Normandie (France)|3187747893
+Lancashire (United Kingdom)|1700590880
+Huila (Colombia)|862933979
+Swietokrzyskie (Poland)|1949461192
+Trnavsky Kraj (Slovakia (Slovak Republic))|248269489
+Zilinsky Kraj (Slovakia (Slovak Republic))|4112144218
+Bradford (United Kingdom)|880502475
+Saint George (Antigua and Barbuda)|1782337783
+Newham (United Kingdom)|2605498382
+Cajamarca (Peru)|1055692990
+North West (Singapore)|967221846
+Meath (Ireland)|903533778
+Hillingdon (United Kingdom)|4060811638
+Ouest (Haiti)|3847852564
+Vaud (Switzerland)|3455407958
+Kwara (Nigeria)|1781010207
+Khabarovskiy Kray (Russian Federation)|1930952064
+Loja (Ecuador)|3591317876
+Da Nang (Viet Nam)|3420395744
+Kano (Nigeria)|3395272533
+Albacete (Spain)|2279886687
+National Capital District (Papua New Guinea)|3093615049
+Hainaut (Belgium)|3304727444
+Leicester (United Kingdom)|4192985541
+Thessalia (Greece)|258964348
+Northern Savonia (Finland)|3098731483
+Sultan Kudarat (Philippines)|3768485468
+Brent (United Kingdom)|4182739936
+Enugu (Nigeria)|3776313264
+Centre (Cameroon)|3249663235
+Baghdad (Iraq)|2253512913
+Chon Buri (Thailand)|2823162667
+Tunapuna-Piarco (Trinidad and Tobago)|591979977
+Santo Domingo De Los Tsachilas (Ecuador)|2043179845
+Saint Catherine (Jamaica)|3939774755
+Faro (Portugal)|3425479939
+Henan Sheng (China)|541588721
+Sterea Ellada (Greece)|4261339682
+North Karelia (Finland)|86911827
+Martinique (Martinique)|1256034849
+Vlaams Brabant (Belgium)|1988655631
+Santa Cruz (Bolivia)|3386907624
+Sisacko-Moslavacka (Croatia)|2040846443
+Santa Elena (Ecuador)|4089128401
+Nonthaburi (Thailand)|2747302668
+Otago (New Zealand)|4144815276
+Bihar (India)|755068180
+Vestfold Og Telemark (Norway)|581328001
+Guadalajara (Spain)|2067547852
+Staffordshire (United Kingdom)|1834830271
+Thuringen (Germany)|2555274784
+Siauliu (Lithuania)|3141576525
+Isle of Man (Isle of Man)|3558218325
+Cartago (Costa Rica)|1004160965
+Ondo (Nigeria)|4189793850
+Norfolk (United Kingdom)|3927642411
+South Karelia (Finland)|2870548379
+Nordjylland (Denmark)|1556183920
+Saint Kitts (Saint Kitts and Nevis)|7275281
+Kandaal (Cambodia)|2762658896
+Espirito Santo (Brazil)|2340147996
+Cortes (Honduras)|391264824
+Varazdinska (Croatia)|3760010635
+Kinshasa (Democratic Republic of The Congo)|2407932276
+Imo (Nigeria)|870157134
+Santarem (Portugal)|1594711006
+Panevezio (Lithuania)|396354604
+Stoke-On-Trent (United Kingdom)|3261996611
+Cochabamba (Bolivia)|1778025613
+Badajoz (Spain)|3364369785
+Regiao Autonoma Da Madeira (Portugal)|2447011234
+Samut Prakan (Thailand)|2850101727
+Paijanne Tavastia (Finland)|2409476462
+Masbate (Philippines)|1448209397
+Huanuco (Peru)|2486180985
+Constanta (Romania)|3127875862
+Warminsko-Mazurskie (Poland)|242249535
+Khulna (Bangladesh)|3865985656
+Zamboanga Sibugay (Philippines)|1260250228
+Eilean Siar (United Kingdom)|1213106559
+Oberosterreich (Austria)|1140492174
+Plzensky Kraj (Czech Republic)|69858583
+Banskobystricky Kraj (Slovakia (Slovak Republic))|1007284859
+Neuquen (Argentina)|2327904603
+Indonesia (Indonesia)|404290698
+Suffolk (United Kingdom)|3532238955
+Coimbra (Portugal)|620560302
+Para (Brazil)|820272431
+New Zealand (New Zealand)|2032601308
+Esmeraldas (Ecuador)|4002408916
+Navarra (Spain)|1992673761
+Buckinghamshire (United Kingdom)|2064796271
+Tunis (Tunisia)|1988547475
+Vientiane Prefecture (Lao Peoples Democratic Republic)|3470802149
+Burgas (Bulgaria)|1337101849
+Warwickshire (United Kingdom)|3549241360
+Mecklenburg-Vorpommern (Germany)|2909112503
+Nakuru (Kenya)|3735283918
+Trondelag (Norway)|1286153634
+Bournemouth Christchurch and Poole (United Kingdom)|3171695417
+Matagalpa (Nicaragua)|488494952
+Chittagong (Bangladesh)|3895093833
+Hallands Lan (Sweden)|1517619090
+Veszprem County (Hungary)|229673028
+Limburg (Belgium)|424202265
+Hammersmith and Fulham (United Kingdom)|2769189494
+Guangxi Zhuangzu Zizhiqu (China)|3613459124
+Sejong (South Korea)|1017727068
+Lubuskie (Poland)|941917619
+Lincolnshire (United Kingdom)|3091699732
+Kraj Vysocina (Czech Republic)|2272663031
+Sankt-Peterburg (Russian Federation)|1390519599
+Lewisham (United Kingdom)|551684205
+South Eleuthera (Bahamas)|1441788428
+Chinandega (Nicaragua)|378066620
+Sumadijski Okrug (Serbia)|3372884486
+Devon (United Kingdom)|492108834
+Pathum Thani (Thailand)|547323261
+Al Kuwayt (Kuwait)|304537247
+Eastern (Ghana)|3172588529
+Narino (Colombia)|662262906
+Phuket (Thailand)|4268284139
+Chisinau (Moldova)|3760080139
+Kharkivs'ka Oblast' (Ukraine)|1602496860
+Msida (Malta)|219732921
+Dong Thap (Viet Nam)|102336176
+Zadarska (Croatia)|2047475363
+Yerevan (Armenia)|3697121312
+Bromley (United Kingdom)|3840214952
+Cotopaxi (Ecuador)|2641502258
+Amman (Jordan)|1790322362
+Flevoland (Netherlands)|33223995
+Plaines Wilhems (Mauritius)|1683339207
+Anguilla (Anguilla)|3529179511
+Raski Okrug (Serbia)|3875379924
+Compostela Valley (Philippines)|1916610452
+Olancho (Honduras)|4119931482
+Magallanes (Chile)|3436475229
+Littoral (Cameroon)|3198378919
+Ionia Nisia (Greece)|22126716
+East Sussex (United Kingdom)|1591420021
+Palencia (Spain)|1353995606
+Nottinghamshire (United Kingdom)|775612625
+Burgos (Spain)|3455613038
+Luhans'ka Oblast' (Ukraine)|1807539385
+Kralovehradecky Kraj (Czech Republic)|510226236
+Steiermark (Austria)|139330831
+Dakar (Senegal)|451373812
+Huelva (Spain)|441599492
+Merton (United Kingdom)|3868139016
+Cluj (Romania)|1887471623
+Alava (Spain)|879217663
+Niger (Nigeria)|1647696729
+Apurimac (Peru)|1715948846
+Caceres (Spain)|672656048
+Leicestershire (United Kingdom)|259175173
+Bulgaria (Bulgaria)|2360367490
+Pakistan (Pakistan)|2054978795
+San Juan-Laventille (Trinidad and Tobago)|351880331
+Orense (Spain)|1237912323
+Pahang (Malaysia)|2684285946
+Lambeth (United Kingdom)|3228213245
+Ar Rayyan (Qatar)|952871371
+Pasco (Peru)|1103174981
+Mpumalanga (South Africa)|75109672
+Gyor-Moson-Sopron (Hungary)|4115891332
+Hope Town (Bahamas)|2274571082
+Bocas Del Toro (Panama)|3945330067
+Vastmanlands Lan (Sweden)|1032411815
+Liberecky Kraj (Czech Republic)|2697362758
+Central (Paraguay)|16976315
+Port of Spain (Trinidad and Tobago)|1559951821
+Aurora (Philippines)|3362808904
+Penghu County (Taiwan region)|3657643982
+Derbyshire (United Kingdom)|818237365
+Liege (Belgium)|3534947508
+Verona (Italy)|2728354023
+Krasnoyarskiy Kray (Russian Federation)|2279830049
+Nottingham (United Kingdom)|3958994890
+L'vivs'ka Oblast' (Ukraine)|2029826341
+Couva-Tabaquite-Talparo (Trinidad and Tobago)|3568748577
+Sliema (Malta)|3428091100
+La Libertad (El Salvador)|1048805545
+Loreto (Peru)|1721855198
+Kildare (Ireland)|4259271261
+Cambridgeshire (United Kingdom)|2997636610
+Guimaras (Philippines)|3506742597
+Coventry (United Kingdom)|1724446841
+Pardubicky Kraj (Czech Republic)|3009017756
+Teruel (Spain)|375421193
+Assam (India)|2674997524
+Limpopo (South Africa)|3117798072
+Kogi (Nigeria)|3644958556
+Hawkes Bay (New Zealand)|265552321
+Jihocesky Kraj (Czech Republic)|1976078066
+Diego Martin (Trinidad and Tobago)|1179391374
+Camarines Norte (Philippines)|1232109340
+Ustecky Kraj (Czech Republic)|2360969231
+Saint James (Jamaica)|3672464717
+Karnten (Austria)|3998415056
+Gibraltar (Gibraltar)|2088458937
+Lerida (Spain)|3115762395
+Bergamo (Italy)|17542705
+Jonkopings Lan (Sweden)|4018786700
+Kymenlaakso (Finland)|448915598
+Opolskie (Poland)|1409707731
+Orebro Lan (Sweden)|2797881868
+Saitama (Japan)|1400475944
+Sarawak (Malaysia)|1345217302
+Lanao Del Sur (Philippines)|2194891102
+Salamanca (Spain)|607040056
+Prahova (Romania)|2512049601
+Olomoucky Kraj (Czech Republic)|2137914154
+Lugo (Spain)|854918031
+Gloucestershire (United Kingdom)|4050039089
+Tavastia Proper (Finland)|139247563
+Nigeria (Nigeria)|3327457999
+North Yorkshire (United Kingdom)|3323151315
+Southern Leyte (Philippines)|4191240111
+Bari (Italy)|1885810884
+Kronobergs Lan (Sweden)|539995123
+Brestskaja Oblast' (Belarus)|3467901885
+Chernivets'ka Oblast' (Ukraine)|4154456377
+Cornwall (United Kingdom)|1516264804
+Uppsala Lan (Sweden)|42269739
+Mongolia (Mongolia)|3585962783
+East Grand Bahama (Bahamas)|3455059069
+San Giljan (Malta)|1548723060
+Hackney (United Kingdom)|1265567825
+Eastern Samar (Philippines)|3734494745
+Taiwan (Taiwan region)|1126277671
+Vasternorrlands Lan (Sweden)|2341937279
+Ekiti (Nigeria)|4123956754
+Tirol (Austria)|1533897562
+Berry Islands (Bahamas)|248520173
+Zaporiz'ka Oblast' (Ukraine)|3229023743
+Satakunta (Finland)|21550515
+Firenze (Italy)|319513943
+Akwa Ibom (Nigeria)|40731880
+Juznobanatski Okrug (Serbia)|2465739172
+Drenthe (Netherlands)|3848845076
+Herrera (Panama)|1326001637
+Mahaica-Berbice (Guyana)|3142893339
+Innlandet (Norway)|2954815396
+North Andros (Bahamas)|1735925332
+Lemesos (Cyprus)|2874420395
+Can Tho (Viet Nam)|947464785
+Saint Andrew (Jamaica)|3613529011
+North-West (South Africa)|3487757840
+Geneve (Switzerland)|811266240
+Anatoliki Makedonia Kai Thraki (Greece)|108097577
+Mont-Liban (Lebanon)|3568447454
+Kensington and Chelsea (United Kingdom)|2339383400
+Richmond Upon Thames (United Kingdom)|2939664513
+Aichi (Japan)|3782559125
+Nunavut (Canada)|190483381
+Black Point (Bahamas)|203361770
+Southampton (United Kingdom)|2010116845
+Barking and Dagenham (United Kingdom)|2265753029
+La Rioja (Spain)|3194551345
+Maranhao (Brazil)|1857816850
+Sodermanlands Lan (Sweden)|3866012765
+Harrow (United Kingdom)|3989747293
+Perak (Malaysia)|676083959
+Palermo (Italy)|3918969506
+Rabat-Sale-Kenitra (Morocco)|957074867
+Dalarnas Lan (Sweden)|1947397728
+Aargau (Switzerland)|396559504
+Mombasa (Kenya)|2567135992
+Brighton and Hove (United Kingdom)|3527502174
+Northern Samar (Philippines)|3205030184
+West Northamptonshire (United Kingdom)|2676996021
+Southern Savonia (Finland)|626280569
+Pulau Pinang (Malaysia)|4033639058
+Odisha (India)|2525092216
+Maribor (Slovenia)|629108268
+Sankt Gallen (Switzerland)|3252071702
+Sefton (United Kingdom)|2700369417
+Gavleborgs Lan (Sweden)|3115576284
+Sunderland (United Kingdom)|2432537849
+Abia (Nigeria)|3789501844
+Bologna (Italy)|3208775524
+Christ Church (Barbados)|1629907175
+Khanh Hoa (Viet Nam)|1560520513
+Oldham (United Kingdom)|2102023645
+Marlborough (New Zealand)|493465973
+Salzburg (Austria)|1264631369
+Kagawa (Japan)|4279796020
+Corrientes (Argentina)|3453669159
+Jinotega (Nicaragua)|478842509
+Kirklees (United Kingdom)|1807389425
+Agion Oros (Greece)|3526444769
+Trieste (Italy)|692168558
+Jablanicki Okrug (Serbia)|2354823257
+Limerick (Ireland)|1852445329
+South-East (Botswana)|2377863290
+Kerry (Ireland)|804197130
+Tobago (Trinidad and Tobago)|1010121706
+Paraiba (Brazil)|1574034195
+Newcastle Upon Tyne (United Kingdom)|2051970622
+Cumbria (United Kingdom)|1047667799
+Mindoro Occidental (Philippines)|352510471
+Birkirkara (Malta)|449312064
+Venezia (Italy)|2994228960
+Oromia (Ethiopia)|3905621070
+Central (Ghana)|3817089787
+Jawa Tengah (Indonesia)|1498718731
+Esteli (Nicaragua)|3501473
+Sarangani (Philippines)|1040469027
+Antrim and Newtownabbey (United Kingdom)|3673534297
+Waltham Forest (United Kingdom)|3654841804
+Chiba (Japan)|1443373643
+Portugal (Portugal)|3126386175
+Taranaki (New Zealand)|712305258
+Kedah (Malaysia)|1560749291
+Groningen (Netherlands)|3240807601
+Miskolc (Hungary)|520224362
+Veliko Tarnovo (Bulgaria)|2144494714
+Valletta (Malta)|3305669505
+Castries (Saint Lucia)|3565807644
+Odes 'ka Oblast' (Ukraine)|1295422809
+Rogaland (Norway)|1107075419
+Sremski Okrug (Serbia)|3752532048
+Worcestershire (United Kingdom)|270916664
+Alger (Algeria)|3625280787
+Samarskaya Oblast (Russian Federation)|2149184847
+Shropshire (United Kingdom)|3406957544
+Kweneng (Botswana)|3408646001
+Tartumaa (Estonia)|3769440521
+Severnobacki Okrug (Serbia)|3782553931
+Aberdeen City (United Kingdom)|3326559896
+Tipperary (Ireland)|830625549
+Vorarlberg (Austria)|166796850
+Ar Riyad (Saudi Arabia)|750593071
+Ipeiros (Greece)|827815455
+Derry City and Strabane (United Kingdom)|1982549975
+Kajiado (Kenya)|554740354
+Zlinsky Kraj (Czech Republic)|1927401374
+Montserrado (Liberia)|3517310126
+Nasarawa (Nigeria)|2563226566
+Northern Territory (Australia)|3083395816
+Aisen Del Gen Ibanez Del Campo (Chile)|741127550
+Leon (Nicaragua)|102200529
+Chongqing Shi (China)|3929752303
+Arbil (Iraq)|3517452970
+Wicklow (Ireland)|2824977448
+Ad Daqahliyah (Egypt)|1867296442
+Ireland (Ireland)|2936144439
+Uttarakhand (India)|3627661799
+Luton (United Kingdom)|3036103867
+Casanare (Colombia)|769653293
+Morobe (Papua New Guinea)|1172155937
+Tianjin Shi (China)|616299359
+Rondonia (Brazil)|565673253
+Southern Ostrobothnia (Finland)|1227651006
+Rajshahi (Bangladesh)|3077494413
+Kalmar Lan (Sweden)|3545902830
+Madre De Dios (Peru)|1398012422
+Wirral (United Kingdom)|3256995417
+Piaui (Brazil)|966565487
+Kelantan (Malaysia)|3810526427
+Kingston Upon Thames (United Kingdom)|2185592288
+Dubrovacko-Neretvanska (Croatia)|1758679226
+Redbridge (United Kingdom)|713697191
+Sumatera Utara (Indonesia)|697205693
+Mures (Romania)|3599315093
+Branicevski Okrug (Serbia)|2519551644
+Reading (United Kingdom)|1886738849
+Somerset (United Kingdom)|3105198027
+Canar (Ecuador)|486821372
+Machakos (Kenya)|3583075220
+Colombia (Colombia)|3169369689
+Wakefield (United Kingdom)|1002804068
+Jharkhand (India)|3291409248
+Saint Martin (Saint Martin)|2534650221
+Jujuy (Argentina)|2320455621
+Fukuoka (Japan)|4069514151
+Krasnodarskiy Kray (Russian Federation)|117356614
+Abu Dhabi (United Arab Emirates)|182984763
+Saint Ann (Jamaica)|1803657041
+Tetovo (Macedonia)|2638242711
+Fife (United Kingdom)|2156782568
+Hajdu-Bihar (Hungary)|2775286615
+Koprivnicko-Krizevacka (Croatia)|968660846
+Paphos (Cyprus)|77082190
+Borsod-Abauj-Zemplen (Hungary)|208863837
+Central Eleuthera (Bahamas)|196397642
+Podunavski Okrug (Serbia)|398561538
+North Northamptonshire (United Kingdom)|4064021418
+Belgium (Belgium)|22731149
+Cross River (Nigeria)|1287489222
+Varmlands Lan (Sweden)|190007401
+Ida-Virumaa (Estonia)|605068987
+Rasinski Okrug (Serbia)|2097120004
+Karlovarsky Kraj (Czech Republic)|2903861049
+Central Bedfordshire (United Kingdom)|1361910279
+Wigan (United Kingdom)|3286790044
+Shaanxi Sheng (China)|3289093857
+Ucayali (Peru)|4084865060
+Guernsey (Guernsey)|4181269670
+Harbour Island (Bahamas)|2701554716
+Valcea (Romania)|1982940313
+French Guiana (French Guiana)|3777728802
+Ville De Kigali (Rwanda)|1866225332
+Larnaca (Cyprus)|2016155068
+Masaya (Nicaragua)|2853331701
+Zamfara (Nigeria)|3351632063
+Salerno (Italy)|2310053429
+Zeeland (Netherlands)|386347371
+Tucuman (Argentina)|1021987912
+Jersey (Jersey)|2339659937
+Huesca (Spain)|4150363127
+Binh Duong (Viet Nam)|1293963531
+Asuncion (Paraguay)|1204460159
+Alagoas (Brazil)|3351240010
+Mendoza (Argentina)|276989009
+Abra (Philippines)|352524894
+Csongrad-Csanad (Hungary)|1571062466
+Amazonas (Peru)|2985456427
+Poltavs'ka Oblast' (Ukraine)|2659132119
+Limon (Costa Rica)|2204478393
+Jasz-Nagykun-Szolnok (Hungary)|347740311
+Brescia (Italy)|1031097204
+Terengganu (Malaysia)|110991263
+Dorset (United Kingdom)|828342343
+Buzau (Romania)|46881689
+Bimini (Bahamas)|3996540159
+Southend-On-Sea (United Kingdom)|3156039402
+Havering (United Kingdom)|2250326172
+More Og Romsdal (Norway)|2980189577
+Karlovacka (Croatia)|1046540787
+Maputo (Mozambique)|2135799791
+Kingston Upon Hull (United Kingdom)|740941747
+Centre (Burkina Faso)|2098857957
+Plymouth (United Kingdom)|647399071
+Rayong (Thailand)|3624438683
+Viseu (Portugal)|572704285
+Masqat (Oman)|332597903
+Middlesbrough (United Kingdom)|2526078644
+Wiltshire (United Kingdom)|3091610086
+Banten (Indonesia)|364572630
+Sutton (United Kingdom)|1345262534
+Sabah (Malaysia)|1293419762
+Hokkaido (Japan)|1131854465
+Basnahira Palata (Sri Lanka)|264338654
+Kien Giang (Viet Nam)|819042884
+Rio Negro (Argentina)|3473924703
+Rio Grande Do Norte (Brazil)|4052749630
+Tasman (New Zealand)|432903103
+Orellana (Ecuador)|1291657236
+Northland (New Zealand)|757256710
+Long Island (Bahamas)|532408358
+Luzern (Switzerland)|3365490301
+Debrecen (Hungary)|2358065220
+Agder (Norway)|3766313847
+Benue (Nigeria)|3272492007
+Minskaja Oblast' (Belarus)|912961280
+Greece (Greece)|1785738028
+Tashkent City (Uzbekistan)|3884608774
+Kyoto (Japan)|861934047
+Westmoreland (Jamaica)|1216328665
+South Lanarkshire (United Kingdom)|1834321939
+Uasin Gishu (Kenya)|1630375144
+Thailand (Thailand)|1759848259
+Bjelovarsko-Bilogorska (Croatia)|2890660228
+Khon Kaen (Thailand)|2172665602
+Hunedoara (Romania)|2730920806
+Thua Thien-Hue (Viet Nam)|1594904974
+Kinmen County (Taiwan region)|3609248458
+Kalinga-Apayso (Philippines)|1615046600
+Arauca (Colombia)|212420352
+Savannakhet (Lao Peoples Democratic Republic)|3720428909
+Macvanski Okrug (Serbia)|2399344088
+Zapadnobacki Okrug (Serbia)|1146676025
+Rivnens'ka Oblast' (Ukraine)|1133234914
+Louth (Ireland)|3475085825
+Surat Thani (Thailand)|3382363627
+Bolton (United Kingdom)|1053499803
+Regiao Autonoma Dos Acores (Portugal)|4195320948
+Vukovarsko-Srijemska (Croatia)|1099476953
+Al Wakrah (Qatar)|388379908
+Sacatepequez (Guatemala)|483886532
+Teramo (Italy)|2643335578
+Peru (Peru)|2433025984
+Siquijor (Philippines)|213855617
+Pazardzhik (Bulgaria)|3770270980
+Romania (Romania)|4049741451
+Liaoning Sheng (China)|620860032
+North Lanarkshire (United Kingdom)|225747311
+Iasi (Romania)|1198305011
+Los Santos (Panama)|584850399
+Cambodia (Cambodia)|4219027142
+Brodsko-Posavska (Croatia)|3854988166
+Genova (Italy)|3748669804
+North Somerset (United Kingdom)|2895600569
+Clare (Ireland)|1565119831
+Dytiki Makedonia (Greece)|268927665
+Slough (United Kingdom)|727400519
+Evora (Portugal)|1710404558
+Wolverhampton (United Kingdom)|3652132064
+Western (Ghana)|293921417
+Rivas (Nicaragua)|162508649
+Barbuda (Antigua and Barbuda)|1467706261
+Wexford (Ireland)|2063429515
+Heves (Hungary)|1409046686
+Kranj (Slovenia)|2976567358
+Sulawesi Selatan (Indonesia)|2710042875
+Miyagi (Japan)|4242753609
+Koper (Slovenia)|1617164337
+Krapinsko-Zagorska (Croatia)|3591499780
+Padova (Italy)|219709254
+Plateau (Nigeria)|4150986303
+Treviso (Italy)|1426855518
+Altayskiy Kray (Russian Federation)|2297147020
+Bar (Montenegro)|1179705142
+Durham (United Kingdom)|4214280188
+Entre Rios (Argentina)|1809740941
+Kolubarski Okrug (Serbia)|1295694774
+Biliran (Philippines)|83295615
+Tumbes (Peru)|406920300
+Ogres Novads (Latvia)|3061140213
+Tien Giang (Viet Nam)|385040205
+Ajaria (Georgia)|2805284884
+Bonaire (Bonaire/Sint Eustatius/Saba)|1595986994
+Sofia (Bulgaria)|2919043894
+Caserta (Italy)|3020708554
+Budva (Montenegro)|4140726918
+Udon Thani (Thailand)|3044868879
+Boaco (Nicaragua)|3472362557
+Sopron (Hungary)|1914814176
+Zlatiborski Okrug (Serbia)|61584603
+Melaka (Malaysia)|639716110
+Gateshead (United Kingdom)|1449503284
+Khyber Pakhtunkhwa (Pakistan)|2720210568
+Derby (United Kingdom)|2885834244
+Camiguin (Philippines)|2334190794
+Maguindanao Del Sur (Philippines)|3720041281
+Marrakech-Safi (Morocco)|3904928478
+Catanduanes (Philippines)|295862073
+Viana Do Castelo (Portugal)|2572382293
+Saint George (Dominica)|2222357035
+San Gwann (Malta)|1115718475
+Rangpur (Bangladesh)|3470743900
+York (United Kingdom)|2822912474
+Saint George (Grenada)|2425624672
+Sibensko-Kninska (Croatia)|3418266253
+Carchi (Ecuador)|4203217249
+Sandwell (United Kingdom)|3746513126
+Pomoravski Okrug (Serbia)|2327592950
+Kainuu (Finland)|333426486
+Hyogo (Japan)|3359465064
+Dudley (United Kingdom)|1420749697
+Szabolcs-Szatmar-Bereg (Hungary)|2237901006
+Bath and North East Somerset (United Kingdom)|3352656312
+Bremen (Germany)|3107784118
+Medway (United Kingdom)|3415079525
+Bac Ninh (Viet Nam)|1054301750
+Islamabad (Pakistan)|180527578
+Bolzano (Italy)|2631335999
+Manchester (Jamaica)|421459267
+Bashkortostan Respublika (Russian Federation)|2623498089
+Central (Botswana)|2271629483
+Modena (Italy)|2159134008
+Botosani (Romania)|1667305038
+Costa Caribe Norte (Nicaragua)|2169342956
+Yunnan Sheng (China)|1057286601
+Ilfov (Romania)|3548177591
+Morogoro (Tanzania)|3018140994
+Ifugao (Philippines)|263821205
+Stinga Nistrului (Moldova)|3964975197
+Djibouti (Djibouti)|2610401428
+Teleorman (Romania)|4228978873
+Portsmouth (United Kingdom)|1056732651
+Blackpool (United Kingdom)|1374485586
+Chernihivs'ka Oblast' (Ukraine)|1446558650
+Jammu and Kashmir (India)|4241289397
+Long An (Viet Nam)|758094630
+Mountain Province (Philippines)|3141502196
+Fejer (Hungary)|374184958
+Dodoma (Tanzania)|2547475924
+Sud-Ouest (Cameroon)|3216537903
+Kemerovskaya Oblast (Russian Federation)|800874590
+Saint Mary (Antigua and Barbuda)|2696458224
+Medimurska (Croatia)|2988803545
+Heilongjiang Sheng (China)|2493825019
+Cosenza (Italy)|2086898150
+Voreio Aigaio (Greece)|394577335
+Romblon (Philippines)|3475467210
+Celje (Slovenia)|3807224623
+Switzerland (Switzerland)|3880720716
+Braganca (Portugal)|1510541385
+Western Area (Sierra Leone)|3409576721
+Castelo Branco (Portugal)|2504155895
+Banjul (Gambia)|618084924
+Solihull (United Kingdom)|1754410258
+Misiones (Argentina)|22844757
+Nevis (Saint Kitts and Nevis)|326854045
+Catania (Italy)|412721135
+Stara Zagora (Bulgaria)|920982873
+Pastaza (Ecuador)|2757873375
+Permskiy Kray (Russian Federation)|499303930
+San Fernando (Trinidad and Tobago)|1665903882
+Blagoevgrad (Bulgaria)|3934262339
+Srednjebanatski Okrug (Serbia)|2589450363
+Isle of Wight (United Kingdom)|1673641701
+Fes-Meknes (Morocco)|1935506714
+Varese (Italy)|2132226216
+Clarendon (Jamaica)|981927647
+Negeri Sembilan (Malaysia)|3527630388
+Dushanbe (Tajikistan)|1395760194
+Bitola (Macedonia)|3836064134
+Bolivar (Ecuador)|2116738340
+Cuneo (Italy)|1639040014
+Segovia (Spain)|3524168858
+Vicenza (Italy)|11253706
+Soria (Spain)|264559070
+Troms Og Finnmark (Norway)|875477107
+Nakhon Pathom (Thailand)|1884668237
+Brasov (Romania)|3627719328
+Ecuador (Ecuador)|4178588683
+Walsall (United Kingdom)|852946906
+Waterford (Ireland)|4248380986
+Andorra La Vella (Andorra)|3764609099
+Rotherham (United Kingdom)|1832435754
+Bauchi (Nigeria)|3971419468
+Salford (United Kingdom)|1058868320
+Peterborough (United Kingdom)|84660821
+Ohrid (Macedonia)|874283192
+Hungary (Hungary)|3837459761
+Gostivar (Macedonia)|2125097169
+Hanover (Jamaica)|4134190783
+Sassari (Italy)|1000568202
+Brunei Muara (Brunei Darussalam)|2759573743
+Cheshire East (United Kingdom)|1953010431
+Canelones (Uruguay)|3291890897
+Kosovski Okrug (Serbia)|3209150005
+Quirino (Philippines)|442339211
+Namur (Belgium)|398212246
+Strumica (Macedonia)|2315849967
+Monza and Brianza (Italy)|405484266
+Rostovskaya Oblast (Russian Federation)|2581033109
+Haskovo (Bulgaria)|1818189840
+Serbia (Serbia)|2793408220
+Donegal (Ireland)|3947057350
+Zamora (Spain)|2073756971
+Windsor and Maidenhead (United Kingdom)|2717208837
+Yangon (Myanmar)|527991069
+Tov (Mongolia)|1707326726
+Neuchatel (Switzerland)|2790895069
+Lagunes (Cote D Ivoire)|1944771589
+Redcar and Cleveland (United Kingdom)|453260645
+Nelson (New Zealand)|4225171186
+Sverdlovskaya Oblast (Russian Federation)|2135579931
+Kumanovo (Macedonia)|1925422448
+Khmel'nyts'ka Oblast' (Ukraine)|4267108757
+Moravicki Okrug (Serbia)|1957058203
+Liepaja (Latvia)|1766208785
+Highland (United Kingdom)|497226470
+Czech Republic (Czech Republic)|2801914964
+Mayo (Ireland)|908797661
+Yambol (Bulgaria)|2740580687
+Preah Sihanouk (Cambodia)|785186066
+Brabant Wallon (Belgium)|1605088867
+Arima (Trinidad and Tobago)|617208297
+Sangre Grande (Trinidad and Tobago)|1806639214
+Liban-Nord (Lebanon)|4132100251
+Milton Keynes (United Kingdom)|3330594955
+Sergipe (Brazil)|381476735
+Cayo (Belize)|1084639688
+East Riding of Yorkshire (United Kingdom)|1471984386
+Haiti (Haiti)|3830042548
+West Lothian (United Kingdom)|2816907566
+Atlantida (Honduras)|1711208928
+Napo (Ecuador)|2991234980
+Swindon (United Kingdom)|3983074366
+St. Helens (United Kingdom)|3214605518
+Gotlands Lan (Sweden)|2601914695
+Littoral (Benin)|495221637
+Somogy (Hungary)|337916822
+Marinduque (Philippines)|2302582614
+South Gloucestershire (United Kingdom)|2542758653
+Chelyabinskaya Oblast (Russian Federation)|1209523140
+Maritime (Togo)|176912443
+Kilkenny (Ireland)|535229071
+Borski Okrug (Serbia)|3952134780
+Pcinjski Okrug (Serbia)|1369433850
+Chontales (Nicaragua)|2375943013
+Cheshire West and Chester (United Kingdom)|708589402
+Ngabe-Bugle (Panama)|2454668909
+Himachal Pradesh (India)|1990052002
+Copperbelt (Zambia)|977652776
+Mykolaivs'ka Oblast' (Ukraine)|1891564521
+Carlow (Ireland)|2273099032
+Katsina (Nigeria)|713706397
+Bacs-Kiskun (Hungary)|301504319
+Central Region (Malawi)|2773546151
+Morona-Santiago (Ecuador)|1629056731
+Banteay Mean Choay (Cambodia)|1182283515
+Basel-Stadt (Switzerland)|222033704
+Trento (Italy)|2011750940
+Central Ostrobothnia (Finland)|1247951227
+Comayagua (Honduras)|1515153245
+Slovakia (Slovak Republic) (Slovakia (Slovak Republic))|3198200191
+East Berbice-Corentyne (Guyana)|1983554423
+Mashonaland West (Zimbabwe)|1585486249
+Salta (Argentina)|1430113292
+Kilifi (Kenya)|2559819069
+Al Iskandariyah (Egypt)|2563195636
+Austria (Austria)|3615659898
+Salaj (Romania)|3660817082
+Primorskiy Kray (Russian Federation)|4141000678
+Swieqi (Malta)|4144287809
+Durres (Albania)|2417293093
+Stockport (United Kingdom)|3297600896
+Niigata (Japan)|797154200
+Souss-Massa (Morocco)|1235751808
+Parma (Italy)|2194427433
+Yogyakarta Jw (Indonesia)|2847702609
+Conwy (United Kingdom)|3911661118
+Jamtlands Lan (Sweden)|4104685581
+Pecs (Hungary)|385701351
+Latina (Italy)|3635907850
+Princes Town (Trinidad and Tobago)|1318703361
+Pirotski Okrug (Serbia)|3496486193
+Lam Dong (Viet Nam)|3561159224
+Tochigi (Japan)|2845626038
+Bedfordshire (United Kingdom)|2573897815
+Chaco (Argentina)|2462787592
+Northern Cape (South Africa)|4068122140
+Renfrewshire (United Kingdom)|445943517
+Barnsley (United Kingdom)|1556185204
+Tanger-Tetouan-Al Hoceima (Morocco)|2476156766
+Kamnik (Slovenia)|4158805697
+Saint Paul (Antigua and Barbuda)|725358394
+Kagoshima (Japan)|1453744735
+Nueva Segovia (Nicaragua)|2110082212
+Taranto (Italy)|1277267624
+Trafford (United Kingdom)|3241958187
+Rhondda (United Kingdom)|1863181233
+Dobrich (Bulgaria)|423821568
+Blackburn With Darwen (United Kingdom)|1607609789
+Zajecarski Okrug (Serbia)|2602721188
+Daugavpils (Latvia)|110566726
+Mid Ulster (United Kingdom)|1484165251
+Manzini (Swaziland)|1085750688
+Southland (New Zealand)|485462375
+Antananarivo (Madagascar)|1176122729
+L'oriental (Morocco)|1558317951
+Parnumaa (Estonia)|3983893907
+Suceava (Romania)|331354216
+Vila Real (Portugal)|856085219
+Koshi (Nepal)|991364218
+Ba Ria-Vung Tau (Viet Nam)|1249559008
+Laois (Ireland)|2653514992
+Szekesfehervar (Hungary)|2282217252
+Khomas (Namibia)|2753497858
+Bury (United Kingdom)|3469431567
+Hai Phong (Viet Nam)|3172259487
+Rochdale (United Kingdom)|426072356
+Nordland (Norway)|2729717029
+North Tyneside (United Kingdom)|3865536464
+Warrington (United Kingdom)|3099557256
+Borno (Nigeria)|2312213288
+Lisburn and Castlereagh (United Kingdom)|1527341605
+Congo (Congo)|2625228639
+Vinnyts'ka Oblast' (Ukraine)|3560475130
+Lecce (Italy)|620366025
+Nakhon Si Thammarat (Thailand)|3184005918
+Phra Nakhon Si Ayutthaya (Thailand)|2062862920
+Taurages (Lithuania)|276263461
+Kirovohrads'ka Oblast' (Ukraine)|532709404
+Doncaster (United Kingdom)|421406154
+Novara (Italy)|2171200357
+Ancona (Italy)|2900556722
+American Samoa (American Samoa)|3095242771
+Madonas Novads (Latvia)|1557791139
+Zamora-Chinchipe (Ecuador)|3457157799
+Nakhon Ratchasima (Thailand)|1151638626
+Licko-Senjska (Croatia)|557447531
+Cherkas'ka Oblast' (Ukraine)|269754702
+Krabi (Thailand)|477071124
+Kecskemet (Hungary)|932452106
+Chubut (Argentina)|2043602583
+Valais (Switzerland)|3333659267
+Chieti (Italy)|2028155485
+Thies (Senegal)|1711728201
+Male (Maldives)|1758528871
+Meru (Kenya)|2802288311
+Jilin Sheng (China)|2502916920
+Kisumu (Kenya)|3048349693
+Ticino (Switzerland)|2397463564
+Lithuania (Lithuania)|3024052659
+North Eleuthera (Bahamas)|575140755
+Granada (Nicaragua)|450161141
+Kvemo Kartli (Georgia)|949698416
+Lovech (Bulgaria)|1530653986
+Ajman (United Arab Emirates)|3090387381
+Dumfries and Galloway (United Kingdom)|3833405889
+Reggio Emilia (Italy)|2826567432
+Carazo (Nicaragua)|2776509452
+Western (Gambia)|4037395587
+Imperia (Italy)|1252118555
+Knowsley (United Kingdom)|1507848421
+Ards and North Down (United Kingdom)|4049547068
+Hung Yen (Viet Nam)|2541613784
+Chiang Rai (Thailand)|1184720109
+Adamawa (Nigeria)|583019513
+Costa Rica (Costa Rica)|2745707596
+Severnobanatski Okrug (Serbia)|727651286
+Nabeul (Tunisia)|2518973324
+Guadeloupe (Guadeloupe)|1937598175
+Perugia (Italy)|1606501238
+Ruse (Bulgaria)|1965034798
+Arezzo (Italy)|1383835297
+Shizuoka (Japan)|2377122603
+Hhohho (Swaziland)|2414260829
+Pavia (Italy)|3245725827
+Vitebskaja Oblast' (Belarus)|4006589745
+Yamaguchi (Japan)|3571021648
+Calderdale (United Kingdom)|731798434
+Trelawny (Jamaica)|835241102
+Nagano (Japan)|3664354292
+Arad (Romania)|3501360759
+Cremona (Italy)|314555695
+Westmeath (Ireland)|1838474458
+Antigua and Barbuda (Antigua and Barbuda)|3281528439
+Wanica (Suriname)|1454250898
+Pleven (Bulgaria)|2590534051
+Saint James (Barbados)|1140276066
+Southern Region (Malawi)|2144045680
+Amapa (Brazil)|2960407301
+Arusha (Tanzania)|266463366
+Ivano-Frankivs'ka Oblast' (Ukraine)|3442350139
+Dundee City (United Kingdom)|1752322862
+Latvia (Latvia)|1551716670
+Cagliari (Italy)|2420884991
+Livorno (Italy)|3316288235
+Pescara (Italy)|1694033994
+Hai Duong (Viet Nam)|591144024
+Volta (Ghana)|34899032
+Ebonyi (Nigeria)|2241840098
+San Pawl Il Bahar (Malta)|3889779032
+Dolj (Romania)|314675423
+Foggia (Italy)|1139735111
+Imereti (Georgia)|3208273526
+Komarom-Esztergom (Hungary)|3447354265
+Sucumbios (Ecuador)|1584195576
+Central Equatoria (South Sudan)|70670227
+Bono (Ghana)|675173215
+Eastern (Uganda)|2204497050
+Aberdeenshire (United Kingdom)|2709139767
+Darien (Panama)|3854114777
+Krsko (Slovenia)|931709900
+Mersin (Turkey)|2064604167
+Sylhet (Bangladesh)|1265238462
+Cavan (Ireland)|3267545324
+Pozesko-Slavonska (Croatia)|2724157844
+Argentina (Argentina)|3656450615
+Tolna (Hungary)|4156066420
+Arges (Romania)|862789590
+Saraburi (Thailand)|2620528947
+Samut Sakhon (Thailand)|2569202231
+Thurrock (United Kingdom)|3891723667
+Marupes Novads (Latvia)|3030061971
+Essequibo Islands-West Demera (Guyana)|3488749621
+Lumbini (Nepal)|3726595737
+Como (Italy)|3015403921
+Soc Trang (Viet Nam)|2923594985
+Fribourg (Switzerland)|2898979449
+Nyeri (Kenya)|3129213730
+Tameside (United Kingdom)|4217749826
+Bulawayo (Zimbabwe)|2077669212
+Stirling (United Kingdom)|2460436127
+Messina (Italy)|3129096817
+Nova Gorica (Slovenia)|2123327950
+Carmarthenshire (United Kingdom)|716961683
+North East Lincolnshire (United Kingdom)|3290129174
+Chachoengsao (Thailand)|2518219892
+Jelgava (Latvia)|2830819439
+Prachin Buri (Thailand)|1759120820
+Saint George (Saint Vincent and The Grenadines)|385330593
+Almaty (Kazakhstan)|3421403177
+Ukraine (Ukraine)|2997375694
+Sharjah (United Arab Emirates)|2144730002
+Offaly (Ireland)|3105242611
+North Lincolnshire (United Kingdom)|757114299
+Pisa (Italy)|4203964304
+Zakarpats'ka Oblast' (Ukraine)|2496544029
+Murang'a (Kenya)|3904101869
+Marijampoles (Lithuania)|1752566508
+Goa (India)|420517990
+Kyustendil (Bulgaria)|2278278651
+Bayelsa (Nigeria)|2950672226
+Izmir (Turkey)|2292423517
+Chandigarh (India)|1079689500
+Sudurland (Iceland)|2296651438
+Alto Parana (Paraguay)|827764120
+Western (Uganda)|2381554961
+Utenos (Lithuania)|3797759465
+Acre (Brazil)|3950867936
+Rezina (Moldova)|1492553006
+Mymensingh (Bangladesh)|425114129
+Saaremaa (Estonia)|2396490396
+Halton (United Kingdom)|2857967175
+Udine (Italy)|1877535093
+Graubunden (Switzerland)|114547042
+Saint George (Barbados)|815776872
+Antalya (Turkey)|2879511292
+Quang Nam (Viet Nam)|2100065067
+Central (Fiji)|3274227254
+Amazonas (Colombia)|529256443
+Manipur (India)|564280776
+Nei Mongol Zizhiqu (China)|147207566
+Ratchaburi (Thailand)|2046823662
+Mantova (Italy)|1983147932
+Central (Zambia)|1449418097
+Resen (Macedonia)|2533704723
+Galati (Romania)|1584187400
+Wokingham (United Kingdom)|1547593337
+Corse (France)|1104721599
+Gandaki (Nepal)|2947289651
+Sokoto (Nigeria)|2759064044
+Blekinge Lan (Sweden)|3984461327
+L'ariana (Tunisia)|929609510
+French Polynesia (French Polynesia)|3645472949
+Guaviare (Colombia)|4144218173
+Raplamaa (Estonia)|1907420930
+Suphan Buri (Thailand)|2761849660
+Nong Khai (Thailand)|471040201
+Flintshire (United Kingdom)|1978433231
+Alba (Romania)|1112805248
+Powys (United Kingdom)|702577814
+Binh Thuan (Viet Nam)|4080713502
+Pistoia (Italy)|389725223
+Thanh Hoa (Viet Nam)|1317137625
+Swansea (United Kingdom)|1806610016
+Armagh City Banbridge and Craigavon (United Kingdom)|39569094
+Costa Caribe Sur (Nicaragua)|825316758
+Al Basrah (Iraq)|1074891615
+Telford and Wrekin (United Kingdom)|2249106625
+Saint Thomas (Jamaica)|73181136
+Phangnga (Thailand)|1711437331
+Turkey (Turkey)|3006158616
+Narok (Kenya)|4134144442
+Alytaus (Lithuania)|967989420
+Coast (Tanzania)|673876568
+Kisii (Kenya)|2958698947
+Bracknell Forest (United Kingdom)|1406974024
+Baranya (Hungary)|1065968196
+Zala (Hungary)|516081977
+Mandalay (Myanmar)|589126136
+Mosta (Malta)|877341770
+Maramures (Romania)|3436081770
+Sligo (Ireland)|2556908414
+Laanemaa (Estonia)|3883806027
+Madhesh (Nepal)|3599680452
+Kericho (Kenya)|344286374
+South Africa (South Africa)|4119493455
+Isle of Anglesey (United Kingdom)|3851717516
+Novo Mesto (Slovenia)|586989846
+Ubon Ratchathani (Thailand)|456401484
+Bihor (Romania)|3205796024
+Nograd (Hungary)|3843134063
+Ravenna (Italy)|229463407
+Yamagata (Japan)|1953008226
+Zalaegerszeg (Hungary)|3519196692
+Ankara (Turkey)|3305030580
+Stockton-On-Tees (United Kingdom)|3174315490
+Ha Nam (Viet Nam)|2290661267
+Kotor (Montenegro)|3550697248
+Kalasin (Thailand)|2725265602
+Northern (Ghana)|1259631840
+Newry Mourne and Down (United Kingdom)|2587904949
+Artibonite (Haiti)|1242090930
+Upper Demerara-Berbice (Guyana)|2118861455
+Newport (United Kingdom)|480246745
+Atlantique (Benin)|3418560052
+Reunion (Reunion)|2256432343
+Chanthaburi (Thailand)|2814942182
+Neamt (Romania)|98177172
+Mashonaland East (Zimbabwe)|2891544135
+Bamako (Mali)|2910171366
+Basel-Landschaft (Switzerland)|628295130
+Jigawa (Nigeria)|3350252612
+Tocantins (Brazil)|174679010
+Bekes (Hungary)|1434065596
+Torbay (United Kingdom)|139920937
+Guizhou Sheng (China)|3849569100
+North Ayrshire (United Kingdom)|3612802022
+Siracusa (Italy)|3373540380
+Ouest (Cameroon)|2191111191
+Savona (Italy)|179037612
+Kurganskaya Oblast (Russian Federation)|2595698699
+Vinh Phuc (Viet Nam)|3447205354
+Northern (Papua New Guinea)|1570056793
+Balochistan (Pakistan)|2781626266
+Prachuap Khiri Khan (Thailand)|2111204215
+Xinjiang Uygur Zizhiqu (China)|747595125
+Mie (Japan)|2395157797
+Mwanza (Tanzania)|1826749755
+Kanchanaburi (Thailand)|1877008719
+Vercelli (Italy)|2502380075
+Samarqand (Uzbekistan)|177549388
+Toshkent (Uzbekistan)|913084841
+Zhytomyrs'ka Oblast' (Ukraine)|642078964
+Faroe Islands (Faroe Islands)|4013658009
+Sakon Nakhon (Thailand)|4229970854
+Kebbi (Nigeria)|2212375992
+Hartlepool (United Kingdom)|1568281301
+Saint Philip (Barbados)|792254347
+Siparia (Trinidad and Tobago)|1056374772
+Kakamega (Kenya)|209785327
+Jamaica (Jamaica)|1379286446
+Ceuta (Spain)|2001557902
+Davao Occidental (Philippines)|3843343107
+Liban-Sud (Lebanon)|1276313101
+Lop Buri (Thailand)|2594580792
+Dac Lac (Viet Nam)|1489425438
+Herefordshire (United Kingdom)|1726097704
+Yoro (Honduras)|286904374
+Mousl (Nainawa) (Iraq)|3177972359
+Haut-Katanga (Democratic Republic of The Congo)|2357570425
+Nyiregyhaza (Hungary)|3660551046
+North-West (Botswana)|742392061
+Matera (Italy)|2805172844
+Gombe (Nigeria)|360577003
+South Ayrshire (United Kingdom)|1205283231
+East Dunbartonshire (United Kingdom)|478638270
+Bridgend (United Kingdom)|1942690146
+Hainan Sheng (China)|2508630107
+Ferrara (Italy)|547460717
+Laikipia (Kenya)|3709761135
+Santa Ana (El Salvador)|1793573782
+Malaysia (Malaysia)|1389735977
+Darlington (United Kingdom)|1766127841
+Zug (Switzerland)|1870660941
+Esch An Der Alzette (Luxembourg)|6319110
+Ragusa (Italy)|3003723108
+Vinh Long (Viet Nam)|3895287321
+Western (Fiji)|4182763012
+Massa-Carrara (Italy)|2054614367
+Bishkek (Kyrgyzstan)|66854619
+Reggio Calabria (Italy)|1323368977
+Szombathely (Hungary)|124793238
+Schwyz (Switzerland)|2050616916
+Burgenland (Austria)|3741048709
+Telsiu (Lithuania)|1073137109
+Ulcinj (Montenegro)|2103131238
+Moray (United Kingdom)|3645145557
+San Miguel (El Salvador)|3999293504
+Gjorce Petrov (Macedonia)|1733707965
+Luxembourg (Belgium)|3369181023
+Pesaro and Urbino (Italy)|2840817060
+Nord (Haiti)|1856742153
+Ajdovscina (Slovenia)|3834606976
+Australia (Australia)|3584599668
+Maseru (Lesotho)|2436421384
+Ouargla (Algeria)|3224767262
+Quang Ninh (Viet Nam)|3576167859
+Nghe An (Viet Nam)|2196150832
+Donets'ka Oblast' (Ukraine)|105184433
+North-East (Botswana)|3409681493
+Bono East (Ghana)|2935940853
+Dambovita (Romania)|3940016702
+Bacau (Romania)|303847432
+Rezekne (Latvia)|50859704
+Vale of Glamorgan (United Kingdom)|2522597891
+Mbeya (Tanzania)|2744018151
+Brokopondo (Suriname)|418254590
+Barisal (Bangladesh)|2484794577
+Bursa (Turkey)|3097054518
+Targovishte (Bulgaria)|2005971345
+Caerphilly (United Kingdom)|860517213
+Scottish Borders (United Kingdom)|2204274470
+Potenza (Italy)|310265696
+Amara (Ethiopia)|3951325011
+Port Louis (Mauritius)|892773940
+Thurgau (Switzerland)|2914760831
+Nandi (Kenya)|2895382408
+English River (Seychelles)|3224203841
+Al Sulaymaniah (Iraq)|3962608563
+Bistrita-Nasaud (Romania)|828388270
+Nord-Ouest (Cameroon)|848394757
+Phetchaburi (Thailand)|3797987231
+Saint Elizabeth (Jamaica)|2204005727
+North Abaco (Bahamas)|3273938189
+Croatia (Local Name - Hrvatska) (Croatia)|131845528
+Alessandria (Italy)|1070274432
+Siena (Italy)|1784786905
+Maputo City (Mozambique)|3245226681
+Spanish Wells (Bahamas)|3505271967
+Sibiu (Romania)|572630226
+Ilhas De Sotavento (Cape Verde)|2334792191
+San Luis (Argentina)|1721188001
+Saint Mary (Jamaica)|2036552688
+Potosi (Bolivia)|4267252143
+Sudurnes (Iceland)|317403337
+Guarda (Portugal)|2042809233
+Piacenza (Italy)|691820615
+Madriz (Nicaragua)|3191122779
+Ben Arous (Tunisia)|1519487773
+West Berkshire (United Kingdom)|3416673993
+Maldonado (Uruguay)|2578989311
+Lampang (Thailand)|2323185616
+Escuintla (Guatemala)|532756122
+Kampong Chaam (Cambodia)|1229817082
+Rimini (Italy)|909115693
+Kampong Chhnang (Cambodia)|1079393319
+Hoa Binh (Viet Nam)|1747622322
+Sliven (Bulgaria)|1133162686
+Lucca (Italy)|1828864295
+Brazzaville (Congo)|530093839
+Al Qalyubiyah (Egypt)|3620080618
+Falkirk (United Kingdom)|2816897737
+Tay Ninh (Viet Nam)|2905036759
+Maha Sarakham (Thailand)|2281868323
+Beja (Portugal)|3168639151
+Thai Binh (Viet Nam)|3812846821
+Shida Kartli (Georgia)|3189681314
+Tyumenskaya Oblast (Russian Federation)|2165699374
+Conakry (Guinea)|1312287596
+Bac Giang (Viet Nam)|3837655456
+Smolyan (Bulgaria)|2438673768
+Al Khawr Wa Adh Dhakhirah (Qatar)|850641756
+Perth and Kinross (United Kingdom)|1455696668
+Choco (Colombia)|3216770042
+Sums 'ka Oblast' (Ukraine)|2736161976
+Sa Kaeo (Thailand)|1745286480
+Mellieha (Malta)|3051833194
+Kgatleng (Botswana)|3967531147
+Viterbo (Italy)|2072163179
+Montana (Bulgaria)|2783310327
+Roi Et (Thailand)|372178390
+Solothurn (Switzerland)|4006765713
+Grosseto (Italy)|3008148995
+Kavadarci (Macedonia)|4090147655
+Ibaraki (Japan)|4090044807
+Longford (Ireland)|4216751024
+Saratovskaya Oblast (Russian Federation)|3368198942
+Luqa (Malta)|546073648
+La Pampa (Argentina)|2479422886
+Quang Ngai (Viet Nam)|3776434556
+South Tyneside (United Kingdom)|3769272650
+Cameroon (Cameroon)|3336733788
+Campobasso (Italy)|3122576797
+An Giang (Viet Nam)|2264521027
+Siem Reab (Cambodia)|1994906566
+Piran (Slovenia)|1033333235
+North Western (Sierra Leone)|866879423
+Ragged Island (Bahamas)|1984374037
+Al Asimah (Bahrain)|1872346290
+Veles (Macedonia)|1158037514
+Olt (Romania)|3481885947
+Lecco (Italy)|24298598
+Jurmala (Latvia)|2595042724
+Sonsonate (El Salvador)|3156194490
+Oruro (Bolivia)|2546128441
+Beni Mellal-Khenifra (Morocco)|3352511777
+North Macedonia (Macedonia)|1673916449
+Lamphun (Thailand)|3018496023
+Estuaire (Gabon)|328182343
+Sousse (Tunisia)|3837794025
+Gisborne (New Zealand)|754833362
+Comoe (Cote D Ivoire)|2173502410
+Santa Cruz (Argentina)|3103411587
+Mogilevskaja Oblast' (Belarus)|1520443821
+Binh Dinh (Viet Nam)|3574595903
+Caqueta (Colombia)|1688335514
+Southern (Zambia)|4128206806
+Lodi (Italy)|1913916681
+Tarija (Bolivia)|737906096
+Causeway Coast and Glens (United Kingdom)|2251308739
+Volyns'ka Oblast (Ukraine)|2609070951
+Gifu (Japan)|2461145607
+Elbasan (Albania)|4177921817
+United Arab Emirates (United Arab Emirates)|3582612603
+Gabrovo (Bulgaria)|2626042055
+Southern Nations (Ethiopia)|355021717
+Embu (Kenya)|2484689383
+San Juan (Argentina)|1327147837
+Batanes (Philippines)|1337049932
+Voronezhskaya Oblast (Russian Federation)|2499501795
+Silistra (Bulgaria)|3112508624
+Nakhon Sawan (Thailand)|3442604759
+Fermanagh and Omagh (United Kingdom)|2445430806
+Bomet (Kenya)|4183301535
+Meghalaya (India)|2290241049
+Prilep (Macedonia)|2455686892
+Szolnok (Hungary)|2859871202
+Dahouk (Iraq)|2955854914
+Sumatera Selatan (Indonesia)|4107592942
+Vallee Du Bandama (Cote D Ivoire)|3686599582
+Hiroshima (Japan)|2701977162
+Lebanon (Lebanon)|2927384364
+Makkah Al Mukarramah (Saudi Arabia)|3866995578
+Portalegre (Portugal)|3108362736
+Gaza (Mozambique)|1048235135
+Frosinone (Italy)|3005455945
+East Lothian (United Kingdom)|1182900494
+Kumamoto (Japan)|3128493253
+Gzira (Malta)|813590528
+Basilan (Philippines)|1887281099
+Pordenone (Italy)|2135461411
+Formosa (Argentina)|2080905276
+Sfax (Tunisia)|3540227219
+Patthaya (Thailand)|3408163796
+Tatarstan Respublika (Russian Federation)|1301681487
+Gros Islet (Saint Lucia)|2302898481
+Midlands (Zimbabwe)|3001610771
+Nam Dinh (Viet Nam)|3473207947
+Kwale (Kenya)|1858566507
+Shiga (Japan)|610935234
+La Spezia (Italy)|3255013680
+Abseron (Azerbaijan)|3879926149
+Forli-Cesena (Italy)|1847495785
+Choluteca (Honduras)|2465129186
+Shumen (Bulgaria)|541672319
+Banaadir (Somalia)|244207509
+Tivat (Montenegro)|2930543974
+Kenya (Kenya)|3658787713
+Makueni (Kenya)|1880244741
+Tana River (Kenya)|630616145
+Kakheti (Georgia)|2421032739
+Merthyr Tydfil (United Kingdom)|3997656789
+Gia Lai (Viet Nam)|103986277
+Viroviticko-Podravska (Croatia)|3563507006
+Satu Mare (Romania)|3470867040
+Cordillera (Paraguay)|3195149430
+Catanzaro (Italy)|201360405
+Brindisi (Italy)|3298128819
+Trans Nzoia (Kenya)|2719993848
+Prato (Italy)|2343585794
+Baringo (Kenya)|3513937759
+Argyll and Bute (United Kingdom)|2135589104
+Avellino (Italy)|2426750932
+Macerata (Italy)|3037736758
+Gansu Sheng (China)|3494695848
+Phu Yen (Viet Nam)|4104304954
+Kommuneqarfik Sermersooq (Greenland)|1392773898
+Nyandarua (Kenya)|2430606857
+Bungoma (Kenya)|1926835793
+Tatabanya (Hungary)|503534075
+Mtskheta-Mtianeti (Georgia)|3937709360
+Umm Salai (Qatar)|3036664268
+Ventspils (Latvia)|3062336259
+Ang Thong (Thailand)|4251617104
+Chimaltenango (Guatemala)|1878835918
+Catamarca (Argentina)|875173315
+Penal-Debe (Trinidad and Tobago)|585221677
+Gwynedd (United Kingdom)|2383148234
+Pembrokeshire (United Kingdom)|3402921632
+Georgia (Georgia)|518248800
+Novosibirskaya Oblast (Russian Federation)|2651852431
+Attard (Malta)|3435182585
+Ishikawa (Japan)|2960331413
+Penzenskaya Oblast (Russian Federation)|880969651
+East Ayrshire (United Kingdom)|1840647670
+Denbighshire (United Kingdom)|1755748663
+Biella (Italy)|2412906942
+Quetzaltenango (Guatemala)|4057604126
+Izola (Slovenia)|3324328134
+Vas (Hungary)|3779435855
+Nouakchott Ouest (Mauritania)|3266341894
+Irkutskaya Oblast (Russian Federation)|2149475750
+Cook Islands (Cook Islands)|2077237839
+Homa Bay (Kenya)|2674589120
+Albania (Albania)|1590011377
+West Coast (New Zealand)|2883506908
+Nagasaki (Japan)|2184603008
+Cesu Novads (Latvia)|61351853
+Lampung (Indonesia)|2966290303
+Zanzibar West (Tanzania)|2053673562
+Upper East (Ghana)|2610909876
+Vratsa (Bulgaria)|1402528069
+Toplicki Okrug (Serbia)|2136928019
+Salgotarjan (Hungary)|3057381626
+Nakhon Nayok (Thailand)|408104971
+Siaya (Kenya)|1211049744
+Southern (Botswana)|3160187720
+Herceg Novi (Montenegro)|3417899072
+Santiago Del Estero (Argentina)|409802838
+West Dunbartonshire (United Kingdom)|2604895930
+Bizerte (Tunisia)|1792164669
+Hauts-Bassins (Burkina Faso)|1778267064
+Stip (Macedonia)|2379994143
+L'aquila (Italy)|3538631948
+Portland (Jamaica)|3364240553
+Rio San Juan (Nicaragua)|3779259434
+Binh Phuoc (Viet Nam)|571946140
+Iceland (Iceland)|1813038541
+Cyprus (Cyprus)|939210147
+Cara'-Severin (Romania)|2537487390
+Sassandra-Marahoue (Cote D Ivoire)|1994707020
+Yobe (Nigeria)|451542716
+Quang Binh (Viet Nam)|3126309338
+Phitsanulok (Thailand)|265611869
+Niksic (Montenegro)|3801687649
+Tharaka-Nithi (Kenya)|4077586274
+Kirinyaga (Kenya)|2913961762
+Leningradskaya Oblast (Russian Federation)|618284982
+Ialomita (Romania)|2937566263
+Wrexham (United Kingdom)|3757755624
+Samtskhe-Javakheti (Georgia)|41469770
+Saint Kitts and Nevis (Saint Kitts and Nevis)|2481553214
+Sevastopol (Ukraine)|3599008241
+Ahafo (Ghana)|3469536810
+Trapani (Italy)|1075407540
+Migori (Kenya)|3591224596
+Phu Tho (Viet Nam)|1397711257
+Lang Son (Viet Nam)|2358954435
+Slovenska Bistrica (Slovenia)|176842230
+Nakhon Phanom (Thailand)|250305525
+Norfolk Island (Norfolk Island)|3110416022
+Sri Lanka (Sri Lanka)|1693191908
+Honduras (Honduras)|457207800
+Vidin (Bulgaria)|3503748391
+Brezice (Slovenia)|3178049006
+Neath Port Talbot (United Kingdom)|3601981315
+Mid and East Antrim (United Kingdom)|3778323815
+Isles of Scilly (United Kingdom)|2677675942
+Saint Philip (Antigua and Barbuda)|3754061922
+Kaluzhskaya Oblast (Russian Federation)|3778645328
+Anenii Noi (Moldova)|113426488
+Ash Sharqiyah (Egypt)|3743296755
+Midlothian (United Kingdom)|588444151
+Orhon (Mongolia)|1834932020
+Kardzhali (Bulgaria)|1914405854
+Quiche (Guatemala)|3018788726
+Tigrai (Ethiopia)|1645681139
+Az Zarqa (Jordan)|2278318962
+Buri Ram (Thailand)|3238103530
+Yamanashi (Japan)|3217703600
+Itapua (Paraguay)|1529214847
+Ammochostos Magusa (Cyprus)|1847474456
+Roscommon (Ireland)|2352931501
+Gorj (Romania)|3854441982
+Ash Sharqiyah (Saudi Arabia)|3537556593
+Kepulauan Riau (Indonesia)|4150716640
+Arunachal Pradesh (India)|4199631520
+Harghita (Romania)|1636394687
+Jekabpils Novads (Latvia)|3893072378
+Nara (Japan)|614759420
+Valmieras Novads (Latvia)|3888816796
+Vaslui (Romania)|1899200137
+Bled (Slovenia)|356916346
+Tripura (India)|83604901
+Islas De La Bahia (Honduras)|3453106011
+Sud Sardegna (Italy)|1418651149
+Nordurland Eystra (Iceland)|2278712768
+Giurqiu (Romania)|176202861
+Trat (Thailand)|3698563209
+Kitui (Kenya)|113578944
+Pernik (Bulgaria)|1515737332
+Tanzania - United Republic of (Tanzania)|669921175
+Lienkiang County (Taiwan region)|3654809575
+Vorumaa (Estonia)|1520847037
+East Renfrewshire (United Kingdom)|134183285
+Kampong Spueu (Cambodia)|3741128644
+Hovsgol (Mongolia)|1738269667
+Svaay Rieng (Cambodia)|115462684
+Kosovsko-Mitrovacki Okrug (Serbia)|754732683
+Jelgavas Novads (Latvia)|2331262704
+Monaco-Ville (Monaco)|1612297264
+Phayao (Thailand)|4028924152
+Angus (United Kingdom)|775826145
+Lacs (Cote D Ivoire)|2642686388
+Tizi-Ouzou (Algeria)|2840468585
+Ehime (Japan)|1392912586
+Vladimirskaya Oblast (Russian Federation)|1268445288
+Aqtobe Oblysy (Kazakhstan)|2250290011
+Riau (Indonesia)|2440496442
+Gomel'skaja Oblast' (Belarus)|2930597303
+Inverclyde (United Kingdom)|5109076
+Gorizia (Italy)|463147276
+Grevenmacher (Luxembourg)|3915922781
+Rieti (Italy)|3640342654
+Braila (Romania)|2242890272
+Saramacca (Suriname)|3994414006
+Monaghan (Ireland)|2237710235
+Calarasi (Romania)|2675349999
+Savannah (Ghana)|1506588749
+Dakunu Palata (Sri Lanka)|630157627
+Vlore (Albania)|1218308619
+Volgogradskaya Oblast (Russian Federation)|2962826998
+Florida (Uruguay)|1577734495
+Colon (Honduras)|3319469559
+Domzale (Slovenia)|3048467701
+Colonia (Uruguay)|2865913910
+Mayaro-Rio Claro (Trinidad and Tobago)|164414381
+North Bank (Gambia)|1430427811
+Geita (Tanzania)|2544219032
+Ternopil's'ka Oblast' (Ukraine)|979866702
+El Paraiso (Honduras)|2147971761
+Mehedinti (Romania)|427467108
+Al Minya (Egypt)|2951851470
+Isparta (Turkey)|1305297308
+Sweden (Sweden)|3452157201
+Al Ahmadi (Kuwait)|3779382292
+Mizoram (India)|2624436987
+Okayama (Japan)|2668783194
+Marsaskala (Malta)|137319679
+Belluno (Italy)|3270001739
+Sud (Cameroon)|325558410
+Erongo (Namibia)|740695455
+Sidama (Ethiopia)|4027760835
+Velenje (Slovenia)|2647059351
+San Jose (Uruguay)|2798759870
+Cucer-Sandevo (Macedonia)|3854468603
+Kirkuk (Iraq)|2548679974
+Thi Qar (Iraq)|2943946478
+Prizrenski Okrug (Serbia)|2345764079
+Leitrim (Ireland)|851984790
+Ropazu Novads (Latvia)|3609012333
+Nagykanizsa (Hungary)|2351827457
+Torfaen (United Kingdom)|3350484524
+Bujumbura Mairie (Burundi)|2839996539
+Monastir (Tunisia)|2967960176
+Kilimanjaro (Tanzania)|3455941776
+Al Bahr Al Ahmar (Egypt)|899635947
+Samegrelo-Zemo Svaneti (Georgia)|3647219762
+Sumatera Barat (Indonesia)|1402732332
+Fier (Albania)|3038334794
+La Paz (El Salvador)|592362427
+Omskaya Oblast (Russian Federation)|3977715148
+Bueng Kan (Thailand)|289985739
+Vayamba Palata (Sri Lanka)|1189603805
+Agrigento (Italy)|2764556254
+Manyara (Tanzania)|3987958843
+Erd (Hungary)|2339342470
+Brcko Distrikt (Bosnia and Herzegovina)|2357675268
+Loei (Thailand)|638980289
+Uri (Switzerland)|551415142
+Gunma (Japan)|3633470338
+Kalimantan Timur (Indonesia)|3571775362
+Crotone (Italy)|555396621
+Para (Suriname)|1991013678
+Hatay (Turkey)|107820531
+Darhan Uul (Mongolia)|1053536228
+Qatar (Qatar)|2262310
+Copan (Honduras)|1284213688
+Santa Barbara (Honduras)|2756042782
+Enna (Italy)|2760384781
+Pecki Okrug (Serbia)|848997384
+Upper West (Ghana)|457922113
+Diourbel (Senegal)|3368542808
+Bas-Sassandra (Cote D Ivoire)|4235739798
+Riviere Du Rempart (Mauritius)|3339951898
+Valle D'aosta (Italy)|3343566171
+Laane-Virumaa (Estonia)|841282007
+Northern Mariana Islands (Northern Mariana Islands)|2020332333
+Baat Dambang (Cambodia)|1314105627
+Selenge (Mongolia)|4055031694
+Trzic (Slovenia)|928814767
+Thai Nguyen (Viet Nam)|3100296835
+Ben Tre (Viet Nam)|2973961453
+Medvode (Slovenia)|2594189233
+San Salvador (Bahamas)|2406864179
+Covasna (Romania)|2621497789
+Point Fortin (Trinidad and Tobago)|2861021929
+Capellen (Luxembourg)|2487947036
+Intibuca (Honduras)|3592598082
+Debar (Macedonia)|3656160190
+Olaines Novads (Latvia)|1343229774
+Fukui (Japan)|673666093
+La Paz (Honduras)|1533886150
+Oran (Algeria)|2551940148
+Pamplemousses (Mauritius)|2096291538
+Caltanissetta (Italy)|3853165220
+South Abaco (Bahamas)|3100597771
+Ivanovskaya Oblast (Russian Federation)|1704772304
+Manicaland (Zimbabwe)|814029275
+Ceredigion (United Kingdom)|3246814353
+Estonia (Estonia)|3728520476
+Yamoussoukro (Cote D Ivoire)|938456663
+Oueme (Benin)|2025332967
+Commewijne (Suriname)|4013420558
+Kampot (Cambodia)|74174472
+Radovljica (Slovenia)|515356489
+Al Najaf (Iraq)|3873470092
+Turkana (Kenya)|3586048870
+Zebbug Malta (Malta)|3494570011
+Tul'skaya Oblast (Russian Federation)|208270848
+Trang (Thailand)|771276677
+Ca Mau (Viet Nam)|2153914211
+Kosovsko-Pomoravski Okrug (Serbia)|4192025152
+Santa Venera (Malta)|2480320392
+Adazu Novads (Latvia)|3377385481
+Mukdahan (Thailand)|3452953434
+Saint Peter (Antigua and Barbuda)|751794345
+Puducherry (India)|2116700847
+La Rioja (Argentina)|1504644274
+As Suways (Egypt)|2757946157
+Dinagat Islands (Philippines)|2280171249
+Phetchabun (Thailand)|4164207695
+Dornod (Mongolia)|2715605727
+Karbala (Iraq)|3381653420
+Taraba (Nigeria)|217666625
+Bejaia (Algeria)|3614635801
+Kamphaeng Phet (Thailand)|1589575796
+Gevgelija (Macedonia)|286390176
+Paraguari (Paraguay)|1519826108
+Ryazanskaya Oblast (Russian Federation)|2030802676
+Chimbu (Papua New Guinea)|130071177
+Al Buhayrah (Egypt)|4127469103
+Belarus (Belarus)|3057841277
+Zabbar (Malta)|1368570000
+Murska Sobota (Slovenia)|2264207314
+British Indian Ocean Territory (British Indian Ocean Territory)|3707974791
+Deyala (Iraq)|2485210652
+Monmouthshire (United Kingdom)|1916579552
+Fukushima (Japan)|3577486941
+Kicevo (Macedonia)|680281106
+Kabul (Afghanistan)|2417313222
+Asti (Italy)|1758111280
+Struga (Macedonia)|2956133168
+Irbid (Jordan)|3040008035
+Taita Taveta (Kenya)|3097039046
+Mersch (Luxembourg)|3444687310
+Ptuj (Slovenia)|4021159558
+Vrancea (Romania)|331245642
+Oristano (Italy)|3329558101
+Pousaat (Cambodia)|2556327650
+Navoiy (Uzbekistan)|1319289510
+Mugla (Turkey)|3604738552
+Black River (Mauritius)|2147722795
+Madang (Papua New Guinea)|2312088529
+Russian Federation (Russian Federation)|3410085997
+Zurrieq (Malta)|1791071360
+Terni (Italy)|1756929414
+Salaspils Novads (Latvia)|3895344750
+Tuzi (Montenegro)|42048993
+Qormi (Malta)|1248504187
+Apayao (Philippines)|401111398
+Elgeyo Marakwet (Kenya)|3677743936
+Cote D Ivoire (Cote D Ivoire)|1312300987
+Tanga (Tanzania)|3426922236
+Kalimantan Barat (Indonesia)|900320206
+Bulgan (Mongolia)|3915564352
+Vihiga (Kenya)|3555079381
+Morocco (Morocco)|2501674161
+Adana (Turkey)|3564174394
+Bani Suwayf (Egypt)|1663597197
+Lao Peoples Democratic Republi (Lao Peoples Democratic Republic)|3613124967
+Adamaoua (Cameroon)|969855653
+Chuy Province (Kyrgyzstan)|409399676
+Al Gharbiyah (Egypt)|762833074
+Iringa (Tanzania)|298725402
+Sumqayit (Azerbaijan)|121622070
+Perlis (Malaysia)|3501014259
+Central Andros (Bahamas)|3579556644
+Northern Region (Malawi)|3119449717
+Namangan (Uzbekistan)|907646566
+Bekescsaba (Hungary)|1295036041
+Goh-Djiboua (Cote D Ivoire)|1872163294
+Nong Bua Lam Phu (Thailand)|1209438985
+Trinidad and Tobago (Trinidad and Tobago)|496610526
+Sakarya (Turkey)|1776820142
+Ninh Thuan (Viet Nam)|2657336979
+Botswana (Botswana)|2069018912
+Busia (Kenya)|1558446597
+Fargona (Uzbekistan)|1132610476
+Moka (Mauritius)|4098070675
+Shinyanga (Tanzania)|933285378
+Sud (Rwanda)|2212532454
+Chumphon (Thailand)|4229349707
+Tak (Thailand)|196300956
+Rezeknes Novads (Latvia)|2110893366
+Chuquisaca (Bolivia)|992425968
+Al Anbar (Iraq)|923451570
+Tra Vinh (Viet Nam)|2203703312
+Paysandu (Uruguay)|3768471218
+Eger (Hungary)|3786432018
+Aomori (Japan)|2389885487
+Rovigo (Italy)|2248502924
+Kuldigas Novads (Latvia)|4205758276
+El Beni (Bolivia)|2533174992
+Saint Thomas (Barbados)|1007310196
+Bosnia and Herzegowina (Bosnia and Herzegovina)|1620667200
+Wakayama (Japan)|3679969736
+Benevento (Italy)|2199008549
+Tulcea (Romania)|3858481007
+Skofja Loka (Slovenia)|2138920815
+Naklo (Slovenia)|3962082791
+Zambia (Zambia)|1790803090
+North-Western (Zambia)|3524247929
+Saint-Louis (Senegal)|280625684
+Flacq (Mauritius)|454566064
+Tierra Del Fuego (Argentina)|1346718525
+Egypt (Egypt)|3271923554
+Rogaska Slatina (Slovenia)|2355994946
+Isiolo (Kenya)|4277472711
+Sudurpashchim (Nepal)|1744377800
+Tipaza (Algeria)|534174664
+Setif (Algeria)|490663
+Montenegro (Montenegro)|639369967
+Zou (Benin)|1805552282
+Kongo Central (Democratic Republic of The Congo)|3275278856
+Bauskas Novads (Latvia)|2861949027
+Enga (Papua New Guinea)|2394237341
+Fermo (Italy)|1493662175
+Haapai (Tonga)|1775072304
+Pointe-Noire (Congo)|3373471310
+Al Minufiyah (Egypt)|1540649709
+Montagnes (Cote D Ivoire)|3683225253
+Phrae (Thailand)|2072154373
+Berea (Lesotho)|3830525285
+Kuna Yala (Panama)|409096374
+Pattani (Thailand)|4250241961
+Saint Lucy (Barbados)|1328450113
+Madhyama Palata (Sri Lanka)|3703619955
+Jizzax (Uzbekistan)|761184380
+West New Britain (Papua New Guinea)|1310727097
+Viljandimaa (Estonia)|1106284004
+Alta Verapaz (Guatemala)|405720728
+Huehuetenango (Guatemala)|196089283
+Rabat Gozo (Malta)|3586250185
+Chiquimula (Guatemala)|3790610480
+Otjozondjupa (Namibia)|1171161857
+Mara (Tanzania)|794522159
+Malta (Malta)|1880272387
+Hodmezovasarhely (Hungary)|172597354
+Sofala (Mozambique)|712612398
+Astana (Kazakhstan)|99996301
+Sondrio (Italy)|3411631100
+Lubombo (Swaziland)|3242005551
+Kotayk (Armenia)|2924556467
+La Manouba (Tunisia)|3428572617
+Tukuma Novads (Latvia)|49806383
+Usulutan (El Salvador)|82686136
+Barbados (Barbados)|2345032318
+Jarvamaa (Estonia)|1713033731
+Aizkraukles Novads (Latvia)|3904441361
+Ascoli Piceno (Italy)|4023827424
+Melilla (Spain)|3042627024
+Nusa Tenggara Barat (Indonesia)|2956564441
+Oita (Japan)|1494165170
+Manisa (Turkey)|3020103252
+Qina (Egypt)|2306834317
+Saint Paul (Dominica)|3457817823
+Western North (Ghana)|3043830517
+Lao Cai (Viet Nam)|1225996753
+Bogovinje (Macedonia)|3114800550
+Grand Port (Mauritius)|1707628479
+Ninh Binh (Viet Nam)|3500393476
+Cetinje (Montenegro)|4064893638
+Phatthalung (Thailand)|4228576011
+Kekavas Novads (Latvia)|3638734626
+Nampula (Mozambique)|3321938095
+Nicaragua (Nicaragua)|2095138079
+Monte-Carlo (Monaco)|2766328438
+Al Madinah Al Munawwarah (Saudi Arabia)|2495338939
+Buxoro (Uzbekistan)|1686346869
+Dunaujvaros (Hungary)|16427228
+Sulu (Philippines)|307178081
+Bac Lieu (Viet Nam)|218377002
+Verbano-Cusio-Ossola (Italy)|1970889298
+Siguldas Novads (Latvia)|3107679390
+San Marcos (Guatemala)|3313036462
+Soriano (Uruguay)|4260196184
+Talsu Novads (Latvia)|4217454545
+Kocevje (Slovenia)|2434198888
+Saint Peter (Barbados)|1599060940
+Berat (Albania)|1715802186
+Blida (Algeria)|3107855952
+Tabora (Tanzania)|2238303166
+Matabeleland South (Zimbabwe)|2150677545
+Asyut (Egypt)|2050265007
+Durazno (Uruguay)|486974638
+Tverskaya Oblast (Russian Federation)|3530576017
+Grosuplje (Slovenia)|3288596410
+Tekirdag (Turkey)|699516085
+Dak Nong (Viet Nam)|335001707
+Dire Dawa (Ethiopia)|397690961
+Ramallah (Palestinian Territories)|3209568972
+Hamrun (Malta)|3948105137
+Stann Creek (Belize)|2407260414
+Northern (Sierra Leone)|194435434
+Zejtun (Malta)|3921541430
+Sezana (Slovenia)|375237432
+Inhambane (Mozambique)|551291968
+Ras Al-Khaimah (United Arab Emirates)|4028075643
+Barletta-Andria-Trani (Italy)|471370920
+Xaghra (Malta)|3081263690
+Qinghai Sheng (China)|2617725050
+Delcevo (Macedonia)|4158331612
+Slovenske Konjice (Slovenia)|1315060839
+Ranong (Thailand)|2813356895
+Sing Buri (Thailand)|419606193
+Korce (Albania)|3856785836
+Bac Kan (Viet Nam)|620237408
+Presidente Hayes (Paraguay)|3575212479
+Armavir (Armenia)|4159839803
+Trbovlje (Slovenia)|4041349127
+Saint Andrew (Saint Vincent and The Grenadines)|2759598488
+Micoud (Saint Lucia)|545951219
+Medenine (Tunisia)|779634882
+Wilayah Persekutuan Putrajaya (Malaysia)|3336094920
+Phichit (Thailand)|3448990603
+Logatec (Slovenia)|3442137300
+Smiltenes Novads (Latvia)|2175453975
+Xizang Zizhiqu (China)|3819329771
+Nagaland (India)|1698595490
+Babil (Iraq)|1645738700
+Oti (Ghana)|1492938599
+Eastern (Zambia)|3026251189
+Bolikhamxai (Lao Peoples Democratic Republic)|4029847340
+Konya (Turkey)|829694804
+Bijelo Polje (Montenegro)|2024331658
+Jogevamaa (Estonia)|1897699271
+Vesturland (Iceland)|3309268185
+South Andros (Bahamas)|4222422076
+Zelino (Macedonia)|830552978
+Oshana (Namibia)|574303303
+Buryatiya Respublika (Russian Federation)|2596502426
+Al Quadisiya (Iraq)|462747168
+Cao Bang (Viet Nam)|3897706764
+Manus (Papua New Guinea)|276738398
+Aceh Sm (Indonesia)|450054127
+Chaiyaphum (Thailand)|105801643
+Schaffhausen (Switzerland)|855593897
+San Vicente (El Salvador)|2757047922
+Savanne (Mauritius)|3885135383
+Salah Al Deen (Iraq)|3517171733
+Northern (Uganda)|294444219
+Caaguazu (Paraguay)|2579712319
+Stavropol'skiy Kray (Russian Federation)|236056613
+East New Britain (Papua New Guinea)|4018177753
+Lasko (Slovenia)|2494978611
+Wajir (Kenya)|2579223022
+Yaroslavskaya Oblast (Russian Federation)|1826469300
+Zalec (Slovenia)|839943743
+Bangladesh (Bangladesh)|1135597640
+Son La (Viet Nam)|2659182397
+Dumyat (Egypt)|2881831263
+Lualaba (Democratic Republic of The Congo)|1076018563
+Si Sa Ket (Thailand)|2693852883
+Prey Veaeng (Cambodia)|1989790023
+Misiones (Paraguay)|1472983063
+Kocani (Macedonia)|1554847145
+Bayanhongor (Mongolia)|3316438057
+Saraj (Macedonia)|3036507534
+Zambezia (Mozambique)|271030156
+Bilesuvar (Azerbaijan)|1673294604
+Jardin Exotique (Monaco)|481796788
+Nyamira (Kenya)|19037786
+Karnali (Nepal)|1187186591
+Constantine (Algeria)|3373382745
+Tacuarembo (Uruguay)|1238351079
+Shiselweni (Swaziland)|2236606772
+Sukhothai (Thailand)|2603813700
+Valle (Honduras)|2836973027
+Kalimantan Selatan (Indonesia)|4030833202
+Singida (Tanzania)|1258760897
+Baja Verapaz (Guatemala)|3949339903
+Lukovica (Slovenia)|1478449480
+Sopiste (Macedonia)|3145050692
+Shkoder (Albania)|2501962796
+Masvingo (Zimbabwe)|2073498126
+Kairouan (Tunisia)|3590961117
+Razgrad (Bulgaria)|4038388113
+Radovis (Macedonia)|1399934338
+Lipetskaya Oblast (Russian Federation)|1898453979
+Danilovgrad (Montenegro)|2358401259
+Sud (Haiti)|796831447
+Saint Barthelemy (Saint Barthelemy)|1018738325
+Nadur (Malta)|2940952315
+Laayoune-Sakia El Hamra (Morocco)|4095317831
+West Pokot (Kenya)|3418559717
+Shan (Myanmar)|3774226144
+Birzebbuga (Malta)|1829227760
+Tuyen Quang (Viet Nam)|2014115015
+Kigoma (Tanzania)|2187788128
+Blaenau Gwent (United Kingdom)|2573242986
+Ilinden (Macedonia)|3351607011
+Solola (Guatemala)|795535276
+Tomskaya Oblast (Russian Federation)|2589741556
+Al Jahrah (Kuwait)|2190360341
+Saint John (Barbados)|2887192355
+Somali (Ethiopia)|1643825488
+Uttaradit (Thailand)|3551308250
+Songwe (Tanzania)|2820188805
+Al Janubiyah (Bahrain)|2326322568
+Kochi (Japan)|3820976021
+Vaduz (Liechtenstein)|1484665644
+Quba (Azerbaijan)|2631336636
+Ha Giang (Viet Nam)|2156811150
+Osh (Kyrgyzstan)|1714633437
+Ash Shamaliyah (Bahrain)|3736519797
+Azad Jammu and Kashmir (Pakistan)|3420832417
+Al Balqa (Jordan)|2029744408
+Omnogovi (Mongolia)|2871799793
+Toyama (Japan)|3992212012
+Ormoz (Slovenia)|4048060507
+Cuyuni-Mazaruni (Guyana)|1381179365
+Nord-Est (Haiti)|2677158252
+Kocaeli (Turkey)|147345713
+New Ireland (Papua New Guinea)|2137226840
+Kaolack (Senegal)|773362337
+Balzan (Malta)|4182599616
+Mavrovo and Rostusa (Macedonia)|1987170715
+Qaraghandy Oblysy (Kazakhstan)|4076249930
+Khanty-Mansiyskiy Avtonomnyy Okrug-Yugra (Russian Federation)|226791103
+Ouest (Rwanda)|3339252153
+Draa-Tafilalet (Morocco)|2908698437
+East Sepik (Papua New Guinea)|2223504633
+Nord-Kivu (Democratic Republic of The Congo)|1767041411
+Fujairah (United Arab Emirates)|1443372125
+Livanu Novads (Latvia)|2808280945
+Orkney Islands (United Kingdom)|742788904
+Salavan (Lao Peoples Democratic Republic)|4204727165
+Maysan (Iraq)|1258288210
+Bokeo (Lao Peoples Democratic Republic)|2672220736
+Quang Tri (Viet Nam)|2251850347
+Artigas (Uruguay)|182324027
+Ahuachapan (El Salvador)|2333138839
+Bur Said (Egypt)|4235838994
+Zanzan (Cote D Ivoire)|2645083909
+Mae Hong Son (Thailand)|916573423
+Zagorje Ob Savi (Slovenia)|400043439
+Ghanzi (Botswana)|1457392282
+Limbazu Novads (Latvia)|569199728
+Clackmannanshire (United Kingdom)|2598787899
+Western (Papua New Guinea)|2225881779
+Aydin (Turkey)|3408458492
+Vrapciste (Macedonia)|3982766552
+Chai Nat (Thailand)|268694604
+Mqabba (Malta)|803377678
+Arkhangel'skaya Oblast (Russian Federation)|2417937910
+Saint Andrew (Barbados)|3279128791
+Nablus (Palestinian Territories)|1999893357
+Andijon (Uzbekistan)|424491343
+Hau Giang (Viet Nam)|1574368491
+Nuoro (Italy)|3426035882
+Sagaing (Myanmar)|17291009
+Crnomelj (Slovenia)|2367175000
+Dienvidkurzemes Novad (Latvia)|442184604
+Ararat (Armenia)|2813549006
+Khersons'ka Oblast' (Ukraine)|2037289092
+Gence (Azerbaijan)|2018965704
+Surin (Thailand)|220800335
+Cuscatlan (El Salvador)|1966084635
+Ludzas Novads (Latvia)|4116411696
+Huambo (Angola)|1922729331
+Glarus (Switzerland)|3399811745
+Centre (Haiti)|1262584643
+Xorazm (Uzbekistan)|351025283
+Mashonaland Central (Zimbabwe)|1251481517
+Mahdia (Tunisia)|339309896
+Gabes (Tunisia)|3491112327
+Lezhe (Albania)|378007097
+Fatick (Senegal)|4103774819
+Pljevlja (Montenegro)|3287966804
+Seychelles (Seychelles)|2777998249
+El Salvador (El Salvador)|3083059107
+Kaliningradskaya Oblast (Russian Federation)|2770488701
+Postojna (Slovenia)|2377952090
+San Pedro (Paraguay)|2152329969
+Shimane (Japan)|3422768726
+Europe (Unknown Country) (Europe (Unknown Country))|3762217162
+Rio Negro (Uruguay)|2271218404
+Vientiane Province (Lao Peoples Democratic Republic)|3897105123
+Cat Island (Bahamas)|539263833
+Sakha Respublika (Russian Federation)|4203699526
+Balti (Moldova)|157936661
+Asir (Saudi Arabia)|2441843434
+Est (Rwanda)|1883115386
+Savanes (Cote D Ivoire)|3482424702
+Batna (Algeria)|780865074
+Guria (Georgia)|1265580559
+Nickerie (Suriname)|3364875194
+Kostromskaya Oblast (Russian Federation)|3578704645
+Wasit (Iraq)|1431128963
+Gaziantep (Turkey)|3700044579
+Gjirokaster (Albania)|3257815880
+Saldus Novads (Latvia)|2739921050
+Louga (Senegal)|317433087
+Rivera (Uruguay)|2691042686
+Rocha (Uruguay)|191742924
+Kampong Thum (Cambodia)|2639297060
+Hentiy (Mongolia)|2460762700
+Chuvashskaya Respublika (Russian Federation)|7818571
+Puconci (Slovenia)|1487988333
+Hebron (Palestinian Territories)|1073260989
+Nepal (Nepal)|4140665202
+Tokushima (Japan)|3939778170
+Shabeellaha Hoose (Somalia)|3344534474
+Rutland (United Kingdom)|2664982623
+Tlemcen (Algeria)|63682972
+Ruvuma (Tanzania)|1780228623
+Louangphabang (Lao Peoples Democratic Republic)|3475669213
+Gafsa (Tunisia)|3962767370
+Garissa (Kenya)|1262902436
+Arhangay (Mongolia)|1900041339
+Ivancna Gorica (Slovenia)|198481445
+Vieux Fort (Saint Lucia)|3316343949
+Suhaj (Egypt)|2007526916
+Almaty Oblysy (Kazakhstan)|2529609145
+Ha Tinh (Viet Nam)|3976062530
+Naegenahira Palata (Sri Lanka)|982123198
+Diekirch (Luxembourg)|2448423198
+Nan (Thailand)|2426234940
+Toamasina (Madagascar)|383641728
+Marowijne (Suriname)|3574441639
+Plateaux (Togo)|2277422389
+Ljutomer (Slovenia)|916958877
+Woqooyi Galbeed (Somalia)|2422490416
+Janub Sina (Egypt)|1002803951
+Mozambique (Mozambique)|2950037594
+Nidwalden (Switzerland)|2969268288
+Siggiewi (Malta)|3047136534
+Taakaev (Cambodia)|928152954
+Dobeles Novads (Latvia)|4013287544
+Tawi-Tawi (Philippines)|3331237786
+Valgamaa (Estonia)|1345560543
+Luxembourg (Luxembourg)|515084803
+Orange Walk (Belize)|1674303939
+Caska (Macedonia)|2296818357
+Zimbabwe (Zimbabwe)|543677592
+Pesnica (Slovenia)|3541436044
+Obwalden (Switzerland)|65643987
+Luapula (Zambia)|2491494881
+Samburu (Kenya)|38137909
+Lindi (Tanzania)|918240435
+Paola (Malta)|1315475075
+Huila (Angola)|372307540
+Embera (Panama)|1607530402
+Respublika Krym (Ukraine)|3810084341
+Harari People (Ethiopia)|2411292914
+Milne Bay (Papua New Guinea)|1579692684
+Miyazaki (Japan)|3305050438
+Uva Palata (Sri Lanka)|2208157988
+Marsabit (Kenya)|1446664997
+Sulawesi Tengah (Indonesia)|624188511
+Negotino (Macedonia)|64108171
+Cerro Largo (Uruguay)|3302675370
+Sirdaryo (Uzbekistan)|959632123
+Orenburgskaya Oblast (Russian Federation)|3884301530
+Idrija (Slovenia)|1523425606
+Ravne Na Koroskem (Slovenia)|4054713041
+Sentilj (Slovenia)|1368661006
+Al-Uqsur (Egypt)|1445375959
+Ghana (Ghana)|241806197
+Nord (Rwanda)|253490757
+Tongatapu (Tonga)|1893576317
+Sabaragamuva Palata (Sri Lanka)|3405034834
+Jesenice (Slovenia)|4125178522
+Lavalleja (Uruguay)|2031040446
+Shirak (Armenia)|1328439923
+Kranjska Gora (Slovenia)|2710645757
+Crna Na Koroskem (Slovenia)|2178439843
+Shymkent (Kazakhstan)|2039479575
+Redingen (Luxembourg)|3464332770
+Sipaliwini (Suriname)|3150794801
+Ig (Slovenia)|647793638
+Straseni (Moldova)|1702595233
+Moravske Toplice (Slovenia)|1122982517
+Salto (Uruguay)|3400960542
+Collines (Benin)|1360801402
+Ventspils Novads (Latvia)|2538164763
+Umm Al-Quwain (United Arab Emirates)|1965960158
+Akita (Japan)|818652871
+Matruh (Egypt)|3651277266
+Dornogovi (Mongolia)|4259987100
+Manica (Mozambique)|4179605827
+Skofljica (Slovenia)|3227950757
+Male Atoll (Maldives)|2309128882
+Tunisia (Tunisia)|2773558432
+Khammouan (Lao Peoples Democratic Republic)|2180464754
+Hincesti (Moldova)|634826624
+Saint Mark (Dominica)|1353874886
+Jambi (Indonesia)|3872084027
+Ningxia Huizi Zizhiqu (China)|2466950025
+Bago (Myanmar)|1730758034
+Kafr Ash Shaykh (Egypt)|1300001191
+Saga (Japan)|856836796
+Matabeleland North (Zimbabwe)|335064549
+Myanmar (Myanmar)|178648709
+Borgou (Benin)|2174598798
+Kouilou (Congo)|1114175071
+Vibo Valentia (Italy)|1961975294
+Kukes (Albania)|2246599469
+Pomeroon-Supenaam (Guyana)|831316113
+Mostaganem (Algeria)|1202454130
+Amurskaya Oblast (Russian Federation)|2405663601
+Miklavzna Dravskem Polju (Slovenia)|752084444
+Leribe (Lesotho)|1123839918
+Houaphan (Lao Peoples Democratic Republic)|1785096128
+Tarabulus (Libyan Arab Jamahiriya)|551478231
+Benguela (Angola)|2250921565
+Southern (Sierra Leone)|167549606
+Eastern (Sierra Leone)|46417646
+Al Ismailiyah (Egypt)|2560196357
+Njombe (Tanzania)|771518125
+Chalatenango (El Salvador)|1384273800
+Suchitepequez (Guatemala)|562593487
+Papua (Indonesia)|26972068
+Zuzemberk (Slovenia)|1438665734
+Yevreyskaya Avtonomnaya Oblast (Russian Federation)|478233972
+Kalimantan Tengah (Indonesia)|2822335067
+Sulawesi Utara (Indonesia)|1428783603
+Hawalli (Kuwait)|4157465867
+Rabat Malta (Malta)|4282757287
+Bouira (Algeria)|2510221145
+Ziguinchor (Senegal)|2694924093
+Peten (Guatemala)|2199100043
+Shetland Islands (United Kingdom)|1791243991
+Est (Cameroon)|178354426
+Kratovo (Macedonia)|2348037815
+Yamalo-Nenetskiy Avtonomnyy Okrug (Russian Federation)|3354003936
+Sant Julia De Loria (Andorra)|2853999192
+Papua Tengah (Indonesia)|1693802500
+Annaba (Algeria)|4035905429
+Guaira (Paraguay)|2494346723
+Kagera (Tanzania)|1141253090
+Tbong Khmum (Cambodia)|1522788233
+Hoce-Slivnica (Slovenia)|2576922215
+Rankovce (Macedonia)|1544820564
+Probistip (Macedonia)|1236727301
+Saint Joseph (Barbados)|390140456
+Centre-Nord (Burkina Faso)|4076345865
+San Andres (Colombia)|1943399230
+Naxxar (Malta)|523074753
+Concepcion (Paraguay)|4043106000
+Kavango East (Namibia)|1228420237
+Tambacounda (Senegal)|658899617
+Totonicapan (Guatemala)|3118491125
+Thimphu (Bhutan)|4187891514
+Beja (Tunisia)|3770155201
+Satun (Thailand)|3938657207
+Al Muharraq (Bahrain)|2624669818
+Lendava (Slovenia)|2617294758
+Baie Sainte Anne (Seychelles)|4094744356
+Poljcane (Slovenia)|2643834684
+Qashqadaryo (Uzbekistan)|834110599
+Samut Songkhram (Thailand)|2565168183
+Sikkim (India)|1160173718
+Slovenj Gradec (Slovenia)|877677831
+Vinica (Macedonia)|483317444
+Tarxien (Malta)|2725122194
+Azerbaijan (Azerbaijan)|1478104397
+La Union (El Salvador)|2305942964
+Uruguay (Uruguay)|2630309310
+Tabuk (Saudi Arabia)|3210517878
+Kara (Togo)|3108046653
+Petrovec (Macedonia)|1527202809
+Tete (Mozambique)|4185307483
+Tearce (Macedonia)|1796769925
+Berane (Montenegro)|3882511863
+Lower River (Gambia)|1178073517
+Nisporeni (Moldova)|398735733
+Zabaykal'skiy Kray (Russian Federation)|596316853
+Boumerdes (Algeria)|2867446203
+Ul'yanovskaya Oblast (Russian Federation)|1718097451
+Uturumaeda Palata (Sri Lanka)|1760862462
+Rozaje (Montenegro)|1699561395
+Yen Bai (Viet Nam)|1967354960
+Al Fayyum (Egypt)|117723270
+Sidi-Bel-Abbes (Algeria)|641757670
+Andaman and Nicobar Islands (India)|2485318640
+Sulawesi Tenggara (Indonesia)|1315419069
+Gracias A Dios (Honduras)|3251707248
+Treinta Y Tres (Uruguay)|2232132228
+Appenzell Ausser-Rhoden (Switzerland)|2864197628
+Ilirska Bistrica (Slovenia)|2411265934
+Dili (Timor-Leste)|736233116
+Dagestan Respublika (Russian Federation)|2611137645
+Dadra and Nagar Haveli and Daman and Diu (India)|876390949
+Amanat Al Asimah (Yemen)|2934976487
+Gagauzia (Moldova)|3908285720
+Vologodskaya Oblast (Russian Federation)|1721378724
+Ovorhangay (Mongolia)|4112637821
+Dravograd (Slovenia)|678356711
+La Habana (Cuba)|1671999283
+Lempira (Honduras)|3835686168
+Balvu Novads (Latvia)|3314825343
+Santa Rosa (Guatemala)|3062038639
+Jezersko (Slovenia)|3519940670
+Yasothon (Thailand)|3658927991
+Fgura (Malta)|2324363731
+Simiyu (Tanzania)|595934555
+Litija (Slovenia)|1665788721
+Al Mafraq (Jordan)|1277312924
+Butel (Macedonia)|3462680911
+Soufriere (Saint Lucia)|4291412104
+Neembucu (Paraguay)|1657182079
+Ialoveni (Moldova)|3871809175
+Al Muthanna (Iraq)|3547786785
+Mubarak Al Kabir (Kuwait)|2250458067
+Diber (Albania)|761166174
+Iwate (Japan)|4200213423
+Karas (Namibia)|628250555
+Chlef (Algeria)|4017536775
+Northern (Zambia)|4272571446
+Kon Tum (Viet Nam)|4293646813
+Mariy El Respublika (Russian Federation)|3285175489
+Kuwait (Kuwait)|2064809869
+Pivka (Slovenia)|3223575758
+Est (Burkina Faso)|69215074
+Lamu (Kenya)|695315178
+Mokhotlong (Lesotho)|3409336776
+Nabatiye (Lebanon)|2452156613
+Ogooue-Maritime (Gabon)|1459897530
+Preilu Novads (Latvia)|2454628788
+Woroba (Cote D Ivoire)|322728463
+Sencur (Slovenia)|1788024591
+Morazan (El Salvador)|710821073
+Pohnpei (Federated States of Micronesia)|2292835966
+Nord-Ouest (Haiti)|141454354
+Pembroke (Malta)|2033531735
+Charlotte (Saint Vincent and The Grenadines)|2663730186
+Jalal-Abad Province (Kyrgyzstan)|80829965
+Aqmola Oblysy (Kazakhstan)|962363464
+Oshikoto (Namibia)|1732964901
+Hardap (Namibia)|4172156266
+Ndjamena (Chad)|2892875649
+Aswan (Egypt)|3765324252
+Asgabat (Turkmenistan)|352809350
+Laghouat (Algeria)|2851074854
+Wilayah Persekutuan Labuan (Malaysia)|3950245056
+Sentjur (Slovenia)|221949120
+Belait (Brunei Darussalam)|1225169435
+Zrece (Slovenia)|1013954183
+Aland Islands (Aland Islands)|2192277350
+Saint Lucia (Saint Lucia)|2975595067
+Plateau-Central (Burkina Faso)|2273309109
+Khakasiya Respublika (Russian Federation)|3421801281
+Valkas Novads (Latvia)|2772753526
+Kozje (Slovenia)|647177263
+Qostanay Oblysy (Kazakhstan)|90223167
+Gilgit-Baltistan (Pakistan)|2824711933
+Sidi Bouzid (Tunisia)|1481358064
+Gulf (Papua New Guinea)|143216470
+Uturu Palata (Sri Lanka)|3010677194
+Lunda Norte (Angola)|2812529806
+Isernia (Italy)|2200582264
+Matam (Senegal)|3699870276
+Districts of Republican Subordination (Tajikistan)|1379670252
+Koror (Palau)|3197189464
+Ocotepeque (Honduras)|3468674686
+Brvenica (Macedonia)|3688803825
+Saint Joseph (Dominica)|2147722127
+Wiltz (Luxembourg)|1932536440
+Barima-Waini (Guyana)|1278107046
+Remich (Luxembourg)|1138524816
+Starse (Slovenia)|4239650881
+Qoraqalpogiston (Uzbekistan)|3592812025
+Jijel (Algeria)|2452402603
+Bolivia (Bolivia)|1112264315
+Samsun (Turkey)|2288131715
+Tottori (Japan)|3030238841
+Nay Pyi Taw (Myanmar)|566023403
+Mtwara (Tanzania)|3576508592
+Sanliurfa (Turkey)|1175544526
+Eskisehir (Turkey)|557569668
+Southern Highlands (Papua New Guinea)|695485117
+Kaoh Kong (Cambodia)|3915256209
+Seki (Azerbaijan)|3400107286
+Zaghouan (Tunisia)|60634024
+Cerknica (Slovenia)|2782915241
+Cabanas (El Salvador)|3380185646
+Kolda (Senegal)|2814513289
+Polvamaa (Estonia)|2571258843
+Aracinovo (Macedonia)|3836155839
+Lipkovo (Macedonia)|457132736
+Mardin (Turkey)|3673466954
+Dasoguz (Turkmenistan)|2690560240
+Balikesir (Turkey)|101503116
+Afar (Ethiopia)|2822508313
+Adan (Yemen)|1355139525
+Gambela Peoples (Ethiopia)|1861526107
+Marsaxlokk (Malta)|334226205
+Chobe (Botswana)|923437709
+Capital Territory (Honiara) (Solomon Islands)|2330298222
+Region Insular (Equatorial Guinea)|373773220
+Jendouba (Tunisia)|3047306248
+Sughd (Tajikistan)|3089497817
+Trebnje (Slovenia)|2009292991
+Bengkulu (Indonesia)|2863421347
+Jutiapa (Guatemala)|2498933738
+Edirne (Turkey)|1263042512
+Vrhnika (Slovenia)|4212197785
+Cuanza Sul (Angola)|2179207366
+Misratah (Libyan Arab Jamahiriya)|2362784326
+Sud-Est (Haiti)|3476721628
+Zelezniki (Slovenia)|1377473159
+Nordurland Vestra (Iceland)|1268437732
+Zacapa (Guatemala)|2219644944
+Dol Pri Ljubljani (Slovenia)|3767494895
+Lori (Armenia)|2426998045
+Nouakchott Nord (Mauritania)|3582542461
+New Caledonia (New Caledonia)|2719009831
+Floriana (Malta)|4254080839
+Zanzibar North (Tanzania)|2493357912
+Nusa Tenggara Timur (Indonesia)|2520711045
+Uthai Thani (Thailand)|275869620
+Antsiranana (Madagascar)|1789800673
+Izabal (Guatemala)|98111320
+Donga (Benin)|632606129
+Siliana (Tunisia)|507464421
+Otdar Mean Chey (Cambodia)|1690690760
+Udmurtskaya Respublika (Russian Federation)|1185741844
+Boucle Du Mouhoun (Burkina Faso)|2466743550
+Namibe (Angola)|3758285652
+Komenda (Slovenia)|2301286582
+Vestfirdir (Iceland)|2629837385
+Bogdanci (Macedonia)|3142517807
+Ain Defla (Algeria)|2456764075
+Relizane (Algeria)|2614493586
+Southwest Ethiopia Peoples (Ethiopia)|1761485817
+Kahraman Maras (Turkey)|439046694
+Austurland (Iceland)|1162936369
+Dien Bien (Viet Nam)|3963774
+Podcetrtek (Slovenia)|3148143639
+Flores (Uruguay)|1138588899
+Kracheh (Cambodia)|1758822268
+Senegal (Senegal)|4100208758
+Smarje Pri Jelsah (Slovenia)|3378074441
+Saint Andrew (Grenada)|2352947125
+Upper River (Gambia)|543042416
+Sveti Nikole (Macedonia)|2431338133
+Racha-Lechkhumi-Kvemo Svaneti (Georgia)|657145981
+Tambovskaya Oblast (Russian Federation)|755438851
+Jarash (Jordan)|761959447
+Gorontalo (Indonesia)|3447617275
+Dzavhan (Mongolia)|3197025117
+Issyk Kul Province (Kyrgyzstan)|2550741863
+Gyor (Hungary)|2030444418
+Kepulauan Bangka Belitung (Indonesia)|1560074835
+Dolneni (Macedonia)|2365474538
+Niamey (Niger)|540460828
+Zaire (Angola)|1840764486
+Lunda Sul (Angola)|1467694534
+Belgorodskaya Oblast (Russian Federation)|3629632322
+Cabo Delgado (Mozambique)|4077988290
+Duplek (Slovenia)|1535753111
+Store (Slovenia)|2338525186
+Gulbenes Novads (Latvia)|1019445822
+Upper Takutu-Upper Essequibo (Guyana)|2193638399
+Kungota (Slovenia)|901073802
+Dobrovnik (Slovenia)|3934200628
+Denizli (Turkey)|192781962
+Surxondaryo (Uzbekistan)|807408648
+Kayseri (Turkey)|1083523205
+Al Qasim (Saudi Arabia)|3631133666
+Lai Chau (Viet Nam)|2230860204
+Mila (Algeria)|3055909031
+Tiaret (Algeria)|3024132438
+Zanzibar South (Tanzania)|3387715157
+Narathiwat (Thailand)|1163292465
+Mahajanga (Madagascar)|4156380024
+Kgalagadi (Botswana)|4174655830
+Saulkrastu Novads (Latvia)|404012529
+Lankaran (Azerbaijan)|1956371422
+Augsdaugavas Novads (Latvia)|3682679789
+Bissau (Guinea-Bissau)|651999976
+Kriva Palanka (Macedonia)|60138460
+Plav (Montenegro)|2684453956
+Sabirabad (Azerbaijan)|3116631289
+Nouakchott Sud (Mauritania)|3698800537
+Sevnica (Slovenia)|2041028808
+Recica Ob Savinji (Slovenia)|44466417
+Coronie (Suriname)|1368341102
+Saint Andrew (Dominica)|2729772995
+Bahrain (Bahrain)|51626377
+Soltustik Qazaqstan Oblysy (Kazakhstan)|28579540
+Pavlodar Oblysy (Kazakhstan)|1768197871
+Orlovskaya Oblast (Russian Federation)|3712844873
+Kasserine (Tunisia)|1611240553
+Guelmim-Oued Noun (Morocco)|2237067712
+Kurskaya Oblast (Russian Federation)|1648933044
+Sempeter-Vrtojba (Slovenia)|2810351992
+Jordan (Jordan)|260641216
+Tamanrasset (Algeria)|1603247541
+Galapagos (Ecuador)|3090789487
+Murmanskaya Oblast (Russian Federation)|3208008228
+Brda (Slovenia)|1223312528
+Vasilevo (Macedonia)|1325974387
+Radenci (Slovenia)|586040002
+Astrakhanskaya Oblast (Russian Federation)|499324412
+Mozirje (Slovenia)|3565007559
+Beqaa (Lebanon)|1789165629
+Yala (Thailand)|2983245897
+No Region (Montserrat)|4289605874
+Tulkarm (Palestinian Territories)|2840511554
+Guyana (Guyana)|3641010701
+Masalli (Azerbaijan)|3307230187
+Kankan (Guinea)|1863480834
+Tuamasaga (Samoa)|187366693
+Jura (Switzerland)|3731363204
+Fianarantsoa (Madagascar)|463656631
+Ash Shihaniyah (Qatar)|212781130
+West Sepik (Papua New Guinea)|1390297292
+Nugaal (Somalia)|682192690
+Bryanskaya Oblast (Russian Federation)|169992171
+Redonda (Antigua and Barbuda)|3286158074
+Retalhuleu (Guatemala)|1742795234
+Mingacevir (Azerbaijan)|784579369
+Lovrenc Na Pohorju (Slovenia)|3975841478
+Andrijevica (Montenegro)|1584030549
+Saint Luke (Dominica)|633691142
+Nigde (Turkey)|538428255
+Shamal Al Batinah (Oman)|4074667739
+Medea (Algeria)|307157271
+Skikda (Algeria)|1683799909
+Koulikoro (Mali)|2014518112
+Xacmaz (Azerbaijan)|1586331409
+Atacora (Benin)|2008909248
+Tolmin (Slovenia)|81672709
+Katavi (Tanzania)|3734045903
+Bordj-Bou-Arreridj (Algeria)|20888864
+Kraslavas Novads (Latvia)|1825930377
+Orhei (Moldova)|3164674877
+Hela (Papua New Guinea)|809187150
+Ghajnsielem (Malta)|996568884
+Msila (Algeria)|868085926
+Dakhlet Nouadhibou (Mauritania)|1073695695
+Vojnik (Slovenia)|4021388374
+Mondol Kiri (Cambodia)|2170248174
+Brezovica (Slovenia)|3985766530
+El Progreso (Guatemala)|1939400337
+Tisina (Slovenia)|2973431828
+Krivogastani (Macedonia)|1356344834
+Canindeyu (Paraguay)|1383475597
+Kaffrine (Senegal)|2063660422
+Kilis (Turkey)|2089444011
+Benshangul-Gumaz (Ethiopia)|1517216890
+Biskra (Algeria)|2639842972
+Bengo (Angola)|2447981654
+Marsa (Malta)|4161412747
+Caazapa (Paraguay)|855309175
+Kunene (Namibia)|4279846744
+Omaheke (Namibia)|3554673908
+Ta Xbiex (Malta)|3272755551
+Kindia (Guinea)|2909068672
+Maluku (Indonesia)|2414903823
+Angola (Angola)|1125661135
+Cahul (Moldova)|680804413
+Mafeteng (Lesotho)|3907867522
+Magway (Myanmar)|802949623
+Jubbada Hoose (Somalia)|848975219
+Debarca (Macedonia)|3511273778
+Nippes (Haiti)|635084232
+Dennery (Saint Lucia)|1839133222
+Van (Turkey)|2033654210
+Prebold (Slovenia)|849439284
+Sentrupert (Slovenia)|2327550120
+Cascades (Burkina Faso)|603348139
+Beltinci (Slovenia)|1984598784
+Bangui (Central African Republic)|1412799680
+Vianden (Luxembourg)|1958345960
+Kalkara (Malta)|1288212247
+Inagua (Bahamas)|4067986234
+Nord (Burkina Faso)|661556724
+Al Karak (Jordan)|3959246054
+Niassa (Mozambique)|3920438148
+Zhambyl Oblysy (Kazakhstan)|3903707920
+Amambay (Paraguay)|484113101
+Turkistan Oblysy (Kazakhstan)|1117134869
+Semkir (Azerbaijan)|2628888846
+Goycay (Azerbaijan)|3408468475
+Osh Shaary (Kyrgyzstan)|3412370334
+San Marino (San Marino)|527133497
+Rukwa (Tanzania)|2478783023
+Tebessa (Algeria)|3664271839
+Menges (Slovenia)|3150000627
+Trzin (Slovenia)|3192476692
+Zabljak (Montenegro)|3747099045
+Zambezi (Namibia)|500720149
+Race-Fram (Slovenia)|3746684324
+Nord (Cameroon)|604278248
+Amnat Charoen (Thailand)|1077207220
+Xaignabouli (Lao Peoples Democratic Republic)|2771103279
+Batys Qazaqstan Oblysy (Kazakhstan)|322867011
+Jegunovce (Macedonia)|3735819755
+Clerf (Luxembourg)|1215546079
+Iraq (Iraq)|2535436078
+Saida (Algeria)|3541325359
+Grenadines (Saint Vincent and The Grenadines)|1241995447
+Gornja Radgona (Slovenia)|1730979202
+Grenada (Grenada)|2117808445
+Touggourt (Algeria)|2123760003
+Kareliya Respublika (Russian Federation)|2577183114
+Le Kef (Tunisia)|311052101
+Horjul (Slovenia)|1504560354
+Bonaire and Sint Eustatius and Saba (Bonaire/Sint Eustatius/Saba)|2037306300
+Nenetskiy Avtonomnyy Okrug (Russian Federation)|949213310
+Mon (Myanmar)|1451035870
+Madaba (Jordan)|3407627053
+Omusati (Namibia)|2626871886
+Muchinga (Zambia)|193096094
+Oum El Bouaghi (Algeria)|2079556435
+Guelma (Algeria)|2457923788
+Ayeyarwady (Myanmar)|2460279719
+Western (Zambia)|2993058697
+Bethlehem (Palestinian Territories)|3849513075
+Valandovo (Macedonia)|266070494
+Banghazi (Libyan Arab Jamahiriya)|2156169131
+Mirna (Slovenia)|3663199805
+Extreme-Nord (Cameroon)|170137285
+Dundgovi (Mongolia)|1639870056
+Cuanza Norte (Angola)|3050643615
+Suhbaatar (Mongolia)|3678193688
+Khatlon (Tajikistan)|1130899533
+Toliara (Madagascar)|910463620
+Govi-Altay (Mongolia)|696920819
+Smartno Pri Litiji (Slovenia)|863640677
+Congo - The Democratic Rep of (Democratic Republic of The Congo)|1884055340
+Acklins (Bahamas)|1679414697
+Kebili (Tunisia)|3443347549
+North East (Ghana)|1734534445
+Canillo (Andorra)|266195698
+Gambia (Gambia)|2381394359
+Preah Vihear (Cambodia)|1452108863
+Pointe Larue (Seychelles)|887013472
+Armenia (Armenia)|232653939
+Eastern Equatoria (South Sudan)|1367652994
+Gitega (Burundi)|1984592246
+Gegark Unik (Armenia)|3591939691
+Mangghystau Oblysy (Kazakhstan)|3485564564
+Yevlax (Azerbaijan)|2730025074
+Qyzylorda Oblysy (Kazakhstan)|3272705109
+Cabinda (Angola)|3927783812
+Chechenskaya Respublika (Russian Federation)|3075886231
+Uzbekistan (Uzbekistan)|3068528239
+Jenin (Palestinian Territories)|2955276842
+Novgorodskaya Oblast (Russian Federation)|639240729
+Louang Namtha (Lao Peoples Democratic Republic)|1509433856
+Aragacotn (Armenia)|2542189937
+Causeni (Moldova)|3621819415
+Soroca (Moldova)|3746363205
+Smartno Ob Paki (Slovenia)|315843862
+Adrar (Algeria)|2899407999
+El Oued (Algeria)|2388450154
+Vaupes (Colombia)|3771035602
+Sud-Ouest (Burkina Faso)|4114912696
+Mascara (Algeria)|1308748917
+Antarctica (Antarctica)|2237798742
+Borovnica (Slovenia)|3426101682
+Cantemir (Moldova)|3417252006
+Mont Fleuri (Seychelles)|4175248946
+Al Aqabah (Jordan)|1012705392
+Kayin (Myanmar)|3744962052
+Zufar (Oman)|2773507697
+Maan (Jordan)|715261290
+Osmaniye (Turkey)|3998587722
+Dingli (Malta)|2169348376
+Kazakhstan (Kazakhstan)|77302820
+Ain-Temouchent (Algeria)|3770223292
+Mudug (Somalia)|1468125626
+Smolenskaya Oblast (Russian Federation)|3724058578
+Mangrove Cay (Bahamas)|3550540858
+Jalapa (Guatemala)|3513017203
+Berde (Azerbaijan)|3260655558
+Kirklareli (Turkey)|3165038105
+Cunene (Angola)|661318212
+Pailin (Cambodia)|454479736
+Uige (Angola)|1829016230
+Saint David (Grenada)|1713140757
+Lenart (Slovenia)|2550867628
+Benin (Benin)|2472638490
+Roche Caiman (Seychelles)|1439866928
+Rosoman (Macedonia)|3783205476
+Ismayilli (Azerbaijan)|768310056
+Straza (Slovenia)|1433669997
+Kwilu (Democratic Republic of The Congo)|155188884
+Qeqqata Kommunia (Greenland)|2604449227
+Solcava (Slovenia)|203008660
+Mislinja (Slovenia)|4020724142
+Zavrc (Slovenia)|570446120
+Sedhiou (Senegal)|770166056
+Jazan (Saudi Arabia)|865803585
+Kayes (Mali)|1833966597
+Al Jifarah (Libyan Arab Jamahiriya)|589912284
+Sirvan (Azerbaijan)|695931269
+Agdas (Azerbaijan)|2871175637
+Tavus (Armenia)|2972106392
+Ajlun (Jordan)|3146394861
+Moxico (Angola)|2503971478
+Trabzon (Turkey)|166634257
+Falesti (Moldova)|1859433980
+Radlje Ob Dravi (Slovenia)|3736308696
+Pemba South (Tanzania)|3443273623
+Pieta (Malta)|2624023525
+Mgarr (Malta)|2433517026
+Zonguldak (Turkey)|2251106704
+Tataouine (Tunisia)|2246760824
+Sostanj (Slovenia)|3887221446
+Maldives (Maldives)|3032383635
+Pskovskaya Oblast (Russian Federation)|2539290792
+Echternach (Luxembourg)|4066848427
+Sentjernej (Slovenia)|1964666705
+Mohale's Hoek (Lesotho)|1877860059
+Toledo (Belize)|3611875283
+Zebbug Ghawdex (Malta)|838297345
+South Miladhunmadulu (Maldives)|873967054
+Xewkija (Malta)|1076255729
+Bie (Angola)|1219559862
+Rotanak Kiri (Cambodia)|3805996665
+Ribnica (Slovenia)|475621513
+Vichada (Colombia)|3711836098
+Aerodrom (Macedonia)|3206779737
+Velike Lasce (Slovenia)|634459984
+Mogila (Macedonia)|4186226169
+Grand Cay (Bahamas)|342638519
+Moores Island (Bahamas)|2070910150
+Pando (Bolivia)|1312377801
+Rogatec (Slovenia)|3790557150
+Maniema (Democratic Republic of The Congo)|1641441867
+Al Farwaniyah (Kuwait)|2725410863
+Kirovskaya Oblast (Russian Federation)|747375963
+Kolasin (Montenegro)|3273797114
+Segou (Mali)|3299773938
+Ohangwena (Namibia)|269964340
+Unity (South Sudan)|51501825
+Kabardino-Balkarskaya Respublika (Russian Federation)|836117165
+Naxcivan (Azerbaijan)|483775526
+Thaba-Tseka (Lesotho)|482050839
+Ituri (Democratic Republic of The Congo)|806641195
+Bechar (Algeria)|979703205
+Arno (Marshall Islands)|2289387298
+Kirkop (Malta)|2185295163
+Divaca (Slovenia)|2091909945
+Kutahya (Turkey)|1973137180
+Al Wadi Al Jadid (Egypt)|1643655155
+Vipava (Slovenia)|1165788937
+Kedougou (Senegal)|1251987801
+South Maalhosmadulu (Maldives)|1327902066
+Corozal (Belize)|4110010123
+Duzce (Turkey)|3122964229
+Makedonska Kamenica (Macedonia)|1938692461
+Bay (Somalia)|3026513972
+Zelenikovo (Macedonia)|513591698
+La Digue (Seychelles)|2617235854
+Berovo (Macedonia)|900375512
+Escaldes-Engordany (Andorra)|638707015
+Ungheni (Moldova)|1586500719
+Rize (Turkey)|1708434948
+Krusevo (Macedonia)|2067944288
+Bormla (Malta)|482251802
+Hajdina (Slovenia)|3365567045
+Sveti Jurij V Slovenskih Gori (Slovenia)|2206883806
+Kamchatskiy Kray (Russian Federation)|1182314584
+Hodos (Slovenia)|2520800644
+Saint Patrick (Dominica)|2692379443
+North Nilandhe Atoll (Maldives)|3351516674
+Trarza (Mauritania)|127993216
+Haut-Ogooue (Gabon)|128604070
+Tutong (Brunei Darussalam)|641442167
+Sud-Kivu (Democratic Republic of The Congo)|644581974
+Salyan (Azerbaijan)|689836431
+Malatya (Turkey)|1169147389
+Makedonski Brod (Macedonia)|1381017233
+Cerklje Na Gorenjskem (Slovenia)|1958576143
+Goranboy (Azerbaijan)|1995684691
+Maluku Utara (Indonesia)|2130182720
+Qebele (Azerbaijan)|2336957005
+Djelfa (Algeria)|2974382405
+Ankaran (Slovenia)|4280684203
+Ordu (Turkey)|4189754714
+Batken (Kyrgyzstan)|3321988909
+Iklin (Malta)|264987813
+Uganda (Uganda)|292441229
+Plateau (Benin)|1552360490
+Mandera (Kenya)|1996957338
+Botha-Bothe (Lesotho)|51072828
+Gharghur (Malta)|3146846708
+Gedo (Somalia)|3042108463
+Celilabab (Azerbaijan)|2207302653
+Vodice (Slovenia)|2644376786
+Singerei (Moldova)|3209077630
+Boqueron (Paraguay)|608305595
+Qacha's Nek (Lesotho)|3921974332
+Floresti (Moldova)|133438424
+Chuuk (Federated States of Micronesia)|4167836392
+Cape Verde (Cape Verde)|3751478991
+Crensovci (Slovenia)|3440531280
+Mono (Benin)|1439275632
+Sakhalinskaya Oblast (Russian Federation)|3233896626
+Moldova - Republic of (Moldova)|2687321301
+Govi-Sumber (Mongolia)|447173892
+Appenzell Inner-Rhoden (Switzerland)|1326855178
+Preddvor (Slovenia)|574773376
+Nevsehir (Turkey)|2122511059
+Salovci (Slovenia)|2261764720
+Saint John (Dominica)|2023860434
+Ghaxaq (Malta)|5196757
+Shyghys Qazaqstan Oblysy (Kazakhstan)|185285948
+Tanintharyi (Myanmar)|480179646
+Lakes (South Sudan)|551624072
+Yalova (Turkey)|576986564
+Qalqilya (Palestinian Territories)|726149640
+Balkh (Afghanistan)|830838676
+Dakhla-Oued Ed-Dahab (Morocco)|1832115859
+Centar Zupa (Macedonia)|4184489670
+Ngounie (Gabon)|3420026
+Ingushetiya Respublika (Russian Federation)|3634149666
+Ladakh (India)|3220430835
+Adiyaman (Turkey)|3110592878
+Bolu (Turkey)|1648817220
+Labe (Guinea)|1515142804
+Cerkno (Slovenia)|2347849143
+Sint Eustaius (Bonaire/Sint Eustatius/Saba)|2268748175
+Kirikkale (Turkey)|2916289514
+Illizi (Algeria)|3764615975
+Kommune Kujalleq (Greenland)|1521627668
+Edinet (Moldova)|1106235141
+Togo (Togo)|2175060738
+Bovec (Slovenia)|2213275480
+Stefan Voda (Moldova)|1205271633
+Keryneia (Cyprus)|2811669560
+North Maalhosmadulu (Maldives)|1658816119
+Cerkvenjak (Slovenia)|515175852
+Haciqabul (Azerbaijan)|1876236855
+Avannaata Kommunia (Greenland)|1764422782
+Gorenja Vas-Poljane (Slovenia)|2400434225
+Canakkale (Turkey)|2553631982
+Bohinj (Slovenia)|1500539260
+Syunik (Armenia)|1243268017
+Mauritius (Mauritius)|2791812423
+Jonglei (South Sudan)|3192590456
+Ruse (Slovenia)|3487049911
+Afyonkarahisar (Turkey)|692551555
+Souk-Ahras (Algeria)|176378259
+Sikasso (Mali)|137952134
+Dosso (Niger)|123852580
+Zhetisu Oblysy (Kazakhstan)|4124235192
+St. Pierre and Miquelon (St. Pierre and Miquelon)|107516694
+Malanje (Angola)|3497412630
+Tozeur (Tunisia)|915925271
+Quthing (Lesotho)|1196922037
+Qusar (Azerbaijan)|70527604
+Marshall Islands (Marshall Islands)|586307625
+Hrpelje-Kozina (Slovenia)|495048808
+Turnisce (Slovenia)|437926810
+Qobustan (Azerbaijan)|1795236427
+Qax (Azerbaijan)|4150002235
+Kurdemir (Azerbaijan)|2108615089
+Komi Respublika (Russian Federation)|2217745488
+Diyarbakir (Turkey)|3773439866
+Matanzas (Cuba)|2578942094
+Ucar (Azerbaijan)|3655122841
+Batman (Turkey)|4075155969
+Tshopo (Democratic Republic of The Congo)|3630979185
+Vanuatu (Vanuatu)|3550855200
+Central River (Gambia)|1898896649
+Mdina (Malta)|4022579933
+Xizi (Azerbaijan)|372376056
+Shamal Sina (Egypt)|3587136282
+Centre-Est (Burkina Faso)|3537217647
+Agcabedi (Azerbaijan)|3904811562
+Semic (Slovenia)|1313944527
+Saint Vincent and The Grenadin (Saint Vincent and The Grenadines)|1539665943
+Luce (Slovenia)|1847301998
+Vitanje (Slovenia)|465138066
+Mauritania (Mauritania)|1592840308
+Temburong (Brunei Darussalam)|2619489206
+Cascade (Seychelles)|1979799109
+Grad (Slovenia)|780865953
+Atyrau Oblysy (Kazakhstan)|816584137
+Fiji (Fiji)|2162946274
+Ha'il (Saudi Arabia)|2417626213
+Ocnita (Moldova)|2620872168
+Malawi (Malawi)|2719358543
+Lenkeran (Azerbaijan)|2758896175
+Erzurum (Turkey)|2836165749
+Sivas (Turkey)|3061039073
+Az Zawiyah (Libyan Arab Jamahiriya)|3145545534
+Moravce (Slovenia)|3261499573
+Addu City (Maldives)|3428470846
+Sabran (Azerbaijan)|299458622
+Adygeya Respublika (Russian Federation)|4137146401
+Al Bahah (Saudi Arabia)|4194087254
+Plaisance (Seychelles)|937307196
+Encamp (Andorra)|1123097841
+Kobarid (Slovenia)|1976112516
+Criuleni (Moldova)|2382179890
+Kaeb (Cambodia)|4062822267
+Ghardaia (Algeria)|2468069138
+Kasai-Oriental (Democratic Republic of The Congo)|2768545060
+Mayabeque (Cuba)|3825470141
+Birgu (Malta)|3290490666
+Terter (Azerbaijan)|3269640345
+Karaman (Turkey)|3068162826
+Aksaray (Turkey)|3813233899
+Ciego De Avila (Cuba)|3164746423
+Mai-Ndombe (Democratic Republic of The Congo)|2527533700
+Uvs (Mongolia)|3199357557
+Destrnik (Slovenia)|3602427280
+Lija (Malta)|914959810
+Gorisnica (Slovenia)|1791610117
+Tillaberi (Niger)|2115494709
+Sierra Leone (Sierra Leone)|2145249722
+Faadhippolhu (Maldives)|2461617586
+Timimoun (Algeria)|3817778146
+Anse Boileau (Seychelles)|4030460456
+Togdheer (Somalia)|2806306599
+Dojran (Macedonia)|2324234788
+Haut-Uele (Democratic Republic of The Congo)|3766053901
+Videm (Slovenia)|1261918950
+Jursinci (Slovenia)|3837132583
+Gornji Petrovci (Slovenia)|3876000385
+Saint Peter (Dominica)|2028836330
+Saint Patrick (Saint Vincent and The Grenadines)|2831752413
+Beyleqan (Azerbaijan)|2579025027
+Sulawesi Barat (Indonesia)|2489842632
+Tokat (Turkey)|2083808025
+Astara (Azerbaijan)|1881759557
+Oguz (Azerbaijan)|1761953913
+Usak (Turkey)|1467471358
+Corum (Turkey)|1305217436
+Samaxi (Azerbaijan)|1287673361
+Hiiumaa (Estonia)|2657381375
+Turkmenistan (Turkmenistan)|1187624565
+Ad Dakhiliyah (Oman)|885735151
+Kalmykiya Respublika (Russian Federation)|869485687
+Bougainville (Papua New Guinea)|595121546
+Dobrova-Polhov Gradec (Slovenia)|281007094
+Upper Nile (South Sudan)|190816654
+Rwanda (Rwanda)|113353502
+Kastamonu (Turkey)|68655602
+Sirnak (Turkey)|1250083443
+Abay Oblysy (Kazakhstan)|3400084132
+Agstafa (Azerbaijan)|3357329829
+Mokronog-Trebelno (Slovenia)|3228987026
+North Ari Atoll (Maldives)|3890077429
+Talas (Kyrgyzstan)|3114974556
+Al Marqab (Libyan Arab Jamahiriya)|4165242008
+Ombella-Mpoko (Central African Republic)|49134477
+Kirsehir (Turkey)|4239584991
+Villa Clara (Cuba)|3132399810
+Al Hudud Ash Shamaliyah (Saudi Arabia)|199697785
+Saba (Bonaire/Sint Eustatius/Saba)|3926863163
+Selnica Ob Dravi (Slovenia)|396465286
+Al Awsat (Eritrea)|3509468301
+Lakshadweep (India)|409826170
+Bari (Somalia)|613810133
+Hodh Ech Chargui (Mauritania)|950763798
+Swaziland (Swaziland)|67011314
+Saint David (Saint Vincent and The Grenadines)|2726073657
+Hovd (Mongolia)|3200291425
+Kwango (Democratic Republic of The Congo)|2849416243
+Ethiopia (Ethiopia)|3978691506
+Anse Aux Pins (Seychelles)|1923633537
+Lozovo (Macedonia)|1795612584
+Oman (Oman)|3695824913
+Ulytau Oblysy (Kazakhstan)|3602505555
+Mirna Pec (Slovenia)|3236196908
+Southern Grenadine Islands (Grenada)|1029305350
+Alibori (Benin)|1046808127
+Podvelka (Slovenia)|1169316012
+Rogasovci (Slovenia)|895624801
+South Ari Atoll (Maldives)|1801222958
+Cirkulane (Slovenia)|1967617445
+Pinar Del Rio (Cuba)|2371942418
+Saint Louis (Seychelles)|1048938498
+Naama (Algeria)|2827978958
+Mezica (Slovenia)|2584979112
+Khenchela (Algeria)|2569644200
+Gradsko (Macedonia)|2471032689
+Radece (Slovenia)|1933037038
+Gaza (Palestinian Territories)|1845369189
+Kavango West (Namibia)|1655293699
+Mordoviya Respublika (Russian Federation)|1601513872
+Qrendi (Malta)|1499607626
+Zaqatala (Azerbaijan)|1436695328
+Vevcani (Macedonia)|1219513342
+Yemen (Yemen)|1215774177
+Liberia (Liberia)|2777417305
+Vayoc Jor (Armenia)|774523842
+Janub Al Batinah (Oman)|696855027
+El-Bayadh (Algeria)|566970230
+Jerusalem (Palestinian Territories)|294287439
+Woleu-Ntem (Gabon)|159353936
+At Tafilah (Jordan)|133733446
+Demir Kapija (Macedonia)|130492812
+Mwaro (Burundi)|109535256
+Gao (Mali)|37689700
+Rodrigues Island (Mauritius)|16741610
+Neftcala (Azerbaijan)|1036052663
+Al Jabal Al Akhdar (Libyan Arab Jamahiriya)|1844755930
+Sahel (Burkina Faso)|4268229227
+Yozgat (Turkey)|3324359860
+Tindouf (Algeria)|4016391808
+South Huvadhu Atoll (Maldives)|3845898353
+Mayotte (Mayotte)|3457007850
+Papua Barat (Indonesia)|3574591363
+Couffo (Benin)|3022319579
+Mali (Mali)|3070552978
+Pemba North (Tanzania)|3032232677
+Imisli (Azerbaijan)|3026860780
+Grande Comore Ngazidja (Comoros)|1072765980
+Sud-Ubangi (Democratic Republic of The Congo)|1060771255
+Shefa (Vanuatu)|723801786
+Tahoua (Niger)|3749774023
+Glacis (Seychelles)|552558100
+Gudja (Malta)|483148293
+Ali Sabieh (Djibouti)|424829791
+Saint Patrick (Grenada)|4175205020
+Fuzuli (Azerbaijan)|4225603981
+Cuando-Cubango (Angola)|50275137
+Metlika (Slovenia)|1170595727
+Drochia (Moldova)|2263102775
+Riscani (Moldova)|1972583934
+Trnovska Vas (Slovenia)|3011415749
+Galguduud (Somalia)|9646995
+Soldanesti (Moldova)|1833540230
+Artemisa (Cuba)|3155531739
+Awdal (Somalia)|1290547946
+Savnik (Montenegro)|2740217899
+Guidimaka (Mauritania)|2713328493
+Djanet (Algeria)|3667205729
+Gornji Grad (Slovenia)|868988188
+Dominica (Dominica)|1267166963
+Elazig (Turkey)|470659983
+Kuzma (Slovenia)|1960099466
+Vallon De La Rousse (Monaco)|1261673524
+Gazi Baba (Macedonia)|2249828670
+Papua New Guinea (Papua New Guinea)|4096064492
+Varaklanu Novads (Latvia)|2972442008
+Gilbert Islands (Kiribati)|1630798258
+Rence-Vogrsko (Slovenia)|3154930969
+Plasnica (Macedonia)|4284346884
+Mary (Turkmenistan)|2782894342
+Goygol (Azerbaijan)|2644462382
+Magadanskaya Oblast (Russian Federation)|2623594438
+Najran (Saudi Arabia)|2501379418
+Herat (Afghanistan)|2385366277
+Bujumbura Rural (Burundi)|129546297
+Kalimantan Utara (Indonesia)|2200302612
+Gharb (Malta)|2185062915
+Pool (Congo)|2142486025
+Jericho (Palestinian Territories)|2139553665
+Shamal Ash Sharqiyah (Oman)|1990505221
+Tissemsilt (Algeria)|1626972977
+Region Continental (Equatorial Guinea)|1610363726
+Severnaya Osetiya-Alaniya Respublika (Russian Federation)|2655133462
+Sarpang (Bhutan)|1527554062
+Karbinci (Macedonia)|1279624853
+Giresun (Turkey)|1119894582
+Holy See (Vatican City State) (Holy See (Vatican City State))|1109588670
+Oudomxai (Lao Peoples Democratic Republic)|988496618
+Kasai (Democratic Republic of The Congo)|934238583
+Rumonge (Burundi)|803757267
+Paraguay (Paraguay)|518164664
+Tovuz (Azerbaijan)|302069083
+Karabuk (Turkey)|197858222
+Western Equatoria (South Sudan)|168355244
+Siyezen (Azerbaijan)|156694539
+Falkland Islands (Malvinas) (Falkland Islands (Malvinas))|1602710372
+Tanganyika (Democratic Republic of The Congo)|4275783961
+El Tarf (Algeria)|4272696200
+Taraclia (Moldova)|4202115161
+Naryn (Kyrgyzstan)|4153854735
+Triesen (Liechtenstein)|4066653013
+Grande-Anse (Haiti)|3938676357
+Bouenza (Congo)|3934477135
+Az Zaayin (Qatar)|3786267901
+Bilecik (Turkey)|3717515561
+Papua Barat Daya (Indonesia)|3457103268
+Aiwo (Nauru)|3373945281
+Schaan (Liechtenstein)|3339475026
+Andorra (Andorra)|3059231344
+Warrap (South Sudan)|2280707769
+Niari (Congo)|2725081800
+Serravalle (San Marino)|2768115320
+Kengerli (Azerbaijan)|3045973809
+Babek (Azerbaijan)|2663464533
+Sanaag (Somalia)|238940166
+Apace (Slovenia)|2621885647
+Dobrepolje (Slovenia)|368292176
+Markovci (Slovenia)|2618125678
+Oplotnica (Slovenia)|749316952
+Staro Nagoricane (Macedonia)|785993795
+Ljubno (Slovenia)|3960495139
+Kidricevo (Slovenia)|886594042
+Al Butnan (Libyan Arab Jamahiriya)|1106901731
+South Thiladhunmathi (Maldives)|2890817456
+Razkrizje (Slovenia)|3101118954
+Dikhil (Djibouti)|3203380167
+Savanes (Togo)|2245442592
+Kolhumadulu (Maldives)|1794100608
+Gorgol (Mauritania)|2286306215
+Tyva Respublika (Russian Federation)|1465611520
+Munxar (Malta)|1461758138
+Pehcevo (Macedonia)|3689046812
+Aluksnes Novads (Latvia)|2858999525
+Laborie (Saint Lucia)|1118502364
+Xekong (Lao Peoples Democratic Republic)|3547845266
+Tombouctou (Mali)|579799057
+Choiseul (Saint Lucia)|2561531324
+Hahdhunmathi (Maldives)|1839747046
+Agua Grande (Sao Tome and Principe)|260199047
+Sveti Jurij (Slovenia)|2297820912
+Ribnica Na Pohorju (Slovenia)|3109727074
+Saint David (Dominica)|752526061
+Sankuru (Democratic Republic of The Congo)|727618581
+North Miladhunmadulu (Maldives)|3411207268
+Lebap (Turkmenistan)|2465224223
+Holguin (Cuba)|2377590705
+Ouaddai (Chad)|2182129110
+Altay Respublika (Russian Federation)|2033602050
+Gorje (Slovenia)|1886475983
+Potaro-Siparuni (Guyana)|1829496129
+Agsu (Azerbaijan)|1818429582
+Kiribati (Kiribati)|1791556753
+Komen (Slovenia)|1744796454
+Takamaka (Seychelles)|1702554253
+Tiris Zemmour (Mauritania)|1698788177
+Bingol (Turkey)|1675156560
+Mus (Turkey)|1653497071
+Sangha (Congo)|1638782090
+Moyen-Ogooue (Gabon)|2483065271
+Mopti (Mali)|1373371920
+Kars (Turkey)|1249846404
+Az Zahirah (Oman)|1140496845
+Tehran (Iran (Islamic Republic of))|1073980271
+Saint John (Grenada)|953747486
+Al Jawf (Saudi Arabia)|797968624
+Ash Shamal (Qatar)|740254938
+Muramvya (Burundi)|596934155
+Denguele (Cote D Ivoire)|539099095
+Hrastnik (Slovenia)|524675307
+Abkhazia (Georgia)|410085641
+Cienfuegos (Cuba)|186183934
+Liquica (Timor-Leste)|173503465
+Saatli (Azerbaijan)|63427870
+Tunceli (Turkey)|1542244929
+Zirovnica (Slovenia)|3514056352
+Fars (Iran (Islamic Republic of))|4039106956
+Zardab (Azerbaijan)|4191949754
+Funafuti (Tuvalu)|3329249720
+Saudi Arabia (Saudi Arabia)|4206354702
+Dimashq (Syrian Arab Republic)|3283419013
+Fontvieille (Monaco)|3538300968
+Qala (Malta)|3067076597
+Naftalan (Azerbaijan)|3008998276
+Sabha (Libyan Arab Jamahiriya)|4267334418
+Gabon (Gabon)|2903368563
+Amasya (Turkey)|2821248790
+Al Hudaydah (Yemen)|2809379923
+Sool (Somalia)|4242728025
+Hiiraan (Somalia)|3660060692
+Donduseni (Moldova)|1077832
+Sainte-Devote (Monaco)|2746888895
+Burdur (Turkey)|2658267354
+Deir El Balah (Palestinian Territories)|3958334549
+Stueng Traeng (Cambodia)|2921824676
+Adrar (Mauritania)|665300792
+Loski Potok (Slovenia)|4012964405
+Polzela (Slovenia)|3769501867
+Zrnovci (Macedonia)|356582602
+Monaco (Monaco)|4248957365
+Novaci (Macedonia)|19366455
+Beau Vallon (Seychelles)|360866166
+Mauren (Liechtenstein)|3740212396
+Bosilovo (Macedonia)|1217470498
+Chukotskiy Avtonomnyy Okrug (Russian Federation)|1609870044
+Crooked Island and Long Cay (Bahamas)|3393979935
+Kerman (Iran (Islamic Republic of))|1642568592
+Mongala (Democratic Republic of The Congo)|3306899189
+Ngchesar (Palau)|3186950382
+Agadez (Niger)|2128212048
+Ziri (Slovenia)|2790730113
+Balaken (Azerbaijan)|2194130434
+Bordj Badji Mokhtar (Algeria)|2751942677
+Mojkovac (Montenegro)|2651333388
+Greenland (Greenland)|3449166797
+Krizevci (Slovenia)|3680047850
+Tandjile (Chad)|1304436360
+Zetale (Slovenia)|1324872787
+Suriname (Suriname)|1408475674
+Janub Ash Sharqiyah (Oman)|1424848005
+An Nuqat Al Khams (Libyan Arab Jamahiriya)|1426295121
+Faranah (Guinea)|1427521925
+Qazax (Azerbaijan)|1473987854
+Miren-Kostanjevica (Slovenia)|1489800722
+Rakhine (Myanmar)|1662804020
+Jan Mayen (Norway)|2218413661
+Batha (Chad)|1707501015
+Telenesti (Moldova)|1745067055
+Ordubad (Azerbaijan)|1854726066
+Micronesia - Federated States O (Federated States of Micronesia)|1956688540
+Centrale (Togo)|1991534722
+Eschen (Liechtenstein)|2013222378
+Samux (Azerbaijan)|14618747
+Moyen-Chari (Chad)|2114939775
+Western Bahr El-Ghazal (South Sudan)|2124004809
+Hodh El Gharbi (Mauritania)|2172096030
+Erzincan (Turkey)|1671225621
+Tubas (Palestinian Territories)|79822734
+Lomami (Democratic Republic of The Congo)|202587595
+Al Buraymi (Oman)|239346208
+Chatham Islands Territory (New Zealand)|295930993
+Bartin (Turkey)|337697440
+Tsirang (Bhutan)|485777521
+Santa Lucija (Malta)|508835955
+Nangarhar (Afghanistan)|509024665
+Glodeni (Moldova)|544505209
+Ordino (Andorra)|582617636
+Kercem (Malta)|1301181021
+Ibb (Yemen)|659616572
+Majsperk (Slovenia)|769865684
+Darnah (Libyan Arab Jamahiriya)|825958290
+Braslovce (Slovenia)|914530645
+Camaguey (Cuba)|962909590
+Namibia (Namibia)|1134572264
+Sinop (Turkey)|1147605773
+Gusinje (Montenegro)|1212427995
+Ahal (Turkmenistan)|1223340644
+Kostel (Slovenia)|1260458540
+Mamou (Guinea)|631189034
+Musandam (Oman)|2996279992
+Oio (Guinea-Bissau)|3062029069
+Guinea (Guinea)|3095994477
+Northern Bahr El-Ghazal (South Sudan)|3183416680
+Karachayevo-Cherkesskaya Respublika (Russian Federation)|3409694796
+Al Kufrah (Libyan Arab Jamahiriya)|3425951087
+Bayan-Olgiy (Mongolia)|3451701575
+Kommune Qeqertalik (Greenland)|3697044367
+Wake Island (US Minor Outlying Islands)|3754721619
+Niue (Niue)|2980066962
+Wadi Fira (Chad)|3796391651
+Arta (Djibouti)|3848974923
+Cuvette (Congo)|3933012280
+Kandahar (Afghanistan)|3994828035
+Grand Anse Praslin (Seychelles)|4033687879
+Demir Hisar (Macedonia)|4142610771
+Log-Dragomer (Slovenia)|4235805866
+Rutana (Burundi)|4244568458
+Maradi (Niger)|4246796250
+Benedikt (Slovenia)|4268742197
+Boke (Guinea)|3784009785
+Salfit (Palestinian Territories)|2568150801
+Zinder (Niger)|2297031306
+South Nilandhe Atoll (Maldives)|2604979499
+Alto Paraguay (Paraguay)|2623189357
+Algeria (Algeria)|2468166489
+Lacin (Azerbaijan)|2811099628
+Isla (Malta)|2432426265
+Saint Mark (Grenada)|2821621843
+Bururi (Burundi)|2392565850
+Agdam (Azerbaijan)|2363452243
+Cimislia (Moldova)|2326081549
+Larvotto (Monaco)|2049481223
+Muta (Slovenia)|2404365078
+Tagant (Mauritania)|491779058
+Baie Lazare (Seychelles)|3963180319
+Kidal (Mali)|3934309514
+Dobrna (Slovenia)|2564068904
+Svalbard (Norway)|1840710947
+Kasai Central (Democratic Republic of The Congo)|777495667
+Wadi Al Hayat (Libyan Arab Jamahiriya)|822319456
+Pluzine (Montenegro)|2636936777
+Brunei Darussalam (Brunei Darussalam)|1099392063
+Sveti Andraz V Slovenskih Gor (Slovenia)|1441009201
+Ngozi (Burundi)|1173383828
+Anse Royale (Seychelles)|3133623141
+Biombo (Guinea-Bissau)|2839869307
+Chad (Chad)|2846004033
+Somalia (Somalia)|2867480094
+Guantanamo (Cuba)|2599436092
+Al Jabal Al Gharbi (Libyan Arab Jamahiriya)|1052103270
+Gedebey (Azerbaijan)|1083952824
+Culfa (Azerbaijan)|1108934958
+El Meniaa (Algeria)|1129433155
+Cankova (Slovenia)|1227225334
+Manatuto (Timor-Leste)|1256126005
+Leova (Moldova)|1335742187
+Borgo Maggiore (San Marino)|1342443341
+Bayburt (Turkey)|1377775958
+Las Tunas (Cuba)|1400017831
+Ghazni (Afghanistan)|1473218439
+Cesinovo-Oblesevo (Macedonia)|1550818285
+Papua Selatan (Indonesia)|1552960667
+Chhukha (Bhutan)|1651228355
+Briceni (Moldova)|52094850
+Assaba (Mauritania)|1676260754
+Shamal Darfur (Sudan)|1702672499
+Kayah (Myanmar)|1712002912
+Samtse (Bhutan)|1766497763
+Palau (Palau)|1969967200
+Shiamal Kurdufan (Sudan)|1997644084
+Paro (Bhutan)|2025578194
+Serur (Azerbaijan)|2094242205
+Hadjer Lamis (Chad)|2104678831
+Calarasi (Moldova)|2114556181
+Shabeellaha Dhexe (Somalia)|2186226356
+Sanma (Vanuatu)|2252080352
+Liechtenstein (Liechtenstein)|2280474323
+Baghlan (Afghanistan)|2314050194
+Beni Abbes (Algeria)|1670003618
+Janub Darfur (Sudan)|56158221
+Mulaku Atoll (Maldives)|93003767
+Al Wusta (Oman)|106118507
+Bahr El Gazel (Chad)|145366293
+Bubanza (Burundi)|189484872
+Vuzenica (Slovenia)|227270995
+La Massana (Andorra)|237311889
+Dornava (Slovenia)|304869358
+Isla De La Juventud (Cuba)|317115695
+State of Palestine (Palestinian Territories)|349154989
+Montserrat (Montserrat)|382961194
+Ta'izz (Yemen)|427889554
+Smarjeske Toplice (Slovenia)|434496912
+Shabwah (Yemen)|547044709
+Al Jufrah (Libyan Arab Jamahiriya)|1037648870
+Loska Dolina (Slovenia)|588719003
+Faryab (Afghanistan)|607501051
+Dhamar (Yemen)|640969769
+Bel Ombre (Seychelles)|649833956
+Tadjourah (Djibouti)|652734480
+Gumushane (Turkey)|772426534
+Phongsali (Lao Peoples Democratic Republic)|840706929
+Bamingui-Bangoran (Central African Republic)|859719733
+Canaries (Saint Lucia)|874976634
+Port Glaud (Seychelles)|925147403
+Yaren (Nauru)|959875811
+Anse La Raye (Saint Lucia)|960203945
+Paktika (Afghanistan)|973625452
+Konce (Macedonia)|1008612185
+Wadi Ash Shati (Libyan Arab Jamahiriya)|575682181
+In Salah (Algeria)|3382482967
+Transnistria (Moldova)|3382667054
+Muyinga (Burundi)|3481876528
+Siirt (Turkey)|3523113756
+Al Wahat (Libyan Arab Jamahiriya)|3548108596
+Balzers (Liechtenstein)|3595896253
+Eua (Tonga)|3603797400
+Xghajra (Malta)|3604038946
+Libyan Arab Jamahiriya (Libyan Arab Jamahiriya)|3605183362
+Mazandaran (Iran (Islamic Republic of))|3635348403
+Kirundo (Burundi)|3742786289
+Felidhu Atoll (Maldives)|3764880238
+Nazarje (Slovenia)|3784610551
+Basarabeasca (Moldova)|3807633698
+Haut-Mbomou (Central African Republic)|2381736424
+Susa (Azerbaijan)|3862864920
+Skocjan (Slovenia)|3912879608
+Zengilan (Azerbaijan)|3993544147
+Odranci (Slovenia)|4001590289
+Lautem (Timor-Leste)|4033325272
+Santiago De Cuba (Cuba)|4074864037
+Nzerekore (Guinea)|4155243873
+Mayo-Kebbi-Est (Chad)|4173531457
+Guainia (Colombia)|4188657452
+Bitlis (Turkey)|4201326412
+Azarbaijan-E Sharqi (Iran (Islamic Republic of))|4217679648
+Cankiri (Turkey)|4260134358
+Balkan (Turkmenistan)|4261067939
+An Nil Al Abyad (Sudan)|4262828836
+Bumthang (Bhutan)|3852068287
+Likouala (Congo)|2408742460
+Fontana (Malta)|2453257121
+Melekeok (Palau)|2479273461
+Anse Etoile (Seychelles)|2485553472
+El Meghaier (Algeria)|2497753155
+Kapisa (Afghanistan)|2569017727
+Kelbecer (Azerbaijan)|2649243840
+Kosrae (Federated States of Micronesia)|2696364546
+Salamat (Chad)|2719919665
+Surt (Libyan Arab Jamahiriya)|2742318381
+Ouled Djellal (Algeria)|2781691969
+Cacheu (Guinea-Bissau)|2782041839
+Mayaguana (Bahamas)|2802086562
+Logone Occidental (Chad)|2828124276
+Azarbayjan-E-Gharbi (Iran (Islamic Republic of))|3370168196
+Lhuentse (Bhutan)|2861194690
+Niger (Niger)|2894283353
+Chari-Baguirmi (Chad)|2925320146
+Vavau (Tonga)|2960248563
+Podlehnik (Slovenia)|3013744149
+Cibitoke (Burundi)|3034995545
+Atua (Samoa)|3037312887
+Gagaifomauga (Samoa)|3054195339
+Vransko (Slovenia)|3136260691
+Yap (Federated States of Micronesia)|3178835587
+Madagascar (Madagascar)|3210247684
+Afghanistan (Afghanistan)|3212619806
+Nalut (Libyan Arab Jamahiriya)|3214333912
+Hamgyong-Bukto (North Korea)|3283622967
+Cankuzo (Burundi)|3350561147
+Bolama (Guinea-Bissau)|2834696701

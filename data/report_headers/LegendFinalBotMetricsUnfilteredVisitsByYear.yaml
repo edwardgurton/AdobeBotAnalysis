@@ -1,0 +1,11 @@
+report_name: LegendFinalBotMetricsUnfilteredVisitsByYear
+columns:
+  - id
+  - variablesdaterangeyear
+  - unique_visitors
+  - visits
+  - fileName
+  - botRuleName
+  - rsidCleanName
+  - fromDate
+  - toDate

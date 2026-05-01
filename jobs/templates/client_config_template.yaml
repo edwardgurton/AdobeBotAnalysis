@@ -1,0 +1,28 @@
+# Your Adobe credentials and IDs
+adobe:
+  clientID: 
+  clientSecret: 
+  adobeOrgID: 
+  globalCompanyID: 
+  rsid: 
+
+#get rsid by following the instructions for generating a new table request
+
+reportConfig:
+
+# Specify the segment, metrics, and dimensions. All reports include Unique Visitors and Visits
+# The segment is []. If no global segment then leave blank.
+# The added metrics 
+# The added dimensions are None.
+  reportTemplate:
+    segmentId: 
+    addMetrics: true
+    metricIds: 
+    addDimension: true
+    dimensionId: 
+    rowLimit: 
+
+
+
+
+

@@ -1,0 +1,50 @@
+[
+  {
+    "id": "s3938_67efce07a17b2a4a178a0f1d",
+    "name": "variables/geocountry = United States"
+  },
+  {
+    "id": "s3938_67efce0717f41903d21f454e",
+    "name": "variables/geocountry = Canada"
+  },
+  {
+    "id": "s3938_67efce08a17b2a4a178a0f1e",
+    "name": "variables/geocountry = United Kingdom"
+  },
+  {
+    "id": "s3938_67efce08e8bf2e4a0b87086b",
+    "name": "variables/geocountry = Australia"
+  },
+  {
+    "id": "s3938_67efce09a17b2a4a178a0f1f",
+    "name": "variables/geocountry = Singapore"
+  },
+  {
+    "id": "s3938_67efce0917f41903d21f454f",
+    "name": "variables/geocountry = Mexico"
+  },
+  {
+    "id": "s3938_67efce09dbe2875a3848d5e6",
+    "name": "variables/geocountry = Philippines"
+  },
+  {
+    "id": "s3938_67efce0a17f41903d21f4550",
+    "name": "variables/geocountry = Malaysia"
+  },
+  {
+    "id": "s3938_67efce0a22106f5da2ef52c9",
+    "name": "variables/geocountry = New Zealand"
+  },
+  {
+    "id": "s3938_67efce0b122bf10a47124455",
+    "name": "variables/geocountry = India"
+  },
+  {
+    "id": "s3938_67efce0bdb6d30039d55ac26",
+    "name": "variables/geocountry = Ireland"
+  },
+  {
+    "id": "s3938_67efce0ca17b2a4a178a0f20",
+    "name": "variables/geocountry = Germany"
+  }
+]

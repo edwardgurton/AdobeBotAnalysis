@@ -1,0 +1,13 @@
+report_name: LegendClickoutsByGeoregionNAOnly
+columns:
+  - id
+  - variablesgeoregion
+  - unique_visitors
+  - visits
+  - raw_clickouts_linear_7d
+  - raw_clickouts_participation_7d
+  - unique_visit_clickouts_linear_7d
+  - unique_visit_clickouts_participation_7d
+  - fileName
+  - fromDate
+  - toDate

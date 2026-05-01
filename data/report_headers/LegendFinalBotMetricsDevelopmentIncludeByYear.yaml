@@ -1,0 +1,9 @@
+report_name: LegendFinalBotMetricsDevelopmentIncludeByYear
+columns:
+  - id
+  - variablesdaterangeyear
+  - unique_visitors
+  - visits
+  - fileName
+  - fromDate
+  - toDate

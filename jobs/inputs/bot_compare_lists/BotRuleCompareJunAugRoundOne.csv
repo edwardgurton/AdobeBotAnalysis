@@ -1,0 +1,8 @@
+﻿dimSegmentId,botRuleName,ReportToIgnore
+s3938_693d5d24dcd11c4a874ff80f,01-BotCompare-JunAug25-Casinoonlinecom-Domain-your-serverde,Domain
+s3938_693d5d4a62fb9877ebbab877,02-BotCompare-JunAug25-Spielautomatende-User-Agent,UserAgent
+s3938_693d5d6e4126b825f379517e,03-BotCompare-JunAug25-Casinocl-MonitorResolution-1400-x-1366,MonitorResolution
+s3938_693d5d934126b825f379517f,04-BotCompare-JunAug25-OnlineCasinoat-Domain-sprintcom,Domain
+s3938_693d5db862fb9877ebbab878,05-BotCompare-JunAug25-OnlineSlotscom-User-Agent,UserAgent
+s3938_693d5dfc62fb9877ebbab879,06-BotCompare-JunAug25-OnlineSlotscom-Domain-uni-saarlandde,Domain
+s3938_693d5e1b62fb9877ebbab87a,07-BotCompare-JunAug25-GuruMain-Domain-rapidseedboxcom,Domain

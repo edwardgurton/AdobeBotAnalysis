@@ -1,0 +1,9 @@
+report_name: SegmentsBuilderCountry50
+columns:
+  - id
+  - geo_country
+  - unique_visitors
+  - visits
+  - fileName
+  - fromDate
+  - toDate

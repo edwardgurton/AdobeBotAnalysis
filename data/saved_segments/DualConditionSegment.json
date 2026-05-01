@@ -1,0 +1,49 @@
+{
+  "name": "BOTCOMPARE_FebMay25RoundThree_01: OnlineBettingcom - OperatingSystem=Android 160 AND Domain = yourserverde ",
+  "description": "",
+  "definition": {
+    "container": {
+      "func": "container",
+      "context": "visits",
+      "pred": {
+        "func": "container",
+        "context": "hits",
+        "pred": {
+          "func": "and",
+          "preds": [
+            {
+              "str": "Android 16.0.0",
+              "val": {
+                "func": "attr",
+                "name": "variables/operatingsystem"
+              },
+              "description": "Operating Systems",
+              "func": "streq"
+            },
+            {
+              "str": "your-server.de",
+              "val": {
+                "func": "attr",
+                "name": "variables/filtereddomain"
+              },
+              "description": "Domain",
+              "func": "streq"
+            }
+          ]
+        }
+      }
+    },
+    "func": "segment",
+    "version": [
+      1,
+      0,
+      0
+    ]
+  },
+  "id": "s3938_69455a2045508d621783af77",
+  "isPostShardId": true,
+  "rsid": "triadsonlinebetting.com",
+  "owner": {
+    "id": 200419062
+  }
+}

@@ -1,0 +1,3 @@
+CompareValidate,SegmentName,RSIDCleanName,Dimension1,Dimension1Item,Dimension2,Dimension2Item
+Compare,BOTCOMPARE_Example_03: SiteName - OperatingSystems=Linux AND Domain=your-server.de,Legend,OperatingSystems,Linux,Domain,your-server.de
+Validate,BOTVALIDATE_Example_05: SiteName - BrowserType=Opera AND MonitorResolution=800x600,Legend,BrowserType,Opera,MonitorResolution,800 x 600
