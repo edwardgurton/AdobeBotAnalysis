@@ -15,11 +15,11 @@ Status legend: `☐ todo` · `🔄 in-progress` · `✅ done` · `⚠️ blocked
 
 ## Current State
 
-**Active step:** Step 5 — Basic download (single request) — code complete, awaiting live validation
+**Active step:** Step 6 — Date, RSID, and segment iteration
 
-**Last commit:** `Step 5.1: flows/report_download.py — download_report() + make_output_path(); load_report_group(); wire run CLI command; 14 passing tests (35 total)`
+**Last commit:** `Step 5.2: fix Unicode output characters for Windows terminal`
 
-**Next concrete action:** Live validation — run `adobe-downloader run --config jobs/examples/legend_bot_investigation_jan25.yaml --report botInvestigationMetricsByBrowser` against real credentials and compare the output JSON to the JS-generated equivalent. Once validated, mark Step 5 done and begin Step 6 (date/RSID/segment iteration).
+**Next concrete action:** Begin Step 6. Add `iterate_dates()` and `iterate_rsids()` async generators to `flows/report_download.py`. Update the `run` command to iterate all RSIDs × all date intervals (using `job.interval` to split the date range). Support `segment_list_file` segment source. Validation: multi-RSID multi-date job completes with the correct number of output files.
 
 **In-flight (uncommitted) work:** *(none)*
 
@@ -79,11 +79,11 @@ Status legend: `☐ todo` · `🔄 in-progress` · `✅ done` · `⚠️ blocked
 
 ## Phase 2 — Report Download
 
-### 🔄 Step 5 — Basic download (single request)
+### ✅ Step 5 — Basic download (single request)
 - **Started:** 2026-05-01
-- **Completed:** — (code complete; awaiting live API validation)
-- **Validation:** Run `adobe-downloader run -c jobs/examples/legend_bot_investigation_jan25.yaml -r botInvestigationMetricsByBrowser` and compare output JSON to JS version.
-- **Notes:** `flows/report_download.py` — `download_report(client, request_body, output_path)` makes one API call and saves JSON; `make_output_path()` matches JS naming convention (`{base}/{client}/JSON/{client}_{report}{_extra}_{DIMSEG{id}_}{from}_{to}.json`). `load_report_group()` added to `config/report_definitions.py`. `run` CLI command wired: resolves report defs (report_ref / report_group / inline), resolves first RSID (single/list/file), iterates report defs sequentially. 35 tests pass.
+- **Completed:** 2026-05-01
+- **Validation:** `adobe-downloader run -c jobs/validation/step5_live_validation.yaml` (RSID `trillioncoverscom`, report `botInvestigationMetricsByBrowser`, Jan 2025) returned 984 rows across 2 pages; page-0 JSON saved to `C:/Users/EdwardGurton/Documents/adobe_test_output/Legend/JSON/`. Structure (columnIds, dimension, rows) matches expected shape. Note: pagination (totalPages > 1) is a known limitation deferred to Step 6.
+- **Notes:** `flows/report_download.py` — `download_report(client, request_body, output_path)` makes one API call and saves JSON; `make_output_path()` matches JS naming convention (`{base}/{client}/JSON/{client}_{report}{_extra}_{DIMSEG{id}_}{from}_{to}.json`). `load_report_group()` added to `config/report_definitions.py`. `run` CLI command wired: resolves report defs (report_ref / report_group / inline), resolves first RSID (single/list/file), iterates report defs sequentially. Fixed Windows terminal Unicode encoding (→/✓ → ASCII). 35 tests pass.
 
 ### ☐ Step 6 — Date, RSID, and segment iteration
 - **Started:** —
@@ -230,10 +230,10 @@ Status legend: `☐ todo` · `🔄 in-progress` · `✅ done` · `⚠️ blocked
 
 ### 2026-05-01 (session 6)
 - **Worked on:** Step 5
-- **Commits:** `Step 5.1: flows/report_download.py — download_report() + make_output_path(); load_report_group(); wire run CLI command; 14 passing tests (35 total)` (1 commit)
-- **Done this session:** Created `adobe_downloader/flows/__init__.py` and `adobe_downloader/flows/report_download.py` — `download_report(client, request_body, output_path)` calls `AdobeClient.get_report()` and writes the JSON response to disk; `make_output_path()` mirrors the JS naming convention (`{base}/{client}/JSON/{client}_{report}{_extra}_{DIMSEG{id}_}{from}_{to}.json`). Added `load_report_group(group_name)` to `config/report_definitions.py`. Wired the `run` CLI command: handles `report_ref`, `report_group`, and inline `report`; handles `single`, `list`, and `file` RSID sources; iterates all resolved report definitions sequentially. 14 new tests, 35 total.
-- **Left in flight:** Live API validation against real credentials.
-- **Next action:** Validate with real credentials — run `adobe-downloader run -c jobs/examples/legend_bot_investigation_jan25.yaml -r botInvestigationMetricsByBrowser` and compare output JSON to JS-generated equivalent. Then begin Step 6 (date/RSID/segment iteration).
+- **Commits:** `Step 5.1` (flows + CLI + tests), `Step 5.2` (Windows Unicode fix) (2 commits)
+- **Done this session:** Created `adobe_downloader/flows/__init__.py` and `adobe_downloader/flows/report_download.py` — `download_report()` + `make_output_path()`. Added `load_report_group()` to `config/report_definitions.py`. Wired `run` CLI command. Fixed Windows terminal Unicode. Live validated: `trillioncoverscom` / `botInvestigationMetricsByBrowser` / Jan 2025 → 984 rows, correct structure. 14 new tests, 35 total.
+- **Left in flight:** Nothing.
+- **Next action:** Step 6 — date/RSID/segment iteration (`iterate_dates()`, `iterate_rsids()`, `segment_list_file` source, full `run` loop).
 
 ### 2026-05-01 (session 3)
 - **Worked on:** Step 2
