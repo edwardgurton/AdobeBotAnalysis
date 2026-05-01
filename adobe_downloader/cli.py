@@ -179,7 +179,7 @@ def run(config: Path, report: str | None) -> None:
 
     click.echo(f"RSID    : {rsid}")
     click.echo(f"Reports : {len(report_defs)}")
-    click.echo(f"Dates   : {job.date_range.from_date} → {job.date_range.to}")
+    click.echo(f"Dates   : {job.date_range.from_date} -> {job.date_range.to}")
 
     async def _run() -> None:
         ac = AdobeClient(job.client)
@@ -198,7 +198,7 @@ def run(config: Path, report: str | None) -> None:
                     file_name_extra=job.file_name_extra,
                 )
                 await download_report(ac, req_body, out_path)
-                click.secho(f"  ✓ {rd.name} → {out_path}", fg="green")
+                click.secho(f"  OK {rd.name} -> {out_path}", fg="green")
         finally:
             await ac.close()
 
