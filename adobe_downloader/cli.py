@@ -109,13 +109,19 @@ def list_users(client: str) -> None:
     help="Download only this named report (overrides report_group multi-report expansion).",
 )
 def run(config: Path, report: str | None) -> None:
-    """Execute a report_download job (single-request mode, Step 5)."""
+    """Execute a report_download job: iterate all RSIDs x date intervals x segments."""
     from adobe_downloader.config.loader import load_config
     from adobe_downloader.config.report_definitions import load_report_group, load_report_registry
     from adobe_downloader.config.schema import ReportDownloadConfig
     from adobe_downloader.core.api_client import AdobeClient
     from adobe_downloader.core.request_builder import build_request
-    from adobe_downloader.flows.report_download import download_report, make_output_path
+    from adobe_downloader.flows.report_download import (
+        download_report,
+        iterate_dates,
+        iterate_rsids,
+        iterate_segments,
+        make_output_path,
+    )
 
     try:
         job = load_config(config)
@@ -157,50 +163,55 @@ def run(config: Path, report: str | None) -> None:
             click.secho(f"Report {report!r} not found in resolved definitions.", fg="red")
             sys.exit(1)
 
-    # Resolve first RSID (Step 5 — single request; iteration added in Step 6)
-    rsids_cfg = job.rsids
-    if rsids_cfg.source == "single":
-        assert rsids_cfg.single is not None
-        rsid = rsids_cfg.single
-    elif rsids_cfg.source == "list":
-        assert rsids_cfg.rsid_list is not None
-        rsid = rsids_cfg.rsid_list[0]
-    else:  # file
-        assert rsids_cfg.file is not None
-        rsid_file = Path(rsids_cfg.file)
+    # Validate RSID file exists before starting downloads
+    if job.rsids.source == "file":
+        rsid_file = Path(job.rsids.file)  # type: ignore[arg-type]
         if not rsid_file.exists():
-            click.secho(f"RSID file not found: {rsids_cfg.file}", fg="red")
+            click.secho(f"RSID file not found: {job.rsids.file}", fg="red")
             sys.exit(1)
-        lines = [ln.strip() for ln in rsid_file.read_text(encoding="utf-8").splitlines() if ln.strip()]
-        if not lines:
-            click.secho(f"RSID file is empty: {rsids_cfg.file}", fg="red")
-            sys.exit(1)
-        rsid = lines[0]
 
-    click.echo(f"RSID    : {rsid}")
+    # Validate segment file exists before starting downloads
+    if job.segments is not None and job.segments.source == "segment_list_file":
+        seg_file = Path(job.segments.file)  # type: ignore[arg-type]
+        if not seg_file.exists():
+            click.secho(f"Segment list file not found: {job.segments.file}", fg="red")
+            sys.exit(1)
+
+    date_intervals = list(iterate_dates(job.date_range, job.interval))
+    rsid_list = list(iterate_rsids(job.rsids))
+
+    click.echo(f"RSIDs   : {len(rsid_list)}")
     click.echo(f"Reports : {len(report_defs)}")
-    click.echo(f"Dates   : {job.date_range.from_date} -> {job.date_range.to}")
+    click.echo(f"Dates   : {job.date_range.from_date} -> {job.date_range.to} ({job.interval}, {len(date_intervals)} interval(s))")
 
     async def _run() -> None:
         ac = AdobeClient(job.client)
+        total = 0
         try:
-            for rd in report_defs:
-                req_body = build_request(
-                    report_def=rd,
-                    date_range=job.date_range,  # type: ignore[arg-type]
-                    rsid=rsid,
-                )
-                out_path = make_output_path(
-                    base_folder=job.output.base_folder,
-                    client=job.client,
-                    report_name=rd.name,
-                    date_range=job.date_range,  # type: ignore[arg-type]
-                    file_name_extra=job.file_name_extra,
-                )
-                await download_report(ac, req_body, out_path)
-                click.secho(f"  OK {rd.name} -> {out_path}", fg="green")
+            for rsid in rsid_list:
+                for date_interval in date_intervals:
+                    for seg_id, seg_ids in iterate_segments(job.segments):
+                        for rd in report_defs:
+                            req_body = build_request(
+                                report_def=rd,
+                                date_range=date_interval,
+                                rsid=rsid,
+                                segments=seg_ids,
+                            )
+                            out_path = make_output_path(
+                                base_folder=job.output.base_folder,
+                                client=job.client,
+                                report_name=rd.name,
+                                date_range=date_interval,
+                                file_name_extra=job.file_name_extra,
+                                segment_id=seg_id,
+                            )
+                            await download_report(ac, req_body, out_path)
+                            click.secho(f"  OK {rsid} / {rd.name} -> {out_path.name}", fg="green")
+                            total += 1
         finally:
             await ac.close()
+        click.echo(f"Done. {total} file(s) downloaded.")
 
     try:
         asyncio.run(_run())
