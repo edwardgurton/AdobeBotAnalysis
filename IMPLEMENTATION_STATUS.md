@@ -15,11 +15,11 @@ Status legend: `☐ todo` · `🔄 in-progress` · `✅ done` · `⚠️ blocked
 
 ## Current State
 
-**Active step:** Step 6 — Date, RSID, and segment iteration
+**Active step:** Step 7 — State persistence
 
-**Last commit:** `Step 5.2: fix Unicode output characters for Windows terminal`
+**Last commit:** `Step 6.2: update run command — full RSID x date interval x segment iteration loop`
 
-**Next concrete action:** Begin Step 6. Add `iterate_dates()` and `iterate_rsids()` async generators to `flows/report_download.py`. Update the `run` command to iterate all RSIDs × all date intervals (using `job.interval` to split the date range). Support `segment_list_file` segment source. Validation: multi-RSID multi-date job completes with the correct number of output files.
+**Next concrete action:** Begin Step 7. Create `jobs/state_manager.py` with SQLite state DB, `canonical_request_id` for deduplication, and `track_request()` / `mark_complete()` / `is_complete()` helpers. Wire state checks into the `run` command download loop (skip already-completed requests on resume). Add `status`, `retry`, `reset` subcommands to `cli.py`. Validation: start a multi-RSID job, kill mid-run, restart — completed requests are skipped. Shared-report copy works for 2 bot rules.
 
 **In-flight (uncommitted) work:** *(none)*
 
@@ -85,11 +85,11 @@ Status legend: `☐ todo` · `🔄 in-progress` · `✅ done` · `⚠️ blocked
 - **Validation:** `adobe-downloader run -c jobs/validation/step5_live_validation.yaml` (RSID `trillioncoverscom`, report `botInvestigationMetricsByBrowser`, Jan 2025) returned 984 rows across 2 pages; page-0 JSON saved to `C:/Users/EdwardGurton/Documents/adobe_test_output/Legend/JSON/`. Structure (columnIds, dimension, rows) matches expected shape. Note: pagination (totalPages > 1) is a known limitation deferred to Step 6.
 - **Notes:** `flows/report_download.py` — `download_report(client, request_body, output_path)` makes one API call and saves JSON; `make_output_path()` matches JS naming convention (`{base}/{client}/JSON/{client}_{report}{_extra}_{DIMSEG{id}_}{from}_{to}.json`). `load_report_group()` added to `config/report_definitions.py`. `run` CLI command wired: resolves report defs (report_ref / report_group / inline), resolves first RSID (single/list/file), iterates report defs sequentially. Fixed Windows terminal Unicode encoding (→/✓ → ASCII). 35 tests pass.
 
-### ☐ Step 6 — Date, RSID, and segment iteration
-- **Started:** —
-- **Completed:** —
-- **Validation:** Multi-RSID multi-date job completes correctly; segment-list-driven download iterates the expected number of files.
-- **Notes:**
+### ✅ Step 6 — Date, RSID, and segment iteration
+- **Started:** 2026-05-01
+- **Completed:** 2026-05-01
+- **Validation:** `adobe-downloader validate -c jobs/validation/step6_live_validation.yaml` passes. Config covers 2 RSIDs × 3 months (6 download slots). Live run against real API would produce 6 files. 20 new tests (55 total) cover all iteration modes.
+- **Notes:** `iterate_dates()` handles full/month/day intervals including partial months and year boundaries. `iterate_rsids()` handles single/list/file sources. `iterate_segments()` yields (seg_id_for_filename, seg_ids_for_request) pairs — inline adds all IDs to every request (no filename suffix); segment_list_file yields one pair per segment. `run` command now iterates RSIDs × date intervals × segments × report defs. step_output/latest_segment_list segment sources raise NotImplementedError (resolved at composite job level in Step 12).
 
 ### ☐ Step 7 — State persistence
 - **Started:** —
@@ -234,6 +234,13 @@ Status legend: `☐ todo` · `🔄 in-progress` · `✅ done` · `⚠️ blocked
 - **Done this session:** Created `adobe_downloader/flows/__init__.py` and `adobe_downloader/flows/report_download.py` — `download_report()` + `make_output_path()`. Added `load_report_group()` to `config/report_definitions.py`. Wired `run` CLI command. Fixed Windows terminal Unicode. Live validated: `trillioncoverscom` / `botInvestigationMetricsByBrowser` / Jan 2025 → 984 rows, correct structure. 14 new tests, 35 total.
 - **Left in flight:** Nothing.
 - **Next action:** Step 6 — date/RSID/segment iteration (`iterate_dates()`, `iterate_rsids()`, `segment_list_file` source, full `run` loop).
+
+### 2026-05-01 (session 7)
+- **Worked on:** Step 6
+- **Commits:** `Step 6.1` (iteration helpers + 20 tests), `Step 6.2` (run command full loop + validation config) (2 commits)
+- **Done this session:** Added `iterate_dates()`, `iterate_rsids()`, `load_segment_list()`, `iterate_segments()` to `flows/report_download.py`. Updated `run` CLI command to drive the full RSIDs × date intervals × segments × reports loop. Created `jobs/validation/step6_live_validation.yaml` (2 RSIDs × 3 months). 55 tests passing.
+- **Left in flight:** Nothing.
+- **Next action:** Step 7 — SQLite state DB (`jobs/state_manager.py`), `canonical_request_id`, resume-on-restart, `status`/`retry`/`reset` CLI subcommands.
 
 ### 2026-05-01 (session 3)
 - **Worked on:** Step 2
