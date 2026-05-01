@@ -15,11 +15,11 @@ Status legend: `☐ todo` · `🔄 in-progress` · `✅ done` · `⚠️ blocked
 
 ## Current State
 
-**Active step:** Step 1 — Project scaffold + config + logging + templates
+**Active step:** Step 2 — Auth + API client
 
-**Last commit:** `Step 0.75: Synthetic test fixtures for all transform types`
+**Last commit:** `Step 1.2: 19 job config templates + 10 worked examples`
 
-**Next concrete action:** Begin Step 1. Create the Python package skeleton (`adobe_downloader/`), `pyproject.toml`, Pydantic config schemas for all job types, and the logging setup. Validate with `adobe-downloader validate --config <example>`.
+**Next concrete action:** Begin Step 2. Implement `core/auth.py` (OAuth token fetch with 5-minute expiry buffer, in-memory caching) and `core/api_client.py` (`AdobeClient` with `get_users()` and `get_authenticated_user()` methods). Validate with `adobe-downloader list-users --client Legend`.
 
 **In-flight (uncommitted) work:** *(none)*
 
@@ -51,11 +51,11 @@ Status legend: `☐ todo` · `🔄 in-progress` · `✅ done` · `⚠️ blocked
 
 ## Phase 1 — Foundation
 
-### ☐ Step 1 — Project scaffold + config + logging + templates
-- **Started:** —
-- **Completed:** —
-- **Validation:** `adobe-downloader validate --config <example>` parses and validates every example config without error.
-- **Notes:**
+### ✅ Step 1 — Project scaffold + config + logging + templates
+- **Started:** 2026-05-01
+- **Completed:** 2026-05-01
+- **Validation:** `adobe-downloader validate --config jobs/examples/<any>.yaml` parses all 10 examples and all 19 templates without schema errors. File-not-found warnings (exit 2) are expected for examples referencing local data paths.
+- **Notes:** One pre-existing non-job-config file (`client_config_template.yaml`) correctly fails validation — it is a credential template, not a job config. `RsidSource.list` field renamed to `rsid_list` with alias `list` to avoid Python builtin shadowing bug.
 
 ### ☐ Step 2 — Auth + API client
 - **Started:** —
@@ -200,9 +200,16 @@ Status legend: `☐ todo` · `🔄 in-progress` · `✅ done` · `⚠️ blocked
 - **Next action:** ...
 -->
 
-### 2026-05-01
+### 2026-05-01 (session 1)
 - **Worked on:** Steps 0 and 0.5
 - **Commits:** `Step 0: File inventory and disposition`, `Step 0.5: Data migration script and guide` (2 commits)
 - **Done this session:** Updated CLAUDE.md and IMPLEMENTATION_STATUS.md to replace `Full__Repo_XML` reference with `legacy_js/` directory. Inventoried all 68 JS files and ~115 non-JS files with disposition tags (`docs/file_inventory.md`). Wrote `scripts/migrate_data.py` which converts JS arrays to plain text/JSON, extracts header definitions to YAML, and copies all data files to their target locations. Fixed a comment-line regex bug in header extraction. Produced `docs/data_migration_guide.md` documenting all migrations and exclusions.
 - **Left in flight:** Nothing.
 - **Next action:** Step 1 — Project scaffold. Create `pyproject.toml`, package skeleton, Pydantic job config schemas, logging setup.
+
+### 2026-05-01 (session 2)
+- **Worked on:** Step 1
+- **Commits:** `Step 1.1: pyproject.toml + package skeleton + logging + CLI entry point`, `Step 1.2: 19 job config templates + 10 worked examples` (2 commits)
+- **Done this session:** Created `pyproject.toml` (setuptools build system, 5 dependencies: click/httpx/pydantic/pyyaml/tenacity). Created `adobe_downloader/` package with `__init__.py`, `cli.py` (Click CLI with validate + stub commands), `config/schema.py` (Pydantic discriminated union covering all 6 job types), `config/loader.py` (YAML load + file reference checks + credential check), `utils/logging.py` (dual-handler logging). Fixed Python 3.13 builtin-shadowing bug: `RsidSource.list` renamed to `rsid_list` with alias. Created 19 job config templates in `jobs/templates/` and 10 worked Legend examples in `jobs/examples/`. All validate cleanly.
+- **Left in flight:** Nothing.
+- **Next action:** Step 2 — `core/auth.py` (OAuth token fetch, 5-minute expiry buffer) + `core/api_client.py` (`AdobeClient`). Validate with `adobe-downloader list-users --client Legend`.
