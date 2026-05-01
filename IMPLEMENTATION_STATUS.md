@@ -15,15 +15,15 @@ Status legend: `☐ todo` · `🔄 in-progress` · `✅ done` · `⚠️ blocked
 
 ## Current State
 
-**Active step:** Step 0.75 — Capture test fixtures
+**Active step:** Step 1 — Project scaffold + config + logging + templates
 
-**Last commit:** `Step 0.5: Data migration script and guide`
+**Last commit:** `Step 0.75: Synthetic test fixtures for all transform types`
 
-**Next concrete action:** Begin Step 0.75 — Capture test fixtures. For each transform type, capture a representative input JSON and expected output CSV from actual production runs. Also capture compiled request bodies for all report types. Place in `tests/fixtures/`.
+**Next concrete action:** Begin Step 1. Create the Python package skeleton (`adobe_downloader/`), `pyproject.toml`, Pydantic config schemas for all job types, and the logging setup. Validate with `adobe-downloader validate --config <example>`.
 
 **In-flight (uncommitted) work:** *(none)*
 
-**Blockers:** Need access to actual downloaded JSON files from past production runs to capture fixtures. If no local copies exist, this step may need to defer fixture capture to after Step 5 (first live download).
+**Blockers:** *(none)*
 
 ---
 
@@ -41,11 +41,11 @@ Status legend: `☐ todo` · `🔄 in-progress` · `✅ done` · `⚠️ blocked
 - **Validation:** `scripts/migrate_data.py` runs cleanly (no warnings); migrated files verified in `data/`, `jobs/inputs/`, `jobs/templates/`, `credentials/`, `docs/reference/`; `docs/data_migration_guide.md` exists.
 - **Notes:** Fixed a header-extraction bug (commented example was being picked up instead of active header string). Script is idempotent — safe to re-run.
 
-### ☐ Step 0.75 — Capture test fixtures
-- **Started:** —
-- **Completed:** —
-- **Validation:** `tests/fixtures/` contains representative input JSONs and expected output CSVs for every transform type, plus compiled request bodies for all report types.
-- **Notes:**
+### ✅ Step 0.75 — Capture test fixtures
+- **Started:** 2026-05-01
+- **Completed:** 2026-05-01
+- **Validation:** `tests/fixtures/` contains input JSONs and expected CSVs for all 6 transform types, plus 3 compiled request bodies.
+- **Notes:** Fixtures are synthetic (derived from JS source analysis, not real API calls). After Step 5 (first live download), supplement with real API responses to catch edge cases. See `tests/fixtures/README.md` for full documentation.
 
 ---
 
@@ -205,4 +205,4 @@ Status legend: `☐ todo` · `🔄 in-progress` · `✅ done` · `⚠️ blocked
 - **Commits:** `Step 0: File inventory and disposition`, `Step 0.5: Data migration script and guide` (2 commits)
 - **Done this session:** Updated CLAUDE.md and IMPLEMENTATION_STATUS.md to replace `Full__Repo_XML` reference with `legacy_js/` directory. Inventoried all 68 JS files and ~115 non-JS files with disposition tags (`docs/file_inventory.md`). Wrote `scripts/migrate_data.py` which converts JS arrays to plain text/JSON, extracts header definitions to YAML, and copies all data files to their target locations. Fixed a comment-line regex bug in header extraction. Produced `docs/data_migration_guide.md` documenting all migrations and exclusions.
 - **Left in flight:** Nothing.
-- **Next action:** Step 0.75 — Capture test fixtures. Need to confirm whether local production JSON files exist; if not, fixture capture defers to after Step 5.
+- **Next action:** Step 1 — Project scaffold. Create `pyproject.toml`, package skeleton, Pydantic job config schemas, logging setup.

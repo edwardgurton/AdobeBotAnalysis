@@ -1,0 +1,2 @@
+id,month,unique_visitors,visits,raw_clickouts,engaged_visits,engagement_rate,First_Time_Visits,Total_Seconds_Spent,Page_Views,fileName,requestName,botRuleName,rsidName
+1207965431,2026-01-01T00:00:00.000/2026-02-01T00:00:00.000,45000,80000,11000,40000,5000,28000,8640000,220000,Legend_botFilterExcludeMetricsByMonth_Apr25ValidatedList_trillioncoverscom_2026-01-01_2026-01-31,botFilterExcludeMetricsByMonth,Apr25ValidatedList,trillioncoverscom

@@ -1,0 +1,37 @@
+{
+  "rsid": "trillioncoverscom",
+  "globalFilters": [
+    {
+      "type": "dateRange",
+      "dateRange": "2026-01-01T00:00:00.000/2026-01-31T00:00:00.000"
+    },
+    {
+      "type": "segment",
+      "segmentId": "s3938_66fe79408ff02713f66ed76b"
+    },
+    {
+      "type": "segment",
+      "segmentId": "s3938_66843aaa4e73b6231c8a7556"
+    }
+  ],
+  "metricContainer": {
+    "metrics": [
+      {"columnId": "0", "id": "metrics/visitors", "sort": "desc"},
+      {"columnId": "1", "id": "metrics/visits", "sort": "desc"},
+      {"columnId": "2", "id": "metrics/event3"},
+      {"columnId": "3", "id": "cm3938_602b915cb99757640284234e"},
+      {"columnId": "4", "id": "cm3938_5fcf3ee998b6d77a9d7167ad"},
+      {"columnId": "5", "id": "cm3938_66d0bfba05c95b4eca739eb4"},
+      {"columnId": "6", "id": "metrics/itemtimespent"},
+      {"columnId": "7", "id": "metrics/pageviews"}
+    ]
+  },
+  "dimension": "variables/daterangemonth",
+  "settings": {
+    "countRepeatInstances": true,
+    "includeAnnotations": true,
+    "page": 0,
+    "nonesBehavior": "return-nones",
+    "limit": 5000
+  }
+}

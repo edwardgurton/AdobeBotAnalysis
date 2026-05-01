@@ -1,0 +1,15 @@
+{
+  "totalPages": 1,
+  "firstPage": true,
+  "lastPage": true,
+  "numberOfElements": 1,
+  "number": 0,
+  "totalElements": 1,
+  "rows": [
+    {
+      "itemId": "1207965431",
+      "value": "2026-01-01T00:00:00.000/2026-02-01T00:00:00.000",
+      "data": [45000, 80000, 11000, 40000, 5000, 28000, 8640000, 220000]
+    }
+  ]
+}

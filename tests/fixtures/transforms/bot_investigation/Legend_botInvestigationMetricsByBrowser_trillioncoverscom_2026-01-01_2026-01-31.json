@@ -1,0 +1,20 @@
+{
+  "totalPages": 1,
+  "firstPage": true,
+  "lastPage": true,
+  "numberOfElements": 2,
+  "number": 0,
+  "totalElements": 2,
+  "rows": [
+    {
+      "itemId": "2027399684",
+      "value": "Chrome",
+      "data": [50000, 85000, 12000, 45000, 30000, 9720000, 250000]
+    },
+    {
+      "itemId": "3843038218",
+      "value": "Safari",
+      "data": [15000, 22000, 3200, 12000, 8000, 2880000, 68000]
+    }
+  ]
+}

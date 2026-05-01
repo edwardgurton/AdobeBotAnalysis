@@ -1,0 +1,26 @@
+{
+  "rsid": "trillioncoverscom",
+  "globalFilters": [
+    {
+      "type": "dateRange",
+      "dateRange": "2026-01-01T00:00:00.000/2026-01-31T00:00:00.000"
+    },
+    {
+      "type": "segment",
+      "segmentId": "s3938_61bb0165a88ab931afa78e4c"
+    }
+  ],
+  "metricContainer": {
+    "metrics": [
+      {"columnId": "0", "id": "metrics/visitors", "sort": "desc"},
+      {"columnId": "1", "id": "metrics/visits", "sort": "desc"}
+    ]
+  },
+  "settings": {
+    "countRepeatInstances": true,
+    "includeAnnotations": true,
+    "page": 0,
+    "nonesBehavior": "return-nones",
+    "limit": 10
+  }
+}
