@@ -82,3 +82,18 @@ def load_report_registry(
         for report_name in rdf.reports:
             registry[report_name] = rdf.resolve(report_name)
     return registry
+
+
+def load_report_group(
+    group_name: str,
+    report_defs_dir: Path | None = None,
+) -> list[ReportDefinitionInline]:
+    """Return all resolved definitions for a named group, in YAML declaration order."""
+    if report_defs_dir is None:
+        report_defs_dir = Path(__file__).parent.parent.parent / "report_definitions"
+    for yaml_file in sorted(report_defs_dir.glob("*.yaml")):
+        raw = yaml.safe_load(yaml_file.read_text(encoding="utf-8"))
+        rdf = ReportDefinitionFile.model_validate(raw)
+        if rdf.group == group_name:
+            return [rdf.resolve(name) for name in rdf.reports]
+    raise KeyError(f"No report group {group_name!r} found in {report_defs_dir}")
