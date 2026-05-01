@@ -15,15 +15,15 @@ Status legend: `☐ todo` · `🔄 in-progress` · `✅ done` · `⚠️ blocked
 
 ## Current State
 
-**Active step:** Step 3 — Rate limiter
+**Active step:** Step 4 — Request builder
 
-**Last commit:** `Step 2.2: wire list-users CLI command to AdobeClient.get_users()`
+**Last commit:** `Step 3: core/rate_limiter.py — sliding-window limiter + 429 global pause + tenacity retry; wire into AdobeClient; 10 passing tests`
 
-**Next concrete action:** Begin Step 3. Implement `core/rate_limiter.py` — sliding-window rate limiter with global pause on 429. Wire into `AdobeClient` API calls. Validate: stress test with 50 rapid mock requests respects window; simulated 429 triggers global pause.
+**Next concrete action:** Begin Step 4. Implement `core/request_builder.py` — port the JS request-body construction logic to Python. Validate: generated request bodies match the test fixtures in `tests/fixtures/`.
 
 **In-flight (uncommitted) work:** *(none)*
 
-**Blockers:** Step 2 validation (`adobe-downloader list-users --client Legend`) requires live Adobe credentials — run this manually to confirm token fetch and user listing before starting Step 3.
+**Blockers:** *(none)*
 
 ---
 
@@ -63,11 +63,11 @@ Status legend: `☐ todo` · `🔄 in-progress` · `✅ done` · `⚠️ blocked
 - **Validation:** `adobe-downloader list-users --client Legend` — CLI wired and imports verified. Live token-fetch + user-list validation requires running against real credentials.
 - **Notes:** `core/auth.py` posts to IMS token endpoint with client-credentials grant; 5-minute expiry buffer via `time.monotonic()`. `AdobeClient` caches token in-memory, exposes `get_users()` (paginated), `get_authenticated_user()`, and stubs for `get_report()`, `create_segment()`, `share_segment()`, `get_report_suites()`. Rate-limiter hook intentionally deferred to Step 3.
 
-### ☐ Step 3 — Rate limiter
-- **Started:** —
-- **Completed:** —
-- **Validation:** Stress test with 50 rapid mock requests passes; rate limiter respects sliding window; global pause on simulated 429 works.
-- **Notes:**
+### ✅ Step 3 — Rate limiter
+- **Started:** 2026-05-01
+- **Completed:** 2026-05-01
+- **Validation:** 10 pytest tests pass: 4 sync (retryable classification) + 6 async (execute result, args, 50-request window, global pause delay, pause expiry, concurrency cap). `asyncio_mode = "auto"` added to `pyproject.toml`; `pytest-asyncio` added as dev dependency.
+- **Notes:** `_get()` and `_post()` private helpers wrap every `AdobeClient` call with rate limiter + tenacity retry (429/500/502/503, 5 attempts, exponential backoff). 429 triggers `set_pause(10s)` before the next tenacity sleep.
 
 ### ☐ Step 4 — Request builder
 - **Started:** —
@@ -213,6 +213,13 @@ Status legend: `☐ todo` · `🔄 in-progress` · `✅ done` · `⚠️ blocked
 - **Done this session:** Created `pyproject.toml` (setuptools build system, 5 dependencies: click/httpx/pydantic/pyyaml/tenacity). Created `adobe_downloader/` package with `__init__.py`, `cli.py` (Click CLI with validate + stub commands), `config/schema.py` (Pydantic discriminated union covering all 6 job types), `config/loader.py` (YAML load + file reference checks + credential check), `utils/logging.py` (dual-handler logging). Fixed Python 3.13 builtin-shadowing bug: `RsidSource.list` renamed to `rsid_list` with alias. Created 19 job config templates in `jobs/templates/` and 10 worked Legend examples in `jobs/examples/`. All validate cleanly.
 - **Left in flight:** Nothing.
 - **Next action:** Step 2 — `core/auth.py` (OAuth token fetch, 5-minute expiry buffer) + `core/api_client.py` (`AdobeClient`). Validate with `adobe-downloader list-users --client Legend`.
+
+### 2026-05-01 (session 4)
+- **Worked on:** Step 3
+- **Commits:** `Step 3: core/rate_limiter.py — sliding-window limiter + 429 global pause + tenacity retry; wire into AdobeClient; 10 passing tests` (1 commit)
+- **Done this session:** Created `adobe_downloader/core/rate_limiter.py` — `SlidingWindowRateLimiter` (12 req/6s sliding window, `asyncio.Semaphore` for concurrency cap, `set_pause()` for global 429 pause, `execute()` with 120s `asyncio.wait_for` timeout). `make_retry()` returns a `tenacity` decorator wired to call `set_pause(10s)` on 429 before retrying (5 attempts, exponential backoff 2–30s, retries on 429/500/502/503). Refactored `AdobeClient` to use `_get()` / `_post()` helpers that go through the limiter + retry; all 6 public methods updated. Added `pytest-asyncio` dev dependency; `asyncio_mode = "auto"` in `pyproject.toml`. 10 tests written and passing.
+- **Left in flight:** Nothing.
+- **Next action:** Step 4 — `core/request_builder.py`. Port JS request-body construction for ranked reports. Validate against fixtures in `tests/fixtures/`.
 
 ### 2026-05-01 (session 3)
 - **Worked on:** Step 2
