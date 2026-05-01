@@ -15,11 +15,11 @@ Status legend: `☐ todo` · `🔄 in-progress` · `✅ done` · `⚠️ blocked
 
 ## Current State
 
-**Active step:** Step 5 — Basic download (single request)
+**Active step:** Step 5 — Basic download (single request) — code complete, awaiting live validation
 
-**Last commit:** `Step 4.1: core/request_builder.py — build_request(); config/report_definitions.py — Pydantic schema + load_report_registry(); 8 report_definitions/*.yaml group files; 11 passing tests`
+**Last commit:** `Step 5.1: flows/report_download.py — download_report() + make_output_path(); load_report_group(); wire run CLI command; 14 passing tests (35 total)`
 
-**Next concrete action:** Begin Step 5. Wire `build_request()` into the CLI's `download` command (or a new `run` command). Implement a single report download using `AdobeClient.get_report()`, save the JSON response to the output folder, and validate the downloaded JSON against the JS-generated equivalent for one report.
+**Next concrete action:** Live validation — run `adobe-downloader run --config jobs/examples/legend_bot_investigation_jan25.yaml --report botInvestigationMetricsByBrowser` against real credentials and compare the output JSON to the JS-generated equivalent. Once validated, mark Step 5 done and begin Step 6 (date/RSID/segment iteration).
 
 **In-flight (uncommitted) work:** *(none)*
 
@@ -79,11 +79,11 @@ Status legend: `☐ todo` · `🔄 in-progress` · `✅ done` · `⚠️ blocked
 
 ## Phase 2 — Report Download
 
-### ☐ Step 5 — Basic download (single request)
-- **Started:** —
-- **Completed:** —
-- **Validation:** Downloaded JSON for one report matches JS-version JSON.
-- **Notes:**
+### 🔄 Step 5 — Basic download (single request)
+- **Started:** 2026-05-01
+- **Completed:** — (code complete; awaiting live API validation)
+- **Validation:** Run `adobe-downloader run -c jobs/examples/legend_bot_investigation_jan25.yaml -r botInvestigationMetricsByBrowser` and compare output JSON to JS version.
+- **Notes:** `flows/report_download.py` — `download_report(client, request_body, output_path)` makes one API call and saves JSON; `make_output_path()` matches JS naming convention (`{base}/{client}/JSON/{client}_{report}{_extra}_{DIMSEG{id}_}{from}_{to}.json`). `load_report_group()` added to `config/report_definitions.py`. `run` CLI command wired: resolves report defs (report_ref / report_group / inline), resolves first RSID (single/list/file), iterates report defs sequentially. 35 tests pass.
 
 ### ☐ Step 6 — Date, RSID, and segment iteration
 - **Started:** —
@@ -227,6 +227,13 @@ Status legend: `☐ todo` · `🔄 in-progress` · `✅ done` · `⚠️ blocked
 - **Done this session:** Created `core/request_builder.py` — `build_request(report_def, date_range, rsid, segments)` always prepends visitors/visits (sort:desc) as columns 0/1, appends `report_def.metrics` from column 2, adds dateRange + base segments + runtime segments to globalFilters, conditionally includes dimension, sets full settings block. Created `config/report_definitions.py` — `ReportDefinitionFile` / `ReportEntry` / `ReportDefinitionDefaults` Pydantic models + `load_report_registry()` that scans `report_definitions/*.yaml` and resolves defaults inheritance. Created 8 `report_definitions/*.yaml` group files covering all 50 Legend reports ported from `legacy_js/config/client_configs/clientLegend.yaml` (bot_investigation, bot_investigation_unfiltered, bot_validation, final_bot_metrics, lookup, topline, segment_builder, clickouts). 21 total tests pass (11 new).
 - **Left in flight:** Nothing.
 - **Next action:** Step 5 — Basic download. Wire `build_request()` + `load_report_registry()` into a `run` CLI command. Implement single-request download, save JSON to output folder. Validate against JS-generated JSON for one report.
+
+### 2026-05-01 (session 6)
+- **Worked on:** Step 5
+- **Commits:** `Step 5.1: flows/report_download.py — download_report() + make_output_path(); load_report_group(); wire run CLI command; 14 passing tests (35 total)` (1 commit)
+- **Done this session:** Created `adobe_downloader/flows/__init__.py` and `adobe_downloader/flows/report_download.py` — `download_report(client, request_body, output_path)` calls `AdobeClient.get_report()` and writes the JSON response to disk; `make_output_path()` mirrors the JS naming convention (`{base}/{client}/JSON/{client}_{report}{_extra}_{DIMSEG{id}_}{from}_{to}.json`). Added `load_report_group(group_name)` to `config/report_definitions.py`. Wired the `run` CLI command: handles `report_ref`, `report_group`, and inline `report`; handles `single`, `list`, and `file` RSID sources; iterates all resolved report definitions sequentially. 14 new tests, 35 total.
+- **Left in flight:** Live API validation against real credentials.
+- **Next action:** Validate with real credentials — run `adobe-downloader run -c jobs/examples/legend_bot_investigation_jan25.yaml -r botInvestigationMetricsByBrowser` and compare output JSON to JS-generated equivalent. Then begin Step 6 (date/RSID/segment iteration).
 
 ### 2026-05-01 (session 3)
 - **Worked on:** Step 2
