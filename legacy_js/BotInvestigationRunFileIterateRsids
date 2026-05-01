@@ -1,0 +1,259 @@
+//COPIED FROM CLAUDE AI
+
+// runBotInvestigationRsids.js - Example script showing how to use the RSIDs processor module
+
+const processBotInvestigationRsids = require('./botInvestigationRsidsProcessor');
+
+// ============================================================================
+// CONFIGURATION OPTIONS - Choose one of the examples below or create your own
+// ============================================================================
+
+// Example 1: Using subtract days mode with full RSID list
+async function runWithSubtractDays() {
+    const config = {
+        toDate: '2025-05-31',
+        mode: 'subtractDays',
+        subtractDaysValue: 130,  // Will calculate fromDate as toDate - 130 days
+        investigationRound: 4.2,
+        rsidListPath: './usefulInfo/Legend/botInvestigationMinThresholdVisits.js',
+        enableStatusReporting: true,
+        statusReportingInterval: 30000  // Report status every 30 seconds
+    };
+
+    try {
+        const result = await processBotInvestigationRsids(config);
+        console.log('\n✨ Processing complete!');
+        console.log(`📊 Results:`);
+        console.log(`  - Success: ${result.success}`);
+        console.log(`  - Processed: ${result.processed}`);
+        console.log(`  - Failed: ${result.failed}`);
+        console.log(`  - Log file: ${result.logFilePath}`);
+        
+        if (result.errors.length > 0) {
+            console.log('\n❌ Errors encountered:');
+            result.errors.forEach(err => {
+                console.log(`  - ${err.rsidCleanName} (RSID: ${err.rsid}): ${err.message}`);
+            });
+        }
+    } catch (error) {
+        console.error('💥 Fatal error:', error);
+        process.exit(1);
+    }
+}
+
+// Example 2: Using fixed date range
+async function runWithFixedDateRange() {
+    const config = {
+        toDate: '2025-05-31',
+        mode: 'fixedFromDate',
+        fromDate: '2025-01-01',  // Explicit from date
+        investigationRound: 4.2,
+        rsidListPath: './usefulInfo/Legend/botInvestigationMinThresholdVisitsLast90Days.js'
+    };
+
+    try {
+        const result = await processBotInvestigationRsids(config);
+        console.log('\n✨ Processing complete!');
+        console.log('Results:', result);
+    } catch (error) {
+        console.error('💥 Fatal error:', error);
+        process.exit(1);
+    }
+}
+
+// Example 3: Single RSID or custom list
+async function runSingleRsid() {
+    const config = {
+        toDate: '2025-05-31',
+        mode: 'subtractDays',
+        subtractDaysValue: 90,
+        investigationRound: 4.2,
+        // Provide the list directly - useful for testing or specific RSIDs
+        rsidCleanNameList: [
+            'OnlineSlotsca'
+            // Add more RSIDs here as needed
+        ],
+        logDir: './logs/single-rsid-investigation',
+        enableStatusReporting: false  // Disable for cleaner output with single RSID
+    };
+
+    try {
+        const result = await processBotInvestigationRsids(config);
+        console.log('\n✨ Processing complete!');
+        console.log('Results:', result);
+    } catch (error) {
+        console.error('💥 Fatal error:', error);
+        process.exit(1);
+    }
+}
+
+// Example 4: Multiple custom RSIDs
+async function runCustomRsidList() {
+    const config = {
+        toDate: '2025-05-31',
+        mode: 'subtractDays',
+        subtractDaysValue: 130,
+        investigationRound: 4.2,
+        rsidCleanNameList: [
+            'OnlineSlotsca',
+            'Casinoguru',
+            'ExampleSite1',
+            'ExampleSite2',
+            // Add all the RSIDs you want to process
+        ],
+        logDir: './logs/custom-rsid-investigation'
+    };
+
+    try {
+        const result = await processBotInvestigationRsids(config);
+        console.log('\n✨ Processing complete!');
+        console.log(`📊 Processed ${result.processed}/${result.processed + result.failed} RSIDs successfully`);
+        console.log(`📁 Log file: ${result.logFilePath}`);
+    } catch (error) {
+        console.error('💥 Fatal error:', error);
+        process.exit(1);
+    }
+}
+
+// Example 5: Command-line argument based configuration
+async function runWithCommandLineArgs() {
+    // Parse command line arguments
+    const args = process.argv.slice(2);
+    
+    if (args.length < 1) {
+        console.log('Usage: node runBotInvestigationRsids.js <toDate> [mode] [fromDate/subtractDays] [investigationRound]');
+        console.log('Example 1: node runBotInvestigationRsids.js 2025-05-31 subtractDays 130 4.2');
+        console.log('Example 2: node runBotInvestigationRsids.js 2025-05-31 fixedFromDate 2025-01-01 4.2');
+        process.exit(1);
+    }
+
+    const toDate = args[0];
+    const mode = args[1] || 'subtractDays';
+    const dateOrDays = args[2] || '130';
+    const investigationRound = parseFloat(args[3]) || 4.2;
+
+    const config = {
+        toDate,
+        mode,
+        investigationRound,
+        rsidListPath: './usefulInfo/Legend/botInvestigationMinThresholdVisits.js'
+    };
+
+    if (mode === 'subtractDays') {
+        config.subtractDaysValue = parseInt(dateOrDays);
+    } else if (mode === 'fixedFromDate') {
+        config.fromDate = dateOrDays;
+    } else {
+        console.error('Invalid mode. Use "subtractDays" or "fixedFromDate"');
+        process.exit(1);
+    }
+
+    console.log('Running with configuration:', config);
+
+    try {
+        const result = await processBotInvestigationRsids(config);
+        console.log('\n✨ Processing complete!');
+        console.log('Results:', result);
+        process.exit(result.success ? 0 : 1);
+    } catch (error) {
+        console.error('💥 Fatal error:', error);
+        process.exit(1);
+    }
+}
+
+// Example 6: Load different RSID lists based on environment
+async function runWithEnvironmentConfig() {
+    const ENV = process.env.NODE_ENV || 'development';
+    const INVESTIGATION_TYPE = process.env.INVESTIGATION_TYPE || 'threshold';
+    
+    // Choose RSID list based on investigation type
+    let rsidListPath;
+    switch(INVESTIGATION_TYPE) {
+        case 'threshold':
+            rsidListPath = './usefulInfo/Legend/botInvestigationMinThresholdVisits.js';
+            break;
+        case 'last90':
+            rsidListPath = './usefulInfo/Legend/botInvestigationMinThresholdVisitsLast90Days.js';
+            break;
+        case 'testing':
+            rsidListPath = './usefulInfo/Legend/RsidListTesting.js';
+            break;
+        default:
+            console.error(`Unknown investigation type: ${INVESTIGATION_TYPE}`);
+            process.exit(1);
+    }
+
+    const config = {
+        toDate: process.env.TO_DATE || '2025-05-31',
+        mode: process.env.DATE_MODE || 'subtractDays',
+        subtractDaysValue: parseInt(process.env.SUBTRACT_DAYS) || 130,
+        investigationRound: parseFloat(process.env.INVESTIGATION_ROUND) || 4.2,
+        rsidListPath,
+        logDir: ENV === 'production' ? './logs/production' : './logs/development',
+        enableStatusReporting: ENV !== 'production'  // Quieter in production
+    };
+
+    if (config.mode === 'fixedFromDate') {
+        config.fromDate = process.env.FROM_DATE;
+        if (!config.fromDate) {
+            console.error('FROM_DATE environment variable required when DATE_MODE=fixedFromDate');
+            process.exit(1);
+        }
+    }
+
+    console.log(`Running in ${ENV} mode with ${INVESTIGATION_TYPE} investigation type`);
+    console.log('Configuration:', config);
+
+    try {
+        const result = await processBotInvestigationRsids(config);
+        console.log('\n✨ Processing complete!');
+        console.log(`📊 Success rate: ${((result.processed / (result.processed + result.failed)) * 100).toFixed(2)}%`);
+        console.log(`📁 Log file: ${result.logFilePath}`);
+        process.exit(result.success ? 0 : 1);
+    } catch (error) {
+        console.error('💥 Fatal error:', error);
+        process.exit(1);
+    }
+}
+
+// ============================================================================
+// CHOOSE WHICH EXAMPLE TO RUN
+// ============================================================================
+
+// Uncomment the example you want to run:
+
+// runWithSubtractDays();
+// runWithFixedDateRange();
+// runSingleRsid();
+// runCustomRsidList();
+// runWithCommandLineArgs();
+// runWithEnvironmentConfig();
+
+// Or run based on environment variable
+const RUN_MODE = process.env.BOT_INVESTIGATION_MODE || 'subtract';
+
+switch(RUN_MODE) {
+    case 'subtract':
+        runWithSubtractDays();
+        break;
+    case 'fixed':
+        runWithFixedDateRange();
+        break;
+    case 'single':
+        runSingleRsid();
+        break;
+    case 'custom':
+        runCustomRsidList();
+        break;
+    case 'cli':
+        runWithCommandLineArgs();
+        break;
+    case 'env':
+        runWithEnvironmentConfig();
+        break;
+    default:
+        console.error(`Unknown mode: ${RUN_MODE}`);
+        console.log('Valid modes: subtract, fixed, single, custom, cli, env');
+        console.log('Set BOT_INVESTIGATION_MODE environment variable or modify this script');
+        process.exit(1);
+}

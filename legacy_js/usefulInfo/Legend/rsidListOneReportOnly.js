@@ -1,0 +1,66 @@
+const rsidListOneReportOnly = [
+    'triacetatesportsde',
+    'triadsonlinebetting.com',
+    'triagecasinogamescom',
+    'triangulategamblingin',
+    'triatomiccasinoit.test',
+    'triaxiality',
+    'triboelectric',
+    'tribologyonlinecasinoscom',
+    'tribuneapuestasdeportivascom',
+    'tricarboxyliconlineslotsca.test',
+    'triceratopscasinoin',
+    'trichlorphononlinecasinoconz.test',
+    'tricolourcasinocouk.test',
+    'triennialpokerde.1sttest',
+    'triggerfishonlinegamblingconz.test',
+    'trigononlinecasinoca.test',
+    'trigonsroulettecom',
+    'trigoonlinegamblingcom.test',
+    'trigraphcasinospielede',
+    'trigspokersitescom.test',
+    'trijetonlinegamblingca.test',
+    'trilingualcasinoonlinenl',
+    'trillionthcasinocombr',
+    'trimetersspielautomatende',
+    'trimetrogoncasinocl',
+    'trimetrogoncasinomx',
+    'trimonthlyonlineroulettecom',
+    'trinketcasinoat.test',
+    'trinucleotidecasinoenligneca.test',
+    'triodescasinope',
+    'trioletcardschatcom.test',
+    'trioxidecasinoonlinecom',
+    'triplaneonlinecasinoat',
+    'triploblasticonlinerouletteorg1.test',
+    'triploidiesonlineblackjackca.test',
+    'trippletailscasinokompassprod',
+    'triptanecasinoca.test',
+    'tripwireonlinecasinosde',
+    'trisectonlineslotscom.test',
+    'triskelionbetca',
+    'tristearincasinocoza',
+    'trisyllableonlinerouletteca',
+    'trithingsonlinecasinocouk.test',
+    'tritonecasinoonlinede.test',
+    'tritriathlonhorseracingcouk',
+    'tritrickcasinoonline.co.uk',
+    'trivialitycasinoconz',
+    'triviumcasinoch',
+    'tribecasinoorg.test',
+    'trillioncoverscom',
+    'trimotoroddspediacom',
+    'trimoneyprod',
+    'trihybridsportsbookreviewcom',
+    'trioletcardschatcom.test'
+];
+
+//RSIDs to remove from investigation:
+//'triillreplaypoker.com',
+//
+
+//RSIDs to remove from investigation and validation
+//'triangulator'
+//
+
+module.exports = rsidListOneReportOnly

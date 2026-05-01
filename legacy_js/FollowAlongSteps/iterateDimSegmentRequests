@@ -1,0 +1,20 @@
+//This assumes you already set up your reportname to be iterated through
+
+const dimToSegments = require('./utils/dimToSegments');
+const iterateSegmentRequests = require('./utils/iterateSegmentRequests');
+
+// Step 1: Create segments
+const result = await dimToSegments('Legend', 'MarketingChannelSegments', 'variables/marketingchannel.marketing-channel-attribution', '2025-01-01', '2025-03-31', ['s123_456'], 'rsid123', 10);
+
+// Step 2: Process segments (using returned info)
+await iterateSegmentRequests(
+  result.filePath,
+  'Q1Analysis', // jobName
+  1000, // delay
+  '2025-01-01',
+  '2025-03-31', 
+  result.requestInfo.requestName,
+  result.requestInfo.clientName,
+  'day',
+  result.requestInfo.rsid
+);

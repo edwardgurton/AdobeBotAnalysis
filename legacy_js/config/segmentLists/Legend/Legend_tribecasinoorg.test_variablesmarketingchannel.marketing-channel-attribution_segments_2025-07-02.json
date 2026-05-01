@@ -1,0 +1,38 @@
+[
+  {
+    "id": "s3938_686541909ffeefbd9c35eaef",
+    "name": "variables/marketingchannel.marketing-channel-attribution=OrganicSearch"
+  },
+  {
+    "id": "s3938_68654191f87da74cae7e3a38",
+    "name": "variables/marketingchannel.marketing-channel-attribution=None"
+  },
+  {
+    "id": "s3938_6865419196eb6d0b79ce3240",
+    "name": "variables/marketingchannel.marketing-channel-attribution=Programmatic"
+  },
+  {
+    "id": "s3938_6865419196eb6d0b79ce3241",
+    "name": "variables/marketingchannel.marketing-channel-attribution=SocialMedia"
+  },
+  {
+    "id": "s3938_6865419296eb6d0b79ce3242",
+    "name": "variables/marketingchannel.marketing-channel-attribution=Referring"
+  },
+  {
+    "id": "s3938_68654192f87da74cae7e3a39",
+    "name": "variables/marketingchannel.marketing-channel-attribution=Email"
+  },
+  {
+    "id": "s3938_68654193feff97c4e3c741a4",
+    "name": "variables/marketingchannel.marketing-channel-attribution=PaidSocial"
+  },
+  {
+    "id": "s3938_6865419396eb6d0b79ce3243",
+    "name": "variables/marketingchannel.marketing-channel-attribution=PaidSearch"
+  },
+  {
+    "id": "s3938_68654193f87da74cae7e3a3a",
+    "name": "variables/marketingchannel.marketing-channel-attribution=OrganicSocial"
+  }
+]

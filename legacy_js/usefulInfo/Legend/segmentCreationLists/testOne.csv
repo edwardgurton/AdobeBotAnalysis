@@ -1,0 +1,6 @@
+CompareValidate,SegmentName,RSIDCleanName,Dimension1,Dimension1Item,Dimension2,Dimension2Item
+Compare,BOTCOMPARE_Example_01: SiteName - OperatingSystems=Android 16.0.0,Legend,OperatingSystems,Android 16.0.0,,
+Compare,BOTCOMPARE_Example_02: SiteName - Domain=suspicious-domain.com,Legend,Domain,suspicious-domain.com,,
+Compare,BOTCOMPARE_Example_03: SiteName - OperatingSystems=Linux AND Domain=your-server.de,Legend,OperatingSystems,Linux,Domain,your-server.de
+Validate,BOTVALIDATE_Example_04: SiteName - UserAgent=Mozilla/5.0 Bot,Legend,UserAgent,Mozilla/5.0 (compatible; Bot/1.0),,
+Validate,BOTVALIDATE_Example_05: SiteName - BrowserType=Robot AND MonitorResolution=Unknown,Legend,BrowserType,Robot,MonitorResolution,Unknown

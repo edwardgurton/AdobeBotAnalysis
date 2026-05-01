@@ -1,0 +1,54 @@
+[
+  {
+    "id": "s3938_67bf3571a715d327951f8e83",
+    "name": "CompatabilityPrefix=0073-Bot-Rule-OnlineGamblingca-User-Agent"
+  },
+  {
+    "id": "s3938_67bf35f9ebdbae138cb4fb44",
+    "name": "CompatabilityPrefix=0076-Bot-Rule-OnlineGamblingca-User-Agent"
+  },
+  {
+    "id": "s3938_67bf362fa715d327951f8e87",
+    "name": "CompatabilityPrefix=0077-Bot-Rule-OnlineGamblingca-User-Agent"
+  },
+  {
+    "id": "s3938_67bf368b19f210401ae4f53f",
+    "name": "CompatabilityPrefix=0078-Bot-Rule-Apuestasdeportivascom-Domain-onocom-AND-Browser-Type-Opera"
+  },
+  {
+    "id": "s3938_67bf36d9a715d327951f8e8d",
+    "name": "CompatabilityPrefix=0080-Bot-Rule-Oddspediacom-User-Agent"
+  },
+  {
+    "id": "s3938_67bf377ea715d327951f8e90",
+    "name": "CompatabilityPrefix=0082-Bot-Rule-coverscom-User-Agent"
+  },
+  {
+    "id": "s3938_67bf386233dfa766943adb2e",
+    "name": "CompatabilityPrefix=0085-Bot-Rule-SportsBookReviewcom-User-Agent"
+  },
+  {
+    "id": "s3938_67bf38a9b545496633c70c5a",
+    "name": "CompatabilityPrefix=0086-Bot-Rule-SportsBookReviewcom-Domain-fullcontrolnet"
+  },
+  {
+    "id": "s3938_67bf394019f210401ae4f559",
+    "name": "CompatabilityPrefix=0087-Bot-Rule-SportsBookReviewcom-User-Agent"
+  },
+  {
+    "id": "s3938_67bf3a6419f210401ae4f569",
+    "name": "CompatabilityPrefix=0091-Bot-Rule-Casinoorg-User-Agent"
+  },
+  {
+    "id": "s3938_67bf3bbf33dfa766943adb4d",
+    "name": "CompatabilityPrefix=0095-Bot-Rule-OnlineGamblingcom-Domain-stwbackupnet"
+  },
+  {
+    "id": "s3938_67efa7a1ee7d084c447c3682",
+    "name": "CompatabilityPrefix=0097-Bot-Rule-Casinoorg-User-Agent"
+  },
+  {
+    "id": "s3938_6863f04bfeff97c4e3c73d84",
+    "name": "CompatabilityPrefix=0098-Bot-Rule-SBR-Domain-AliBabaGroup"
+  }
+]

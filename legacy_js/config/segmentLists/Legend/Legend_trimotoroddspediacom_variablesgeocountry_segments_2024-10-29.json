@@ -1,0 +1,50 @@
+[
+  {
+    "id": "s3938_6720bc074f4e514125a55504",
+    "name": "variables/geocountry = Brazil"
+  },
+  {
+    "id": "s3938_6720bc08d575bf1cc34c6dd5",
+    "name": "variables/geocountry = United States"
+  },
+  {
+    "id": "s3938_6720bc0878fa807438d97150",
+    "name": "variables/geocountry = Italy"
+  },
+  {
+    "id": "s3938_6720bc084f4e514125a55505",
+    "name": "variables/geocountry = Peru"
+  },
+  {
+    "id": "s3938_6720bc0978fa807438d97151",
+    "name": "variables/geocountry = Spain"
+  },
+  {
+    "id": "s3938_6720bc0978fa807438d97152",
+    "name": "variables/geocountry = Mexico"
+  },
+  {
+    "id": "s3938_6720bc0a78fa807438d97153",
+    "name": "variables/geocountry = Kenya"
+  },
+  {
+    "id": "s3938_6720bc0a4f4e514125a55506",
+    "name": "variables/geocountry = Nigeria"
+  },
+  {
+    "id": "s3938_6720bc0bd575bf1cc34c6dd6",
+    "name": "variables/geocountry = South Africa"
+  },
+  {
+    "id": "s3938_6720bc0bd575bf1cc34c6dd7",
+    "name": "variables/geocountry = United Kingdom"
+  },
+  {
+    "id": "s3938_6720bc0b78fa807438d97154",
+    "name": "variables/geocountry = India"
+  },
+  {
+    "id": "s3938_6720bc0c78fa807438d97156",
+    "name": "variables/geocountry = Canada"
+  }
+]

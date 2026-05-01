@@ -1,0 +1,10 @@
+# Details of the local folder
+# for Windows use C:/Adobe Downloads
+# For fastest performance, avoid folders which are linked to other file sharing tools (e.g. sharepoint, dropbox)
+# # For Mac, ensure to use backslash / before Users folder to reference the absolute directory
+
+# storage:
+#   folder: "C:/Adobe Downloads"
+
+storage:
+  folder: "/Users/edwardgurton/Documents/Work/Adobe Downloads"

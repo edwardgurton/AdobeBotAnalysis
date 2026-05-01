@@ -1,0 +1,431 @@
+adobe:
+  clientID: 9585bf3b8c6f4d188ad6a1c1e8b8cd57
+  clientSecret: p8e-EG5TeDCsW0dXWdyLh3TCYJv4T-uAxozp
+  adobeOrgID: 9CE579FD5DCD8B590A495E09@AdobeOrg
+  globalCompanyID: legend0
+  rsid: trillioncoverscom
+botInvestigationMetrics: >-
+  metrics/event3, cm3938_602b915cb99757640284234e,
+  cm3938_66d0bfba05c95b4eca739eb4, metrics/itemtimespent, metrics/pageviews
+reportConfig:
+  botInvestigationMetricsByDay:
+    segmentId: s3938_66fe79408ff02713f66ed76b
+    addMetrics: true
+    metricIds: >-
+      metrics/event3, cm3938_602b915cb99757640284234e,
+      cm3938_66d0bfba05c95b4eca739eb4, metrics/itemtimespent, metrics/pageviews
+    addDimension: true
+    dimensionId: variables/daterangeday
+    rowLimit: 500
+  botInvestigationMetricsByMarketingChannel:
+    segmentId: s3938_66fe79408ff02713f66ed76b
+    addMetrics: true
+    metricIds: >-
+      metrics/event3, cm3938_602b915cb99757640284234e,
+      cm3938_66d0bfba05c95b4eca739eb4, metrics/itemtimespent, metrics/pageviews
+    addDimension: true
+    dimensionId: variables/marketingchannel
+    rowLimit: 50
+  botInvestigationMetricsByDevice:
+    segmentId: s3938_66fe79408ff02713f66ed76b
+    addMetrics: true
+    metricIds: >-
+      metrics/event3, cm3938_602b915cb99757640284234e,
+      cm3938_66d0bfba05c95b4eca739eb4, metrics/itemtimespent, metrics/pageviews
+    addDimension: true
+    dimensionId: variables/mobiledevicetype
+    rowLimit: 500
+  botInvestigationMetricsByDomain:
+    segmentId: s3938_66fe79408ff02713f66ed76b
+    addMetrics: true
+    metricIds: >-
+      metrics/event3, cm3938_602b915cb99757640284234e,
+      cm3938_66d0bfba05c95b4eca739eb4, metrics/itemtimespent, metrics/pageviews
+    addDimension: true
+    dimensionId: variables/filtereddomain
+    rowLimit: 500
+  botInvestigationMetricsByMonitorResolution:
+    segmentId: s3938_66fe79408ff02713f66ed76b
+    addMetrics: true
+    metricIds: >-
+      metrics/event3, cm3938_602b915cb99757640284234e,
+      cm3938_66d0bfba05c95b4eca739eb4, metrics/itemtimespent, metrics/pageviews
+    addDimension: true
+    dimensionId: variables/monitorresolution
+    rowLimit: 500
+  botInvestigationMetricsByHourOfDay:
+    segmentId: s3938_66fe79408ff02713f66ed76b
+    addMetrics: true
+    metricIds: >-
+      metrics/event3, cm3938_602b915cb99757640284234e,
+      cm3938_66d0bfba05c95b4eca739eb4, metrics/itemtimespent, metrics/pageviews
+    addDimension: true
+    dimensionId: variables/timeparthourofday
+    rowLimit: 25
+  botInvestigationMetricsByOperatingSystem:
+    segmentId: s3938_66fe79408ff02713f66ed76b
+    addMetrics: true
+    metricIds: >-
+      metrics/event3, cm3938_602b915cb99757640284234e,
+      cm3938_66d0bfba05c95b4eca739eb4, metrics/itemtimespent, metrics/pageviews
+    addDimension: true
+    dimensionId: variables/operatingsystem
+    rowLimit: 500
+  botInvestigationMetricsByPageURL:
+    segmentId: s3938_66fe79408ff02713f66ed76b
+    addMetrics: true
+    metricIds: >-
+      metrics/event3, cm3938_602b915cb99757640284234e,
+      cm3938_66d0bfba05c95b4eca739eb4, metrics/itemtimespent, metrics/pageviews
+    addDimension: true
+    dimensionId: variables/evar2
+    rowLimit: 500
+  botInvestigationMetricsByRegion:
+    segmentId: s3938_66fe79408ff02713f66ed76b
+    addMetrics: true
+    metricIds: >-
+      metrics/event3, cm3938_602b915cb99757640284234e,
+      cm3938_66d0bfba05c95b4eca739eb4, metrics/itemtimespent, metrics/pageviews
+    addDimension: true
+    dimensionId: variables/georegion
+    rowLimit: 500
+  botInvestigationMetricsByUserAgent:
+    segmentId: s3938_66fe79408ff02713f66ed76b
+    addMetrics: true
+    metricIds: >-
+      metrics/event3, cm3938_602b915cb99757640284234e,
+      cm3938_66d0bfba05c95b4eca739eb4, metrics/itemtimespent, metrics/pageviews
+    addDimension: true
+    dimensionId: variables/evar23
+    rowLimit: 500
+  botInvestigationMetricsByBrowser:
+    segmentId: s3938_66fe79408ff02713f66ed76b
+    addMetrics: true
+    metricIds: >-
+      metrics/event3, cm3938_602b915cb99757640284234e,
+      cm3938_66d0bfba05c95b4eca739eb4, metrics/itemtimespent, metrics/pageviews
+    addDimension: true
+    dimensionId: variables/browser
+    rowLimit: 500
+  botInvestigationMetricsByBrowserType:
+    segmentId: s3938_66fe79408ff02713f66ed76b
+    addMetrics: true
+    metricIds: >-
+      metrics/event3, cm3938_602b915cb99757640284234e,
+      cm3938_66d0bfba05c95b4eca739eb4, metrics/itemtimespent, metrics/pageviews
+    addDimension: true
+    dimensionId: variables/browsertype
+  botInvestigationMetricsByMobileManufacturer:
+    segmentId: s3938_66fe79408ff02713f66ed76b
+    addMetrics: true
+    metricIds: >-
+      metrics/event3, cm3938_602b915cb99757640284234e,
+      cm3938_66d0bfba05c95b4eca739eb4, metrics/itemtimespent, metrics/pageviews
+    addDimension: true
+    dimensionId: variables/mobilemanufacturer
+    rowLimit: 500
+  botFilterExcludeMetricsByMonth:
+    segmentId: s3938_66fe79408ff02713f66ed76b
+    addMetrics: true
+    metricIds: >-
+      metrics/event3, cm3938_602b915cb99757640284234e,
+      cm3938_5fcf3ee998b6d77a9d7167ad, cm3938_66d0bfba05c95b4eca739eb4,
+      metrics/itemtimespent, metrics/pageviews
+    addDimension: true
+    dimensionId: variables/daterangemonth
+    rowLimit: 5000
+  botFilterExcludexBotRuleMetricsByMonth:
+    segmentId: s3938_66fe79408ff02713f66ed76b
+    addMetrics: true
+    metricIds: >-
+      metrics/event3, cm3938_602b915cb99757640284234e,
+      cm3938_5fcf3ee998b6d77a9d7167ad, cm3938_66d0bfba05c95b4eca739eb4,
+      metrics/itemtimespent, metrics/pageviews
+    addDimension: true
+    dimensionId: variables/daterangemonth
+    rowLimit: 5000
+  botFilterIncludeMetricsByMonth:
+    segmentId: s3938_666ae77965ae5e6a3c2c1709
+    addMetrics: true
+    metricIds: >-
+      metrics/event3, cm3938_602b915cb99757640284234e,
+      cm3938_5fcf3ee998b6d77a9d7167ad, cm3938_66d0bfba05c95b4eca739eb4,
+      metrics/itemtimespent, metrics/pageviews
+    addDimension: true
+    dimensionId: variables/daterangemonth
+    rowLimit: 5000
+  botFilterIncludexBotRuleMetricsByMonth:
+    segmentId: s3938_666ae77965ae5e6a3c2c1709
+    addMetrics: true
+    metricIds: >-
+      metrics/event3, cm3938_602b915cb99757640284234e,
+      cm3938_5fcf3ee998b6d77a9d7167ad, cm3938_66d0bfba05c95b4eca739eb4,
+      metrics/itemtimespent, metrics/pageviews
+    addDimension: true
+    dimensionId: variables/daterangemonth
+    rowLimit: 5000
+  SegmentsBuildervariablesgeocountry:
+    segmentId: s3938_66fe79408ff02713f66ed76b
+    addMetrics: false
+    metricIds: ""
+    addDimension: true
+    dimensionId: variables/geocountry
+    rowLimit: 12
+  SegmentsBuilderCountry50:
+    segmentId: s3938_66fe79408ff02713f66ed76b
+    addMetrics: false
+    metricIds: ""
+    addDimension: true
+    dimensionId: variables/geocountry
+    rowLimit: 500
+  JustSegmentMetricsByMonth:
+    segmentId: null
+    addMetrics: true
+    metricIds: >-
+      metrics/event3, cm3938_602b915cb99757640284234e,
+      cm3938_5fcf3ee998b6d77a9d7167ad
+    addDimension: true
+    dimensionId: variables/daterangemonth
+    rowLimit: 5000
+  botFilterExcludexBotRuleXSuspiciousMarketingChannelsMetricsByMonth:
+    segmentId: s3938_66fe79408ff02713f66ed76b,s3938_67c09bc9b1a3887faa7d3844
+    addMetrics: true
+    metricIds: >-
+      metrics/event3, cm3938_602b915cb99757640284234e,
+      cm3938_5fcf3ee998b6d77a9d7167ad, cm3938_66d0bfba05c95b4eca739eb4,
+      metrics/itemtimespent, metrics/pageviews
+    addDimension: true
+    dimensionId: variables/daterangemonth
+    rowLimit: 5000
+  botFilterExcludexBotRuleXDesktopMetricsByMonth:
+    segmentId: s3938_66fe79408ff02713f66ed76b,s3938_67c09bfb5bc6d048a2295f86
+    addMetrics: true
+    metricIds: >-
+      metrics/event3, cm3938_602b915cb99757640284234e,
+      cm3938_5fcf3ee998b6d77a9d7167ad, cm3938_66d0bfba05c95b4eca739eb4,
+      metrics/itemtimespent, metrics/pageviews
+    addDimension: true
+    dimensionId: variables/daterangemonth
+    rowLimit: 5000
+  botFilterExcludexBotRuleMetricsByPageUrl:
+    segmentId: s3938_66fe79408ff02713f66ed76b
+    addMetrics: true
+    metricIds: >-
+      metrics/event3, cm3938_602b915cb99757640284234e,
+      cm3938_5fcf3ee998b6d77a9d7167ad, cm3938_66d0bfba05c95b4eca739eb4,
+      metrics/itemtimespent, metrics/pageviews
+    addDimension: true
+    dimensionId: variables/evar2
+    rowLimit: 10
+  SegmentsBuildervariablesgeoregion:
+    segmentId: s3938_61bb0165a88ab931afa78e4c
+    addMetrics: false
+    metricIds: ""
+    addDimension: true
+    dimensionId: variables/georegion
+  SegmentsBuildervariablesmarketingchannelmarketing-channel-attribution:
+    segmentId: s3938_61bb0165a88ab931afa78e4c
+    addMetrics: false
+    metricIds: ""
+    addDimension: true
+    dimensionId: variables/marketingchannel.marketing-channel-attribution
+  toplineMetricsForRsidValidation:
+    segmentId: s3938_61bb0165a88ab931afa78e4c
+    addMetrics: false
+    metricIds: null
+    addDimension: false
+    dimensionId: null
+    rowLimit: 10
+  LegendClickoutsByGeoregionNAOnly:
+    segmentId: s3938_61bb0165a88ab931afa78e4c, s3938_681e521d16e3be6770921fa8
+    addMetrics: true
+    metricIds: >-
+      cm3938_67877f0e25c74e65d1f3f449, cm3938_68655d7318c56ac719c11a44,
+      cm3938_68655dd05c74c471e8de44d0, cm3938_68655e0b18c56ac719c11a47
+    addDimension: true
+    dimensionId: variables/georegion
+  LegendClickoutsAdCloudMetrics:
+    segmentId: s3938_686797a0feff97c4e3c747c9
+    addMetrics: true
+    metricIds: >-
+      cm3938_67877f0e25c74e65d1f3f449, cm3938_68655d7318c56ac719c11a44,
+      cm3938_68655dd05c74c471e8de44d0, cm3938_68655e0b18c56ac719c11a47,
+      metrics/amo_cost, metrics/amo_clicks, metrics/amo_impressions
+    addDimension: true
+    dimensionId: variables/marketingchannel.marketing-channel-attribution
+  LegendFinalBotMetricsUnfilteredVisitsByYear:
+    segmentId: ""
+    addMetrics: false
+    metricIds: ""
+    addDimension: true
+    dimensionId: variables/daterangeyear
+  LegendFinalBotMetricsCurrentIncludeByYear:
+    segmentId: s3938_64b141c647aa8c3cec5a1a95
+    addMetrics: false
+    metricIds: ""
+    addDimension: true
+    dimensionId: variables/daterangeyear
+  LegendFinalBotMetricsDevelopmentIncludeByYear:
+    segmentId: s3938_6892257b8fb8265765efa206
+    addMetrics: false
+    metricIds: ""
+    addDimension: true
+    dimensionId: variables/daterangeyear
+  botInvestigationUnfilteredMetricsByDay:
+    segmentId: null
+    addMetrics: true
+    metricIds: >-
+      metrics/event3, cm3938_602b915cb99757640284234e,
+      cm3938_66d0bfba05c95b4eca739eb4, metrics/itemtimespent, metrics/pageviews
+    addDimension: true
+    dimensionId: variables/daterangeday
+    rowLimit: 500
+  botInvestigationUnfilteredMetricsByMarketingChannel:
+    segmentId: null
+    addMetrics: true
+    metricIds: >-
+      metrics/event3, cm3938_602b915cb99757640284234e,
+      cm3938_66d0bfba05c95b4eca739eb4, metrics/itemtimespent, metrics/pageviews
+    addDimension: true
+    dimensionId: variables/marketingchannel
+    rowLimit: 50
+  botInvestigationUnfilteredMetricsByDevice:
+    segmentId: null
+    addMetrics: true
+    metricIds: >-
+      metrics/event3, cm3938_602b915cb99757640284234e,
+      cm3938_66d0bfba05c95b4eca739eb4, metrics/itemtimespent, metrics/pageviews
+    addDimension: true
+    dimensionId: variables/mobiledevicetype
+    rowLimit: 500
+  botInvestigationUnfilteredMetricsByDomain:
+    segmentId: null
+    addMetrics: true
+    metricIds: >-
+      metrics/event3, cm3938_602b915cb99757640284234e,
+      cm3938_66d0bfba05c95b4eca739eb4, metrics/itemtimespent, metrics/pageviews
+    addDimension: true
+    dimensionId: variables/filtereddomain
+    rowLimit: 500
+  botInvestigationUnfilteredMetricsByMonitorResolution:
+    segmentId: null
+    addMetrics: true
+    metricIds: >-
+      metrics/event3, cm3938_602b915cb99757640284234e,
+      cm3938_66d0bfba05c95b4eca739eb4, metrics/itemtimespent, metrics/pageviews
+    addDimension: true
+    dimensionId: variables/monitorresolution
+    rowLimit: 500
+  botInvestigationUnfilteredMetricsByHourOfDay:
+    segmentId: null
+    addMetrics: true
+    metricIds: >-
+      metrics/event3, cm3938_602b915cb99757640284234e,
+      cm3938_66d0bfba05c95b4eca739eb4, metrics/itemtimespent, metrics/pageviews
+    addDimension: true
+    dimensionId: variables/timeparthourofday
+    rowLimit: 25
+  botInvestigationUnfilteredMetricsByOperatingSystem:
+    segmentId: null
+    addMetrics: true
+    metricIds: >-
+      metrics/event3, cm3938_602b915cb99757640284234e,
+      cm3938_66d0bfba05c95b4eca739eb4, metrics/itemtimespent, metrics/pageviews
+    addDimension: true
+    dimensionId: variables/operatingsystem
+    rowLimit: 500
+  botInvestigationUnfilteredMetricsByPageURL:
+    segmentId: null
+    addMetrics: true
+    metricIds: >-
+      metrics/event3, cm3938_602b915cb99757640284234e,
+      cm3938_66d0bfba05c95b4eca739eb4, metrics/itemtimespent, metrics/pageviews
+    addDimension: true
+    dimensionId: variables/evar2
+    rowLimit: 500
+  botInvestigationUnfilteredMetricsByRegion:
+    segmentId: null
+    addMetrics: true
+    metricIds: >-
+      metrics/event3, cm3938_602b915cb99757640284234e,
+      cm3938_66d0bfba05c95b4eca739eb4, metrics/itemtimespent, metrics/pageviews
+    addDimension: true
+    dimensionId: variables/georegion
+    rowLimit: 500
+  botInvestigationUnfilteredMetricsByUserAgent:
+    segmentId: null
+    addMetrics: true
+    metricIds: >-
+      metrics/event3, cm3938_602b915cb99757640284234e,
+      cm3938_66d0bfba05c95b4eca739eb4, metrics/itemtimespent, metrics/pageviews
+    addDimension: true
+    dimensionId: variables/evar23
+    rowLimit: 500
+  botInvestigationUnfilteredMetricsByBrowser:
+    segmentId: null
+    addMetrics: true
+    metricIds: >-
+      metrics/event3, cm3938_602b915cb99757640284234e,
+      cm3938_66d0bfba05c95b4eca739eb4, metrics/itemtimespent, metrics/pageviews
+    addDimension: true
+    dimensionId: variables/browser
+    rowLimit: 500
+  botInvestigationUnfilteredMetricsByBrowserType:
+    segmentId: null
+    addMetrics: true
+    metricIds: >-
+      metrics/event3, cm3938_602b915cb99757640284234e,
+      cm3938_66d0bfba05c95b4eca739eb4, metrics/itemtimespent, metrics/pageviews
+    addDimension: true
+    dimensionId: variables/browsertype
+  botInvestigationUnfilteredMetricsByMobileManufacturer:
+    segmentId: null
+    addMetrics: true
+    metricIds: >-
+      metrics/event3, cm3938_602b915cb99757640284234e,
+      cm3938_66d0bfba05c95b4eca739eb4, metrics/itemtimespent, metrics/pageviews
+    addDimension: true
+    dimensionId: variables/mobilemanufacturer
+    rowLimit: 500
+  Lookupvariablesbrowsertype:
+    segmentId: ""
+    addMetrics: false
+    metricIds: ""
+    addDimension: true
+    dimensionId: variables/browsertype
+    rowLimit: 50000
+  Lookupvariablesoperatingsystem:
+    segmentId: ""
+    addMetrics: false
+    metricIds: ""
+    addDimension: true
+    dimensionId: variables/operatingsystem
+    rowLimit: 50000
+  Lookupvariablesmobilemanufacturer:
+    segmentId: ""
+    addMetrics: false
+    metricIds: ""
+    addDimension: true
+    dimensionId: variables/mobilemanufacturer
+    rowLimit: 50000
+  Lookupvariablesmonitorresolution:
+    segmentId: ""
+    addMetrics: false
+    metricIds: ""
+    addDimension: true
+    dimensionId: variables/monitorresolution
+    rowLimit: 50000
+  Lookupvariablesmarketingchannel:
+    segmentId: ""
+    addMetrics: false
+    metricIds: ""
+    addDimension: true
+    dimensionId: variables/marketingchannel
+    rowLimit: 50000
+  Lookupvariablesgeoregion:
+    segmentId: ""
+    addMetrics: false
+    metricIds: ""
+    addDimension: true
+    dimensionId: variables/georegion
+    rowLimit: 50000

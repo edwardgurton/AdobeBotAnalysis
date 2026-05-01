@@ -1,0 +1,19 @@
+CompareValidate,SegmentName,RSIDCleanName,Dimension1,Dimension1Item,Dimension2,Dimension2Item
+Validate,0158 BOT RULE: OnlineBettingcom - OperatingSystem=Android 160 AND Domain = yourserverde,OnlineBettingcom,OperatingSystem,Android 16.0,Domain,yourserver.de
+Validate,"0159 BOT RULE: Cardschat.com - UserAgent = Mozilla/50 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605115 (KHTML, like Gecko) Version/166 Mobile/15E148 Safari/6041 AND Monitor Resolution = 432 x 736",Cardschat.com,UserAgent,"Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1",Monitor Resolution,432 x 736
+Validate,"0160 BOT RULE: Cardschat.com - UserAgent = Mozilla/50 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605115 (KHTML, like Gecko) Version/166 Mobile/15E148 Safari/6041 AND Monitor Resolution = 800 x 600",Cardschat.com,UserAgent,"Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1",Monitor Resolution,800 x 600
+Compare,BOTCOMPARE_FebMay25RoundThree_01: coverscom - Domain=amazonawscom AND BrowserType=Mozilla,coverscom,Domain,amazonaws.com,BrowserType,Mozilla
+Validate,0161 BOT RULE: Cardschatcom - Domain=amazonawscom AND BrowserType=Yandex,Cardschatcom,Domain,amazonaws.com,BrowserType,Yandex
+Validate,0162 BOT RULE: MoneyPillar - Domain=amazonawscom AND MonitorResolution = 320 x 200,MoneyPillar,Domain,amazonaws.com,MonitorResolution,320 x 200
+Validate,0163 BOT RULE: coverscom - MonitorResolution = 1280 x 1280,coverscom,MonitorResolution,1280 x 1280,,
+Validate,0164 BOT RULE: coverscom - Domain=amazonawscom AND MonitorResolution = 800x600,coverscom,Domain,amazonaws.com,MonitorResolution,800x600
+Validate,0165 BOT RULE: MoneyPillar - Domain=amazonawscom AND OperatingSystem = Chrome OS 11700,MoneyPillar,Domain,amazonaws.com,OperatingSystem,Chrome OS 117.0.0
+Validate,0166 BOT RULE: GuruOther - Domain=amazonawscom AND OperatingSystem = Chrome OS 9404606,GuruOther,Domain,amazonaws.com,OperatingSystem,Chrome OS 94.0.4606
+Validate,0167 BOT RULE: MoneyPillar - Domain=amazonawscom AND OperatingSystem = iOS 111,MoneyPillar,Domain,amazonaws.com,OperatingSystem,iOS 11.1
+Validate,0168 BOT RULE: MoneyPillar - Domain=amazonawscom AND OperatingSystem = iOS 1323,MoneyPillar,Domain,amazonaws.com,OperatingSystem,iOS 13.2.3
+Validate,0169 BOT RULE: Coverscom - Domain=amazonawscom AND OperatingSystem = Linux,Coverscom,Domain,amazonaws.com,OperatingSystem,Linux
+Compare,BOTCOMPARE_FebMay25RoundThree_02: Coverscom - OperatingSystem = Linux,Coverscom,OperatingSystem,Linux,,
+Compare,BOTCOMPARE_FebMay25RoundThree_03: MoneyPillar - Domain=amazonawscom AND PageURL = https://moneywisecom/,MoneyPillar,Domain,amazonaws.com,PageURL,https://moneywise.com/
+Validate,0170 BOT RULE: Cardschatcom - Domain=amazonawscom AND UserAgent=Mozilla/50 (X11; Linux x86_64; rv:1390) Gecko/20100101 Firefox/1390,Cardschatcom,Domain,amazonaws.com,UserAgent,Mozilla/5.0 (X11; Linux x86_64; rv:139.0) Gecko/20100101 Firefox/139.0
+Validate,"0171 BOT RULE: Casinoat - Domain=amazonawscom AND UserAgent=Mozilla/50 (Windows NT 100; Win64; x64) AppleWebKit/53736 (KHTML, like Gecko) Chrome/124000 Safari/53736",Casinoat,Domain,amazonaws.com,UserAgent,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+Compare,BOTCOMPARE_FebMay25RoundThree_04: Casinoorg - MarketingChannel=Programmatic Clickthrough,Casinoorg,MarketingChannel,Programmatic Clickthrough,,

@@ -1,0 +1,1867 @@
+// Generated on 2026-01-01
+// Date range: 2025-12-01 to 2026-01-01
+
+const botInvestigationRsidCountriesMinThreshold = [
+  {
+    "rsidCleanName": "Apuestasdeportivascom",
+    "geocountry": "Spain",
+    "segmentId": "s3938_6852864ce90051508f05779b",
+    "visits": 181074
+  },
+  {
+    "rsidCleanName": "Apuestasdeportivascom",
+    "geocountry": "Peru",
+    "segmentId": "s3938_685286662edc2b6d3f46284d",
+    "visits": 11687
+  },
+  {
+    "rsidCleanName": "Apuestasdeportivascom",
+    "geocountry": "Venezuela",
+    "segmentId": "s3938_6852866ae90051508f0577a5",
+    "visits": 6464
+  },
+  {
+    "rsidCleanName": "Apuestasdeportivascom",
+    "geocountry": "Mexico",
+    "segmentId": "s3938_68528662e90051508f0577a2",
+    "visits": 5225
+  },
+  {
+    "rsidCleanName": "Apuestasdeportivascom",
+    "geocountry": "Colombia",
+    "segmentId": "s3938_68528671e90051508f0577a7",
+    "visits": 3171
+  },
+  {
+    "rsidCleanName": "Apuestasdeportivascom",
+    "geocountry": "Chile",
+    "segmentId": "s3938_6852867066b0b8fc854865e2",
+    "visits": 3088
+  },
+  {
+    "rsidCleanName": "CasinoEnligneca",
+    "geocountry": "Canada",
+    "segmentId": "s3938_68528650e90051508f05779c",
+    "visits": 3597
+  },
+  {
+    "rsidCleanName": "CasinoOnlinede",
+    "geocountry": "Germany",
+    "segmentId": "s3938_6852864f66b0b8fc854865dc",
+    "visits": 71899
+  },
+  {
+    "rsidCleanName": "CasinoSpielede",
+    "geocountry": "Germany",
+    "segmentId": "s3938_6852864f66b0b8fc854865dc",
+    "visits": 7224
+  },
+  {
+    "rsidCleanName": "Casinoat",
+    "geocountry": "Austria",
+    "segmentId": "s3938_6863d65f0bb9cb6dfeac950f",
+    "visits": 28441
+  },
+  {
+    "rsidCleanName": "Casinoat",
+    "geocountry": "Germany",
+    "segmentId": "s3938_6852864f66b0b8fc854865dc",
+    "visits": 9539
+  },
+  {
+    "rsidCleanName": "Casinoca",
+    "geocountry": "Canada",
+    "segmentId": "s3938_68528650e90051508f05779c",
+    "visits": 71970
+  },
+  {
+    "rsidCleanName": "Casinoca",
+    "geocountry": "United States",
+    "segmentId": "s3938_6852864e2edc2b6d3f462848",
+    "visits": 4843
+  },
+  {
+    "rsidCleanName": "Casinoch",
+    "geocountry": "Switzerland",
+    "segmentId": "s3938_6863d65d0bb9cb6dfeac950d",
+    "visits": 13862
+  },
+  {
+    "rsidCleanName": "Casinoch",
+    "geocountry": "Germany",
+    "segmentId": "s3938_6852864f66b0b8fc854865dc",
+    "visits": 11643
+  },
+  {
+    "rsidCleanName": "Casinomx",
+    "geocountry": "Mexico",
+    "segmentId": "s3938_68528662e90051508f0577a2",
+    "visits": 14276
+  },
+  {
+    "rsidCleanName": "Casinoorg",
+    "geocountry": "United States",
+    "segmentId": "s3938_6852864e2edc2b6d3f462848",
+    "visits": 1206974
+  },
+  {
+    "rsidCleanName": "Casinoorg",
+    "geocountry": "Canada",
+    "segmentId": "s3938_68528650e90051508f05779c",
+    "visits": 194621
+  },
+  {
+    "rsidCleanName": "Casinoorg",
+    "geocountry": "Germany",
+    "segmentId": "s3938_6852864f66b0b8fc854865dc",
+    "visits": 138516
+  },
+  {
+    "rsidCleanName": "Casinoorg",
+    "geocountry": "United Kingdom",
+    "segmentId": "s3938_685286552edc2b6d3f462849",
+    "visits": 91428
+  },
+  {
+    "rsidCleanName": "Casinoorg",
+    "geocountry": "Australia",
+    "segmentId": "s3938_68528658e90051508f05779f",
+    "visits": 87095
+  },
+  {
+    "rsidCleanName": "Casinoorg",
+    "geocountry": "France",
+    "segmentId": "s3938_685286592edc2b6d3f46284a",
+    "visits": 80353
+  },
+  {
+    "rsidCleanName": "Casinoorg",
+    "geocountry": "Netherlands",
+    "segmentId": "s3938_6852865be90051508f0577a0",
+    "visits": 73680
+  },
+  {
+    "rsidCleanName": "Casinoorg",
+    "geocountry": "New Zealand",
+    "segmentId": "s3938_68528660e90051508f0577a1",
+    "visits": 58681
+  },
+  {
+    "rsidCleanName": "Casinoorg",
+    "geocountry": "Brazil",
+    "segmentId": "s3938_68528653e90051508f05779e",
+    "visits": 54150
+  },
+  {
+    "rsidCleanName": "Casinoorg",
+    "geocountry": "Spain",
+    "segmentId": "s3938_6852864ce90051508f05779b",
+    "visits": 49421
+  },
+  {
+    "rsidCleanName": "Casinoorg",
+    "geocountry": "South Africa",
+    "segmentId": "s3938_68528652e90051508f05779d",
+    "visits": 42620
+  },
+  {
+    "rsidCleanName": "Casinoorg",
+    "geocountry": "Mexico",
+    "segmentId": "s3938_68528662e90051508f0577a2",
+    "visits": 42015
+  },
+  {
+    "rsidCleanName": "Casinoorg",
+    "geocountry": "India",
+    "segmentId": "s3938_6852865d66b0b8fc854865de",
+    "visits": 27076
+  },
+  {
+    "rsidCleanName": "Casinoorg",
+    "geocountry": "Italy",
+    "segmentId": "s3938_68528664e90051508f0577a3",
+    "visits": 25436
+  },
+  {
+    "rsidCleanName": "Casinoorg",
+    "geocountry": "Bangladesh",
+    "segmentId": "s3938_6852865f66b0b8fc854865df",
+    "visits": 23290
+  },
+  {
+    "rsidCleanName": "Casinoorg",
+    "geocountry": "Argentina",
+    "segmentId": "s3938_6852865666b0b8fc854865dd",
+    "visits": 23227
+  },
+  {
+    "rsidCleanName": "Casinoorg",
+    "geocountry": "Portugal",
+    "segmentId": "s3938_6863d65cd33a62bb80cb5fd8",
+    "visits": 16853
+  },
+  {
+    "rsidCleanName": "Casinoorg",
+    "geocountry": "Belgium",
+    "segmentId": "s3938_6863d656e981a01ef4d23032",
+    "visits": 16805
+  },
+  {
+    "rsidCleanName": "Casinoorg",
+    "geocountry": "Singapore",
+    "segmentId": "s3938_6863cf670d663b6430dd08aa",
+    "visits": 16490
+  },
+  {
+    "rsidCleanName": "Casinoorg",
+    "geocountry": "Austria",
+    "segmentId": "s3938_6863d65f0bb9cb6dfeac950f",
+    "visits": 16248
+  },
+  {
+    "rsidCleanName": "Casinoorg",
+    "geocountry": "Chile",
+    "segmentId": "s3938_6852867066b0b8fc854865e2",
+    "visits": 14070
+  },
+  {
+    "rsidCleanName": "Casinoorg",
+    "geocountry": "Switzerland",
+    "segmentId": "s3938_6863d65d0bb9cb6dfeac950d",
+    "visits": 13543
+  },
+  {
+    "rsidCleanName": "Casinoorg",
+    "geocountry": "Philippines",
+    "segmentId": "s3938_6852865c2edc2b6d3f46284b",
+    "visits": 12222
+  },
+  {
+    "rsidCleanName": "Casinoorg",
+    "geocountry": "Sweden",
+    "segmentId": "s3938_6863d6610bb9cb6dfeac9510",
+    "visits": 12190
+  },
+  {
+    "rsidCleanName": "Casinoorg",
+    "geocountry": "Japan",
+    "segmentId": "s3938_6863d651d33a62bb80cb5fd7",
+    "visits": 10579
+  },
+  {
+    "rsidCleanName": "Casinoorg",
+    "geocountry": "Peru",
+    "segmentId": "s3938_685286662edc2b6d3f46284d",
+    "visits": 9444
+  },
+  {
+    "rsidCleanName": "Casinoorg",
+    "geocountry": "Israel",
+    "segmentId": "s3938_6863d662d33a62bb80cb5fd9",
+    "visits": 8385
+  },
+  {
+    "rsidCleanName": "Casinoorg",
+    "geocountry": "Romania",
+    "segmentId": "s3938_6863d667d33a62bb80cb5fdb",
+    "visits": 8294
+  },
+  {
+    "rsidCleanName": "Casinoorg",
+    "geocountry": "Ireland",
+    "segmentId": "s3938_6863d66ae981a01ef4d23035",
+    "visits": 8075
+  },
+  {
+    "rsidCleanName": "Casinoorg",
+    "geocountry": "China",
+    "segmentId": "s3938_6863d6abe981a01ef4d23038",
+    "visits": 7771
+  },
+  {
+    "rsidCleanName": "Casinoorg",
+    "geocountry": "Thailand",
+    "segmentId": "s3938_6863d665d33a62bb80cb5fda",
+    "visits": 7348
+  },
+  {
+    "rsidCleanName": "Casinoorg",
+    "geocountry": "Norway",
+    "segmentId": "s3938_6863d66de981a01ef4d23036",
+    "visits": 6928
+  },
+  {
+    "rsidCleanName": "Casinoorg",
+    "geocountry": "South Korea",
+    "segmentId": "s3938_6852866d66b0b8fc854865e0",
+    "visits": 6752
+  },
+  {
+    "rsidCleanName": "Casinoorg",
+    "geocountry": "Venezuela",
+    "segmentId": "s3938_6852866ae90051508f0577a5",
+    "visits": 5918
+  },
+  {
+    "rsidCleanName": "Casinoorg",
+    "geocountry": "Hong Kong SAR of China",
+    "segmentId": "s3938_6863d66b0bb9cb6dfeac9511",
+    "visits": 5906
+  },
+  {
+    "rsidCleanName": "Casinoorg",
+    "geocountry": "Pakistan",
+    "segmentId": "s3938_6863d668d33a62bb80cb5fdc",
+    "visits": 5710
+  },
+  {
+    "rsidCleanName": "Casinoorg",
+    "geocountry": "Denmark",
+    "segmentId": "s3938_6863d66ffeff97c4e3c73cb0",
+    "visits": 5235
+  },
+  {
+    "rsidCleanName": "Casinoorg",
+    "geocountry": "Czech Republic",
+    "segmentId": "s3938_6863d671feff97c4e3c73cb1",
+    "visits": 5197
+  },
+  {
+    "rsidCleanName": "Casinoorg",
+    "geocountry": "Bulgaria",
+    "segmentId": "s3938_6863d6770d663b6430dd08d8",
+    "visits": 5179
+  },
+  {
+    "rsidCleanName": "Casinoorg",
+    "geocountry": "Viet Nam",
+    "segmentId": "s3938_6863d6820d663b6430dd08db",
+    "visits": 5045
+  },
+  {
+    "rsidCleanName": "Casinoorg",
+    "geocountry": "Tunisia",
+    "segmentId": "s3938_6863d64a0bb9cb6dfeac950c",
+    "visits": 4503
+  },
+  {
+    "rsidCleanName": "Casinoorg",
+    "geocountry": "Ecuador",
+    "segmentId": "s3938_6863d674f87da74cae7e356b",
+    "visits": 4403
+  },
+  {
+    "rsidCleanName": "Casinoorg",
+    "geocountry": "Finland",
+    "segmentId": "s3938_6863d6780d663b6430dd08d9",
+    "visits": 4295
+  },
+  {
+    "rsidCleanName": "Casinoorg",
+    "geocountry": "Angola",
+    "segmentId": "s3938_6863d6fc0bb9cb6dfeac952c",
+    "visits": 3910
+  },
+  {
+    "rsidCleanName": "Casinoorg",
+    "geocountry": "Ukraine",
+    "segmentId": "s3938_6863d66ed33a62bb80cb5fdd",
+    "visits": 3782
+  },
+  {
+    "rsidCleanName": "Casinoorg",
+    "geocountry": "Morocco",
+    "segmentId": "s3938_6863d6752ecbd0d04d46fad3",
+    "visits": 3596
+  },
+  {
+    "rsidCleanName": "Casinoorg",
+    "geocountry": "Greece",
+    "segmentId": "s3938_685286632edc2b6d3f46284c",
+    "visits": 3506
+  },
+  {
+    "rsidCleanName": "Casinoorg",
+    "geocountry": "Latvia",
+    "segmentId": "s3938_6863d6872ecbd0d04d46fad5",
+    "visits": 3268
+  },
+  {
+    "rsidCleanName": "Casinoorg",
+    "geocountry": "Slovenia",
+    "segmentId": "s3938_6863d681f87da74cae7e356d",
+    "visits": 3031
+  },
+  {
+    "rsidCleanName": "Casinoorg",
+    "geocountry": "Poland",
+    "segmentId": "s3938_6863d67cfeff97c4e3c73cb4",
+    "visits": 3009
+  },
+  {
+    "rsidCleanName": "Casinoorg",
+    "geocountry": "Georgia",
+    "segmentId": "s3938_6863d652e981a01ef4d23031",
+    "visits": 2998
+  },
+  {
+    "rsidCleanName": "Casinoorg",
+    "geocountry": "Taiwan region",
+    "segmentId": "s3938_6852866f66b0b8fc854865e1",
+    "visits": 2960
+  },
+  {
+    "rsidCleanName": "Casinoorg",
+    "geocountry": "Lithuania",
+    "segmentId": "s3938_6863d67e2ecbd0d04d46fad4",
+    "visits": 2953
+  },
+  {
+    "rsidCleanName": "Casinoorg",
+    "geocountry": "Serbia",
+    "segmentId": "s3938_6863d6849ffeefbd9c35e602",
+    "visits": 2874
+  },
+  {
+    "rsidCleanName": "Casinoorg",
+    "geocountry": "Indonesia",
+    "segmentId": "s3938_6863d672f87da74cae7e356a",
+    "visits": 2717
+  },
+  {
+    "rsidCleanName": "Casinous",
+    "geocountry": "United States",
+    "segmentId": "s3938_6852864e2edc2b6d3f462848",
+    "visits": 24123
+  },
+  {
+    "rsidCleanName": "Casinous",
+    "geocountry": "Turkey",
+    "segmentId": "s3938_6863d68efeff97c4e3c73cb7",
+    "visits": 11930
+  },
+  {
+    "rsidCleanName": "Casinous",
+    "geocountry": "Singapore",
+    "segmentId": "s3938_6863cf670d663b6430dd08aa",
+    "visits": 6117
+  },
+  {
+    "rsidCleanName": "Casinous",
+    "geocountry": "Brazil",
+    "segmentId": "s3938_68528653e90051508f05779e",
+    "visits": 6081
+  },
+  {
+    "rsidCleanName": "Casinous",
+    "geocountry": "China",
+    "segmentId": "s3938_6863d6abe981a01ef4d23038",
+    "visits": 5917
+  },
+  {
+    "rsidCleanName": "Casinous",
+    "geocountry": "Canada",
+    "segmentId": "s3938_68528650e90051508f05779c",
+    "visits": 5461
+  },
+  {
+    "rsidCleanName": "Casinous",
+    "geocountry": "United Kingdom",
+    "segmentId": "s3938_685286552edc2b6d3f462849",
+    "visits": 4931
+  },
+  {
+    "rsidCleanName": "Casinous",
+    "geocountry": "Germany",
+    "segmentId": "s3938_6852864f66b0b8fc854865dc",
+    "visits": 3348
+  },
+  {
+    "rsidCleanName": "Casinous",
+    "geocountry": "Ukraine",
+    "segmentId": "s3938_6863d66ed33a62bb80cb5fdd",
+    "visits": 3266
+  },
+  {
+    "rsidCleanName": "GuruDE",
+    "geocountry": "Germany",
+    "segmentId": "s3938_6852864f66b0b8fc854865dc",
+    "visits": 152629
+  },
+  {
+    "rsidCleanName": "GuruDE",
+    "geocountry": "Austria",
+    "segmentId": "s3938_6863d65f0bb9cb6dfeac950f",
+    "visits": 29531
+  },
+  {
+    "rsidCleanName": "GuruDE",
+    "geocountry": "Singapore",
+    "segmentId": "s3938_6863cf670d663b6430dd08aa",
+    "visits": 7433
+  },
+  {
+    "rsidCleanName": "GuruES",
+    "geocountry": "Spain",
+    "segmentId": "s3938_6852864ce90051508f05779b",
+    "visits": 86169
+  },
+  {
+    "rsidCleanName": "GuruES",
+    "geocountry": "Mexico",
+    "segmentId": "s3938_68528662e90051508f0577a2",
+    "visits": 55689
+  },
+  {
+    "rsidCleanName": "GuruES",
+    "geocountry": "Peru",
+    "segmentId": "s3938_685286662edc2b6d3f46284d",
+    "visits": 23366
+  },
+  {
+    "rsidCleanName": "GuruES",
+    "geocountry": "Chile",
+    "segmentId": "s3938_6852867066b0b8fc854865e2",
+    "visits": 22055
+  },
+  {
+    "rsidCleanName": "GuruES",
+    "geocountry": "Ecuador",
+    "segmentId": "s3938_6863d674f87da74cae7e356b",
+    "visits": 7446
+  },
+  {
+    "rsidCleanName": "GuruES",
+    "geocountry": "Paraguay",
+    "segmentId": "s3938_6863d67ff87da74cae7e356c",
+    "visits": 4155
+  },
+  {
+    "rsidCleanName": "GuruES",
+    "geocountry": "Singapore",
+    "segmentId": "s3938_6863cf670d663b6430dd08aa",
+    "visits": 3463
+  },
+  {
+    "rsidCleanName": "GuruES",
+    "geocountry": "Colombia",
+    "segmentId": "s3938_68528671e90051508f0577a7",
+    "visits": 3160
+  },
+  {
+    "rsidCleanName": "GuruES",
+    "geocountry": "United States",
+    "segmentId": "s3938_6852864e2edc2b6d3f462848",
+    "visits": 2815
+  },
+  {
+    "rsidCleanName": "GuruES",
+    "geocountry": "El Salvador",
+    "segmentId": "s3938_6863d6a10d663b6430dd08e0",
+    "visits": 2781
+  },
+  {
+    "rsidCleanName": "GuruES",
+    "geocountry": "Panama",
+    "segmentId": "s3938_6863d6962ecbd0d04d46fad9",
+    "visits": 2652
+  },
+  {
+    "rsidCleanName": "GuruIT",
+    "geocountry": "Italy",
+    "segmentId": "s3938_68528664e90051508f0577a3",
+    "visits": 30989
+  },
+  {
+    "rsidCleanName": "GuruIT",
+    "geocountry": "Switzerland",
+    "segmentId": "s3938_6863d65d0bb9cb6dfeac950d",
+    "visits": 7464
+  },
+  {
+    "rsidCleanName": "GuruJP",
+    "geocountry": "Japan",
+    "segmentId": "s3938_6863d651d33a62bb80cb5fd7",
+    "visits": 48543
+  },
+  {
+    "rsidCleanName": "GuruJP",
+    "geocountry": "Singapore",
+    "segmentId": "s3938_6863cf670d663b6430dd08aa",
+    "visits": 4549
+  },
+  {
+    "rsidCleanName": "GuruMain",
+    "geocountry": "South Africa",
+    "segmentId": "s3938_68528652e90051508f05779d",
+    "visits": 261796
+  },
+  {
+    "rsidCleanName": "GuruMain",
+    "geocountry": "United Kingdom",
+    "segmentId": "s3938_685286552edc2b6d3f462849",
+    "visits": 71426
+  },
+  {
+    "rsidCleanName": "GuruMain",
+    "geocountry": "United States",
+    "segmentId": "s3938_6852864e2edc2b6d3f462848",
+    "visits": 71007
+  },
+  {
+    "rsidCleanName": "GuruMain",
+    "geocountry": "Canada",
+    "segmentId": "s3938_68528650e90051508f05779c",
+    "visits": 40827
+  },
+  {
+    "rsidCleanName": "GuruMain",
+    "geocountry": "Tunisia",
+    "segmentId": "s3938_6863d64a0bb9cb6dfeac950c",
+    "visits": 34164
+  },
+  {
+    "rsidCleanName": "GuruMain",
+    "geocountry": "Indonesia",
+    "segmentId": "s3938_6863d672f87da74cae7e356a",
+    "visits": 26328
+  },
+  {
+    "rsidCleanName": "GuruMain",
+    "geocountry": "Georgia",
+    "segmentId": "s3938_6863d652e981a01ef4d23031",
+    "visits": 24261
+  },
+  {
+    "rsidCleanName": "GuruMain",
+    "geocountry": "Australia",
+    "segmentId": "s3938_68528658e90051508f05779f",
+    "visits": 24110
+  },
+  {
+    "rsidCleanName": "GuruMain",
+    "geocountry": "Finland",
+    "segmentId": "s3938_6863d6780d663b6430dd08d9",
+    "visits": 22290
+  },
+  {
+    "rsidCleanName": "GuruMain",
+    "geocountry": "Netherlands",
+    "segmentId": "s3938_6852865be90051508f0577a0",
+    "visits": 21038
+  },
+  {
+    "rsidCleanName": "GuruMain",
+    "geocountry": "Poland",
+    "segmentId": "s3938_6863d67cfeff97c4e3c73cb4",
+    "visits": 20664
+  },
+  {
+    "rsidCleanName": "GuruMain",
+    "geocountry": "Sweden",
+    "segmentId": "s3938_6863d6610bb9cb6dfeac9510",
+    "visits": 16946
+  },
+  {
+    "rsidCleanName": "GuruMain",
+    "geocountry": "Germany",
+    "segmentId": "s3938_6852864f66b0b8fc854865dc",
+    "visits": 15993
+  },
+  {
+    "rsidCleanName": "GuruMain",
+    "geocountry": "New Zealand",
+    "segmentId": "s3938_68528660e90051508f0577a1",
+    "visits": 13691
+  },
+  {
+    "rsidCleanName": "GuruMain",
+    "geocountry": "Latvia",
+    "segmentId": "s3938_6863d6872ecbd0d04d46fad5",
+    "visits": 11321
+  },
+  {
+    "rsidCleanName": "GuruMain",
+    "geocountry": "Serbia",
+    "segmentId": "s3938_6863d6849ffeefbd9c35e602",
+    "visits": 11188
+  },
+  {
+    "rsidCleanName": "GuruMain",
+    "geocountry": "Lithuania",
+    "segmentId": "s3938_6863d67e2ecbd0d04d46fad4",
+    "visits": 10355
+  },
+  {
+    "rsidCleanName": "GuruMain",
+    "geocountry": "Norway",
+    "segmentId": "s3938_6863d66de981a01ef4d23036",
+    "visits": 9405
+  },
+  {
+    "rsidCleanName": "GuruMain",
+    "geocountry": "Austria",
+    "segmentId": "s3938_6863d65f0bb9cb6dfeac950f",
+    "visits": 9365
+  },
+  {
+    "rsidCleanName": "GuruMain",
+    "geocountry": "Ireland",
+    "segmentId": "s3938_6863d66ae981a01ef4d23035",
+    "visits": 8612
+  },
+  {
+    "rsidCleanName": "GuruMain",
+    "geocountry": "Singapore",
+    "segmentId": "s3938_6863cf670d663b6430dd08aa",
+    "visits": 8347
+  },
+  {
+    "rsidCleanName": "GuruMain",
+    "geocountry": "Romania",
+    "segmentId": "s3938_6863d667d33a62bb80cb5fdb",
+    "visits": 7661
+  },
+  {
+    "rsidCleanName": "GuruMain",
+    "geocountry": "Cyprus",
+    "segmentId": "s3938_6863d6bcd33a62bb80cb5fea",
+    "visits": 6896
+  },
+  {
+    "rsidCleanName": "GuruMain",
+    "geocountry": "Hungary",
+    "segmentId": "s3938_6863d663e981a01ef4d23034",
+    "visits": 6829
+  },
+  {
+    "rsidCleanName": "GuruMain",
+    "geocountry": "Slovenia",
+    "segmentId": "s3938_6863d681f87da74cae7e356d",
+    "visits": 6126
+  },
+  {
+    "rsidCleanName": "GuruMain",
+    "geocountry": "India",
+    "segmentId": "s3938_6852865d66b0b8fc854865de",
+    "visits": 5713
+  },
+  {
+    "rsidCleanName": "GuruMain",
+    "geocountry": "Albania",
+    "segmentId": "s3938_6863d6aed33a62bb80cb5fe6",
+    "visits": 5639
+  },
+  {
+    "rsidCleanName": "GuruMain",
+    "geocountry": "Italy",
+    "segmentId": "s3938_68528664e90051508f0577a3",
+    "visits": 5321
+  },
+  {
+    "rsidCleanName": "GuruMain",
+    "geocountry": "Spain",
+    "segmentId": "s3938_6852864ce90051508f05779b",
+    "visits": 5060
+  },
+  {
+    "rsidCleanName": "GuruMain",
+    "geocountry": "Botswana",
+    "segmentId": "s3938_6863d6e50bb9cb6dfeac9523",
+    "visits": 5009
+  },
+  {
+    "rsidCleanName": "GuruMain",
+    "geocountry": "Bangladesh",
+    "segmentId": "s3938_6852865f66b0b8fc854865df",
+    "visits": 4404
+  },
+  {
+    "rsidCleanName": "GuruMain",
+    "geocountry": "Croatia",
+    "segmentId": "s3938_6863d6882ecbd0d04d46fad6",
+    "visits": 4363
+  },
+  {
+    "rsidCleanName": "GuruMain",
+    "geocountry": "Greece",
+    "segmentId": "s3938_685286632edc2b6d3f46284c",
+    "visits": 4118
+  },
+  {
+    "rsidCleanName": "GuruMain",
+    "geocountry": "Switzerland",
+    "segmentId": "s3938_6863d65d0bb9cb6dfeac950d",
+    "visits": 4116
+  },
+  {
+    "rsidCleanName": "GuruMain",
+    "geocountry": "Denmark",
+    "segmentId": "s3938_6863d66ffeff97c4e3c73cb0",
+    "visits": 4056
+  },
+  {
+    "rsidCleanName": "GuruMain",
+    "geocountry": "Angola",
+    "segmentId": "s3938_6863d6fc0bb9cb6dfeac952c",
+    "visits": 3751
+  },
+  {
+    "rsidCleanName": "GuruMain",
+    "geocountry": "Slovakia (Slovak Republic)",
+    "segmentId": "s3938_6863d693f87da74cae7e356f",
+    "visits": 3522
+  },
+  {
+    "rsidCleanName": "GuruMain",
+    "geocountry": "Estonia",
+    "segmentId": "s3938_6863d68afeff97c4e3c73cb6",
+    "visits": 3360
+  },
+  {
+    "rsidCleanName": "GuruMain",
+    "geocountry": "Turkey",
+    "segmentId": "s3938_6863d68efeff97c4e3c73cb7",
+    "visits": 3170
+  },
+  {
+    "rsidCleanName": "GuruMain",
+    "geocountry": "Portugal",
+    "segmentId": "s3938_6863d65cd33a62bb80cb5fd8",
+    "visits": 3029
+  },
+  {
+    "rsidCleanName": "GuruMain",
+    "geocountry": "Malaysia",
+    "segmentId": "s3938_6863d6902ecbd0d04d46fad8",
+    "visits": 2939
+  },
+  {
+    "rsidCleanName": "GuruMain",
+    "geocountry": "Czech Republic",
+    "segmentId": "s3938_6863d671feff97c4e3c73cb1",
+    "visits": 2769
+  },
+  {
+    "rsidCleanName": "GuruMain",
+    "geocountry": "Bulgaria",
+    "segmentId": "s3938_6863d6770d663b6430dd08d8",
+    "visits": 2629
+  },
+  {
+    "rsidCleanName": "GuruMain",
+    "geocountry": "Brazil",
+    "segmentId": "s3938_68528653e90051508f05779e",
+    "visits": 2588
+  },
+  {
+    "rsidCleanName": "GuruOther",
+    "geocountry": "Greece",
+    "segmentId": "s3938_685286632edc2b6d3f46284c",
+    "visits": 82127
+  },
+  {
+    "rsidCleanName": "GuruOther",
+    "geocountry": "Argentina",
+    "segmentId": "s3938_6852865666b0b8fc854865dd",
+    "visits": 59752
+  },
+  {
+    "rsidCleanName": "GuruOther",
+    "geocountry": "Brazil",
+    "segmentId": "s3938_68528653e90051508f05779e",
+    "visits": 42084
+  },
+  {
+    "rsidCleanName": "GuruOther",
+    "geocountry": "Slovakia (Slovak Republic)",
+    "segmentId": "s3938_6863d693f87da74cae7e356f",
+    "visits": 17727
+  },
+  {
+    "rsidCleanName": "GuruOther",
+    "geocountry": "South Korea",
+    "segmentId": "s3938_6852866d66b0b8fc854865e0",
+    "visits": 15708
+  },
+  {
+    "rsidCleanName": "GuruOther",
+    "geocountry": "Singapore",
+    "segmentId": "s3938_6863cf670d663b6430dd08aa",
+    "visits": 13430
+  },
+  {
+    "rsidCleanName": "GuruOther",
+    "geocountry": "Denmark",
+    "segmentId": "s3938_6863d66ffeff97c4e3c73cb0",
+    "visits": 13087
+  },
+  {
+    "rsidCleanName": "GuruOther",
+    "geocountry": "Czech Republic",
+    "segmentId": "s3938_6863d671feff97c4e3c73cb1",
+    "visits": 12231
+  },
+  {
+    "rsidCleanName": "GuruOther",
+    "geocountry": "Bulgaria",
+    "segmentId": "s3938_6863d6770d663b6430dd08d8",
+    "visits": 8986
+  },
+  {
+    "rsidCleanName": "GuruOther",
+    "geocountry": "Belgium",
+    "segmentId": "s3938_6863d656e981a01ef4d23032",
+    "visits": 6033
+  },
+  {
+    "rsidCleanName": "GuruOther",
+    "geocountry": "Georgia",
+    "segmentId": "s3938_6863d652e981a01ef4d23031",
+    "visits": 4787
+  },
+  {
+    "rsidCleanName": "GuruOther",
+    "geocountry": "Latvia",
+    "segmentId": "s3938_6863d6872ecbd0d04d46fad5",
+    "visits": 3809
+  },
+  {
+    "rsidCleanName": "GuruOther",
+    "geocountry": "Germany",
+    "segmentId": "s3938_6852864f66b0b8fc854865dc",
+    "visits": 3277
+  },
+  {
+    "rsidCleanName": "GuruPT",
+    "geocountry": "Portugal",
+    "segmentId": "s3938_6863d65cd33a62bb80cb5fd8",
+    "visits": 21222
+  },
+  {
+    "rsidCleanName": "GuruPT",
+    "geocountry": "Brazil",
+    "segmentId": "s3938_68528653e90051508f05779e",
+    "visits": 5363
+  },
+  {
+    "rsidCleanName": "GuruPT",
+    "geocountry": "Singapore",
+    "segmentId": "s3938_6863cf670d663b6430dd08aa",
+    "visits": 3443
+  },
+  {
+    "rsidCleanName": "MarcadoresOnlinecom",
+    "geocountry": "Spain",
+    "segmentId": "s3938_6852864ce90051508f05779b",
+    "visits": 207094
+  },
+  {
+    "rsidCleanName": "MarcadoresOnlinecom",
+    "geocountry": "Venezuela",
+    "segmentId": "s3938_6852866ae90051508f0577a5",
+    "visits": 16133
+  },
+  {
+    "rsidCleanName": "MoneyPillar",
+    "geocountry": "United States",
+    "segmentId": "s3938_6852864e2edc2b6d3f462848",
+    "visits": 3829991
+  },
+  {
+    "rsidCleanName": "MoneyPillar",
+    "geocountry": "Canada",
+    "segmentId": "s3938_68528650e90051508f05779c",
+    "visits": 469917
+  },
+  {
+    "rsidCleanName": "MoneyPillar",
+    "geocountry": "United Kingdom",
+    "segmentId": "s3938_685286552edc2b6d3f462849",
+    "visits": 22052
+  },
+  {
+    "rsidCleanName": "MoneyPillar",
+    "geocountry": "Singapore",
+    "segmentId": "s3938_6863cf670d663b6430dd08aa",
+    "visits": 11805
+  },
+  {
+    "rsidCleanName": "MoneyPillar",
+    "geocountry": "Ireland",
+    "segmentId": "s3938_6863d66ae981a01ef4d23035",
+    "visits": 10811
+  },
+  {
+    "rsidCleanName": "MoneyPillar",
+    "geocountry": "Australia",
+    "segmentId": "s3938_68528658e90051508f05779f",
+    "visits": 9901
+  },
+  {
+    "rsidCleanName": "MoneyPillar",
+    "geocountry": "Mexico",
+    "segmentId": "s3938_68528662e90051508f0577a2",
+    "visits": 8838
+  },
+  {
+    "rsidCleanName": "MoneyPillar",
+    "geocountry": "India",
+    "segmentId": "s3938_6852865d66b0b8fc854865de",
+    "visits": 8083
+  },
+  {
+    "rsidCleanName": "MoneyPillar",
+    "geocountry": "New Zealand",
+    "segmentId": "s3938_68528660e90051508f0577a1",
+    "visits": 6827
+  },
+  {
+    "rsidCleanName": "MoneyPillar",
+    "geocountry": "South Africa",
+    "segmentId": "s3938_68528652e90051508f05779d",
+    "visits": 5943
+  },
+  {
+    "rsidCleanName": "MoneyPillar",
+    "geocountry": "Philippines",
+    "segmentId": "s3938_6852865c2edc2b6d3f46284b",
+    "visits": 4141
+  },
+  {
+    "rsidCleanName": "MoneyPillar",
+    "geocountry": "Germany",
+    "segmentId": "s3938_6852864f66b0b8fc854865dc",
+    "visits": 4119
+  },
+  {
+    "rsidCleanName": "MoneyPillar",
+    "geocountry": "Spain",
+    "segmentId": "s3938_6852864ce90051508f05779b",
+    "visits": 3040
+  },
+  {
+    "rsidCleanName": "MoneyPillar",
+    "geocountry": "Brazil",
+    "segmentId": "s3938_68528653e90051508f05779e",
+    "visits": 2801
+  },
+  {
+    "rsidCleanName": "MoneyPillar",
+    "geocountry": "Malaysia",
+    "segmentId": "s3938_6863d6902ecbd0d04d46fad8",
+    "visits": 2756
+  },
+  {
+    "rsidCleanName": "MoneyPillar",
+    "geocountry": "Netherlands",
+    "segmentId": "s3938_6852865be90051508f0577a0",
+    "visits": 2659
+  },
+  {
+    "rsidCleanName": "MoneyPillar",
+    "geocountry": "France",
+    "segmentId": "s3938_685286592edc2b6d3f46284a",
+    "visits": 2650
+  },
+  {
+    "rsidCleanName": "MoneyPillar",
+    "geocountry": "Nigeria",
+    "segmentId": "s3938_68528669e90051508f0577a4",
+    "visits": 2529
+  },
+  {
+    "rsidCleanName": "Oddspediacom",
+    "geocountry": "Brazil",
+    "segmentId": "s3938_68528653e90051508f05779e",
+    "visits": 169781
+  },
+  {
+    "rsidCleanName": "Oddspediacom",
+    "geocountry": "Italy",
+    "segmentId": "s3938_68528664e90051508f0577a3",
+    "visits": 97603
+  },
+  {
+    "rsidCleanName": "Oddspediacom",
+    "geocountry": "United States",
+    "segmentId": "s3938_6852864e2edc2b6d3f462848",
+    "visits": 91585
+  },
+  {
+    "rsidCleanName": "Oddspediacom",
+    "geocountry": "Mexico",
+    "segmentId": "s3938_68528662e90051508f0577a2",
+    "visits": 59895
+  },
+  {
+    "rsidCleanName": "Oddspediacom",
+    "geocountry": "Spain",
+    "segmentId": "s3938_6852864ce90051508f05779b",
+    "visits": 50048
+  },
+  {
+    "rsidCleanName": "Oddspediacom",
+    "geocountry": "Kenya",
+    "segmentId": "s3938_685286672edc2b6d3f46284e",
+    "visits": 45281
+  },
+  {
+    "rsidCleanName": "Oddspediacom",
+    "geocountry": "United Kingdom",
+    "segmentId": "s3938_685286552edc2b6d3f462849",
+    "visits": 44164
+  },
+  {
+    "rsidCleanName": "Oddspediacom",
+    "geocountry": "Peru",
+    "segmentId": "s3938_685286662edc2b6d3f46284d",
+    "visits": 42925
+  },
+  {
+    "rsidCleanName": "Oddspediacom",
+    "geocountry": "Nigeria",
+    "segmentId": "s3938_68528669e90051508f0577a4",
+    "visits": 41432
+  },
+  {
+    "rsidCleanName": "Oddspediacom",
+    "geocountry": "Germany",
+    "segmentId": "s3938_6852864f66b0b8fc854865dc",
+    "visits": 34883
+  },
+  {
+    "rsidCleanName": "Oddspediacom",
+    "geocountry": "France",
+    "segmentId": "s3938_685286592edc2b6d3f46284a",
+    "visits": 32002
+  },
+  {
+    "rsidCleanName": "Oddspediacom",
+    "geocountry": "Netherlands",
+    "segmentId": "s3938_6852865be90051508f0577a0",
+    "visits": 28472
+  },
+  {
+    "rsidCleanName": "Oddspediacom",
+    "geocountry": "South Africa",
+    "segmentId": "s3938_68528652e90051508f05779d",
+    "visits": 26234
+  },
+  {
+    "rsidCleanName": "Oddspediacom",
+    "geocountry": "India",
+    "segmentId": "s3938_6852865d66b0b8fc854865de",
+    "visits": 24637
+  },
+  {
+    "rsidCleanName": "Oddspediacom",
+    "geocountry": "Switzerland",
+    "segmentId": "s3938_6863d65d0bb9cb6dfeac950d",
+    "visits": 20879
+  },
+  {
+    "rsidCleanName": "Oddspediacom",
+    "geocountry": "Portugal",
+    "segmentId": "s3938_6863d65cd33a62bb80cb5fd8",
+    "visits": 17964
+  },
+  {
+    "rsidCleanName": "Oddspediacom",
+    "geocountry": "Canada",
+    "segmentId": "s3938_68528650e90051508f05779c",
+    "visits": 16042
+  },
+  {
+    "rsidCleanName": "Oddspediacom",
+    "geocountry": "Bulgaria",
+    "segmentId": "s3938_6863d6770d663b6430dd08d8",
+    "visits": 15566
+  },
+  {
+    "rsidCleanName": "Oddspediacom",
+    "geocountry": "Ecuador",
+    "segmentId": "s3938_6863d674f87da74cae7e356b",
+    "visits": 12117
+  },
+  {
+    "rsidCleanName": "Oddspediacom",
+    "geocountry": "Angola",
+    "segmentId": "s3938_6863d6fc0bb9cb6dfeac952c",
+    "visits": 11259
+  },
+  {
+    "rsidCleanName": "Oddspediacom",
+    "geocountry": "Cote D Ivoire",
+    "segmentId": "s3938_6863d6d3d33a62bb80cb5ff0",
+    "visits": 10965
+  },
+  {
+    "rsidCleanName": "Oddspediacom",
+    "geocountry": "Singapore",
+    "segmentId": "s3938_6863cf670d663b6430dd08aa",
+    "visits": 10900
+  },
+  {
+    "rsidCleanName": "Oddspediacom",
+    "geocountry": "Belgium",
+    "segmentId": "s3938_6863d656e981a01ef4d23032",
+    "visits": 10675
+  },
+  {
+    "rsidCleanName": "Oddspediacom",
+    "geocountry": "Uganda",
+    "segmentId": "s3938_6863d6cd0bb9cb6dfeac951c",
+    "visits": 9238
+  },
+  {
+    "rsidCleanName": "Oddspediacom",
+    "geocountry": "Viet Nam",
+    "segmentId": "s3938_6863d6820d663b6430dd08db",
+    "visits": 9019
+  },
+  {
+    "rsidCleanName": "Oddspediacom",
+    "geocountry": "Poland",
+    "segmentId": "s3938_6863d67cfeff97c4e3c73cb4",
+    "visits": 8984
+  },
+  {
+    "rsidCleanName": "Oddspediacom",
+    "geocountry": "Philippines",
+    "segmentId": "s3938_6852865c2edc2b6d3f46284b",
+    "visits": 8360
+  },
+  {
+    "rsidCleanName": "Oddspediacom",
+    "geocountry": "Ghana",
+    "segmentId": "s3938_6863d6d6e981a01ef4d23043",
+    "visits": 8359
+  },
+  {
+    "rsidCleanName": "Oddspediacom",
+    "geocountry": "Colombia",
+    "segmentId": "s3938_68528671e90051508f0577a7",
+    "visits": 8294
+  },
+  {
+    "rsidCleanName": "Oddspediacom",
+    "geocountry": "Morocco",
+    "segmentId": "s3938_6863d6752ecbd0d04d46fad3",
+    "visits": 8181
+  },
+  {
+    "rsidCleanName": "Oddspediacom",
+    "geocountry": "Australia",
+    "segmentId": "s3938_68528658e90051508f05779f",
+    "visits": 7918
+  },
+  {
+    "rsidCleanName": "Oddspediacom",
+    "geocountry": "Argentina",
+    "segmentId": "s3938_6852865666b0b8fc854865dd",
+    "visits": 7690
+  },
+  {
+    "rsidCleanName": "Oddspediacom",
+    "geocountry": "Sweden",
+    "segmentId": "s3938_6863d6610bb9cb6dfeac9510",
+    "visits": 7579
+  },
+  {
+    "rsidCleanName": "Oddspediacom",
+    "geocountry": "Chile",
+    "segmentId": "s3938_6852867066b0b8fc854865e2",
+    "visits": 7566
+  },
+  {
+    "rsidCleanName": "Oddspediacom",
+    "geocountry": "Romania",
+    "segmentId": "s3938_6863d667d33a62bb80cb5fdb",
+    "visits": 6206
+  },
+  {
+    "rsidCleanName": "Oddspediacom",
+    "geocountry": "Tanzania",
+    "segmentId": "s3938_6863d72b0bb9cb6dfeac953b",
+    "visits": 6180
+  },
+  {
+    "rsidCleanName": "Oddspediacom",
+    "geocountry": "Cameroon",
+    "segmentId": "s3938_6863d6e00bb9cb6dfeac9522",
+    "visits": 5589
+  },
+  {
+    "rsidCleanName": "Oddspediacom",
+    "geocountry": "Norway",
+    "segmentId": "s3938_6863d66de981a01ef4d23036",
+    "visits": 5471
+  },
+  {
+    "rsidCleanName": "Oddspediacom",
+    "geocountry": "Austria",
+    "segmentId": "s3938_6863d65f0bb9cb6dfeac950f",
+    "visits": 5307
+  },
+  {
+    "rsidCleanName": "Oddspediacom",
+    "geocountry": "Serbia",
+    "segmentId": "s3938_6863d6849ffeefbd9c35e602",
+    "visits": 5138
+  },
+  {
+    "rsidCleanName": "Oddspediacom",
+    "geocountry": "Ireland",
+    "segmentId": "s3938_6863d66ae981a01ef4d23035",
+    "visits": 4951
+  },
+  {
+    "rsidCleanName": "Oddspediacom",
+    "geocountry": "Finland",
+    "segmentId": "s3938_6863d6780d663b6430dd08d9",
+    "visits": 4780
+  },
+  {
+    "rsidCleanName": "Oddspediacom",
+    "geocountry": "Indonesia",
+    "segmentId": "s3938_6863d672f87da74cae7e356a",
+    "visits": 4484
+  },
+  {
+    "rsidCleanName": "Oddspediacom",
+    "geocountry": "Zambia",
+    "segmentId": "s3938_6863d6eb0bb9cb6dfeac9525",
+    "visits": 3959
+  },
+  {
+    "rsidCleanName": "Oddspediacom",
+    "geocountry": "Bangladesh",
+    "segmentId": "s3938_6852865f66b0b8fc854865df",
+    "visits": 3883
+  },
+  {
+    "rsidCleanName": "Oddspediacom",
+    "geocountry": "Malaysia",
+    "segmentId": "s3938_6863d6902ecbd0d04d46fad8",
+    "visits": 3626
+  },
+  {
+    "rsidCleanName": "Oddspediacom",
+    "geocountry": "Albania",
+    "segmentId": "s3938_6863d6aed33a62bb80cb5fe6",
+    "visits": 3474
+  },
+  {
+    "rsidCleanName": "Oddspediacom",
+    "geocountry": "Denmark",
+    "segmentId": "s3938_6863d66ffeff97c4e3c73cb0",
+    "visits": 3119
+  },
+  {
+    "rsidCleanName": "Oddspediacom",
+    "geocountry": "Azerbaijan",
+    "segmentId": "s3938_6863d6e3e981a01ef4d23046",
+    "visits": 3104
+  },
+  {
+    "rsidCleanName": "Oddspediacom",
+    "geocountry": "Hong Kong SAR of China",
+    "segmentId": "s3938_6863d66b0bb9cb6dfeac9511",
+    "visits": 2987
+  },
+  {
+    "rsidCleanName": "Oddspediacom",
+    "geocountry": "Botswana",
+    "segmentId": "s3938_6863d6e50bb9cb6dfeac9523",
+    "visits": 2961
+  },
+  {
+    "rsidCleanName": "Oddspediacom",
+    "geocountry": "Kazakhstan",
+    "segmentId": "s3938_6863d6f90bb9cb6dfeac952a",
+    "visits": 2919
+  },
+  {
+    "rsidCleanName": "Oddspediacom",
+    "geocountry": "Tunisia",
+    "segmentId": "s3938_6863d64a0bb9cb6dfeac950c",
+    "visits": 2846
+  },
+  {
+    "rsidCleanName": "Oddspediacom",
+    "geocountry": "Slovakia (Slovak Republic)",
+    "segmentId": "s3938_6863d693f87da74cae7e356f",
+    "visits": 2725
+  },
+  {
+    "rsidCleanName": "Oddspediacom",
+    "geocountry": "Panama",
+    "segmentId": "s3938_6863d6962ecbd0d04d46fad9",
+    "visits": 2705
+  },
+  {
+    "rsidCleanName": "Oddspediacom",
+    "geocountry": "Mozambique",
+    "segmentId": "s3938_6863d6dee981a01ef4d23044",
+    "visits": 2702
+  },
+  {
+    "rsidCleanName": "Oddspediacom",
+    "geocountry": "Ethiopia",
+    "segmentId": "s3938_6863d6ba0bb9cb6dfeac9516",
+    "visits": 2691
+  },
+  {
+    "rsidCleanName": "Oddspediacom",
+    "geocountry": "Bolivia",
+    "segmentId": "s3938_6863d67afeff97c4e3c73cb3",
+    "visits": 2556
+  },
+  {
+    "rsidCleanName": "Oddspediacom",
+    "geocountry": "Pakistan",
+    "segmentId": "s3938_6863d668d33a62bb80cb5fdc",
+    "visits": 2504
+  },
+  {
+    "rsidCleanName": "OnlineBettingcom",
+    "geocountry": "United States",
+    "segmentId": "s3938_6852864e2edc2b6d3f462848",
+    "visits": 3575
+  },
+  {
+    "rsidCleanName": "OnlineCasinoat",
+    "geocountry": "Austria",
+    "segmentId": "s3938_6863d65f0bb9cb6dfeac950f",
+    "visits": 4145
+  },
+  {
+    "rsidCleanName": "OnlineCasinoca",
+    "geocountry": "Canada",
+    "segmentId": "s3938_68528650e90051508f05779c",
+    "visits": 3449
+  },
+  {
+    "rsidCleanName": "OnlineSlotsca",
+    "geocountry": "Canada",
+    "segmentId": "s3938_68528650e90051508f05779c",
+    "visits": 17725
+  },
+  {
+    "rsidCleanName": "OnlineSlotscom",
+    "geocountry": "United States",
+    "segmentId": "s3938_6852864e2edc2b6d3f462848",
+    "visits": 4995
+  },
+  {
+    "rsidCleanName": "Pokerde1stSite",
+    "geocountry": "Germany",
+    "segmentId": "s3938_6852864f66b0b8fc854865dc",
+    "visits": 47831
+  },
+  {
+    "rsidCleanName": "Pokerde1stSite",
+    "geocountry": "Austria",
+    "segmentId": "s3938_6863d65f0bb9cb6dfeac950f",
+    "visits": 4780
+  },
+  {
+    "rsidCleanName": "Pokerde1stSite",
+    "geocountry": "Switzerland",
+    "segmentId": "s3938_6863d65d0bb9cb6dfeac950d",
+    "visits": 3166
+  },
+  {
+    "rsidCleanName": "Spielautomatende",
+    "geocountry": "Germany",
+    "segmentId": "s3938_6852864f66b0b8fc854865dc",
+    "visits": 24344
+  },
+  {
+    "rsidCleanName": "SportsBookReviewcom",
+    "geocountry": "United States",
+    "segmentId": "s3938_6852864e2edc2b6d3f462848",
+    "visits": 566314
+  },
+  {
+    "rsidCleanName": "SportsBookReviewcom",
+    "geocountry": "Canada",
+    "segmentId": "s3938_68528650e90051508f05779c",
+    "visits": 64491
+  },
+  {
+    "rsidCleanName": "SportsBookReviewcom",
+    "geocountry": "Taiwan region",
+    "segmentId": "s3938_6852866f66b0b8fc854865e1",
+    "visits": 16872
+  },
+  {
+    "rsidCleanName": "SportsBookReviewcom",
+    "geocountry": "United Kingdom",
+    "segmentId": "s3938_685286552edc2b6d3f462849",
+    "visits": 10126
+  },
+  {
+    "rsidCleanName": "SportsBookReviewcom",
+    "geocountry": "Singapore",
+    "segmentId": "s3938_6863cf670d663b6430dd08aa",
+    "visits": 8563
+  },
+  {
+    "rsidCleanName": "SportsBookReviewcom",
+    "geocountry": "Australia",
+    "segmentId": "s3938_68528658e90051508f05779f",
+    "visits": 5563
+  },
+  {
+    "rsidCleanName": "SportsBookReviewcom",
+    "geocountry": "Mexico",
+    "segmentId": "s3938_68528662e90051508f0577a2",
+    "visits": 4543
+  },
+  {
+    "rsidCleanName": "SportsBookReviewcom",
+    "geocountry": "Germany",
+    "segmentId": "s3938_6852864f66b0b8fc854865dc",
+    "visits": 3347
+  },
+  {
+    "rsidCleanName": "SportsBookReviewcom",
+    "geocountry": "China",
+    "segmentId": "s3938_6863d6abe981a01ef4d23038",
+    "visits": 3243
+  },
+  {
+    "rsidCleanName": "coverscom",
+    "geocountry": "United States",
+    "segmentId": "s3938_6852864e2edc2b6d3f462848",
+    "visits": 7800569
+  },
+  {
+    "rsidCleanName": "coverscom",
+    "geocountry": "Venezuela",
+    "segmentId": "s3938_6852866ae90051508f0577a5",
+    "visits": 880068
+  },
+  {
+    "rsidCleanName": "coverscom",
+    "geocountry": "Canada",
+    "segmentId": "s3938_68528650e90051508f05779c",
+    "visits": 777200
+  },
+  {
+    "rsidCleanName": "coverscom",
+    "geocountry": "Dominican Republic",
+    "segmentId": "s3938_6852866ce90051508f0577a6",
+    "visits": 446513
+  },
+  {
+    "rsidCleanName": "coverscom",
+    "geocountry": "Singapore",
+    "segmentId": "s3938_6863cf670d663b6430dd08aa",
+    "visits": 239465
+  },
+  {
+    "rsidCleanName": "coverscom",
+    "geocountry": "Mexico",
+    "segmentId": "s3938_68528662e90051508f0577a2",
+    "visits": 203406
+  },
+  {
+    "rsidCleanName": "coverscom",
+    "geocountry": "Philippines",
+    "segmentId": "s3938_6852865c2edc2b6d3f46284b",
+    "visits": 100171
+  },
+  {
+    "rsidCleanName": "coverscom",
+    "geocountry": "United Kingdom",
+    "segmentId": "s3938_685286552edc2b6d3f462849",
+    "visits": 51772
+  },
+  {
+    "rsidCleanName": "coverscom",
+    "geocountry": "Australia",
+    "segmentId": "s3938_68528658e90051508f05779f",
+    "visits": 51394
+  },
+  {
+    "rsidCleanName": "coverscom",
+    "geocountry": "Taiwan region",
+    "segmentId": "s3938_6852866f66b0b8fc854865e1",
+    "visits": 46622
+  },
+  {
+    "rsidCleanName": "coverscom",
+    "geocountry": "Germany",
+    "segmentId": "s3938_6852864f66b0b8fc854865dc",
+    "visits": 44420
+  },
+  {
+    "rsidCleanName": "coverscom",
+    "geocountry": "Chile",
+    "segmentId": "s3938_6852867066b0b8fc854865e2",
+    "visits": 30010
+  },
+  {
+    "rsidCleanName": "coverscom",
+    "geocountry": "Japan",
+    "segmentId": "s3938_6863d651d33a62bb80cb5fd7",
+    "visits": 25660
+  },
+  {
+    "rsidCleanName": "coverscom",
+    "geocountry": "Colombia",
+    "segmentId": "s3938_68528671e90051508f0577a7",
+    "visits": 25384
+  },
+  {
+    "rsidCleanName": "coverscom",
+    "geocountry": "Spain",
+    "segmentId": "s3938_6852864ce90051508f05779b",
+    "visits": 24373
+  },
+  {
+    "rsidCleanName": "coverscom",
+    "geocountry": "Hong Kong SAR of China",
+    "segmentId": "s3938_6863d66b0bb9cb6dfeac9511",
+    "visits": 24196
+  },
+  {
+    "rsidCleanName": "coverscom",
+    "geocountry": "South Korea",
+    "segmentId": "s3938_6852866d66b0b8fc854865e0",
+    "visits": 23582
+  },
+  {
+    "rsidCleanName": "coverscom",
+    "geocountry": "Bahamas",
+    "segmentId": "s3938_6863d6bf0bb9cb6dfeac9517",
+    "visits": 17477
+  },
+  {
+    "rsidCleanName": "coverscom",
+    "geocountry": "Peru",
+    "segmentId": "s3938_685286662edc2b6d3f46284d",
+    "visits": 17296
+  },
+  {
+    "rsidCleanName": "coverscom",
+    "geocountry": "Brazil",
+    "segmentId": "s3938_68528653e90051508f05779e",
+    "visits": 16506
+  },
+  {
+    "rsidCleanName": "coverscom",
+    "geocountry": "Netherlands",
+    "segmentId": "s3938_6852865be90051508f0577a0",
+    "visits": 12978
+  },
+  {
+    "rsidCleanName": "coverscom",
+    "geocountry": "France",
+    "segmentId": "s3938_685286592edc2b6d3f46284a",
+    "visits": 12383
+  },
+  {
+    "rsidCleanName": "coverscom",
+    "geocountry": "Panama",
+    "segmentId": "s3938_6863d6962ecbd0d04d46fad9",
+    "visits": 11420
+  },
+  {
+    "rsidCleanName": "coverscom",
+    "geocountry": "Ireland",
+    "segmentId": "s3938_6863d66ae981a01ef4d23035",
+    "visits": 9255
+  },
+  {
+    "rsidCleanName": "coverscom",
+    "geocountry": "Ecuador",
+    "segmentId": "s3938_6863d674f87da74cae7e356b",
+    "visits": 8742
+  },
+  {
+    "rsidCleanName": "coverscom",
+    "geocountry": "Nigeria",
+    "segmentId": "s3938_68528669e90051508f0577a4",
+    "visits": 8595
+  },
+  {
+    "rsidCleanName": "coverscom",
+    "geocountry": "New Zealand",
+    "segmentId": "s3938_68528660e90051508f0577a1",
+    "visits": 7946
+  },
+  {
+    "rsidCleanName": "coverscom",
+    "geocountry": "Sweden",
+    "segmentId": "s3938_6863d6610bb9cb6dfeac9510",
+    "visits": 7788
+  },
+  {
+    "rsidCleanName": "coverscom",
+    "geocountry": "India",
+    "segmentId": "s3938_6852865d66b0b8fc854865de",
+    "visits": 7558
+  },
+  {
+    "rsidCleanName": "coverscom",
+    "geocountry": "Puerto Rico",
+    "segmentId": "s3938_6863d694feff97c4e3c73cb8",
+    "visits": 6905
+  },
+  {
+    "rsidCleanName": "coverscom",
+    "geocountry": "Viet Nam",
+    "segmentId": "s3938_6863d6820d663b6430dd08db",
+    "visits": 6830
+  },
+  {
+    "rsidCleanName": "coverscom",
+    "geocountry": "China",
+    "segmentId": "s3938_6863d6abe981a01ef4d23038",
+    "visits": 6815
+  },
+  {
+    "rsidCleanName": "coverscom",
+    "geocountry": "Argentina",
+    "segmentId": "s3938_6852865666b0b8fc854865dd",
+    "visits": 6464
+  },
+  {
+    "rsidCleanName": "coverscom",
+    "geocountry": "Portugal",
+    "segmentId": "s3938_6863d65cd33a62bb80cb5fd8",
+    "visits": 6453
+  },
+  {
+    "rsidCleanName": "coverscom",
+    "geocountry": "Finland",
+    "segmentId": "s3938_6863d6780d663b6430dd08d9",
+    "visits": 6410
+  },
+  {
+    "rsidCleanName": "coverscom",
+    "geocountry": "Greece",
+    "segmentId": "s3938_685286632edc2b6d3f46284c",
+    "visits": 6287
+  },
+  {
+    "rsidCleanName": "coverscom",
+    "geocountry": "Poland",
+    "segmentId": "s3938_6863d67cfeff97c4e3c73cb4",
+    "visits": 5841
+  },
+  {
+    "rsidCleanName": "coverscom",
+    "geocountry": "Serbia",
+    "segmentId": "s3938_6863d6849ffeefbd9c35e602",
+    "visits": 4826
+  },
+  {
+    "rsidCleanName": "coverscom",
+    "geocountry": "Denmark",
+    "segmentId": "s3938_6863d66ffeff97c4e3c73cb0",
+    "visits": 4661
+  },
+  {
+    "rsidCleanName": "coverscom",
+    "geocountry": "Angola",
+    "segmentId": "s3938_6863d6fc0bb9cb6dfeac952c",
+    "visits": 4374
+  },
+  {
+    "rsidCleanName": "coverscom",
+    "geocountry": "Croatia",
+    "segmentId": "s3938_6863d6882ecbd0d04d46fad6",
+    "visits": 4133
+  },
+  {
+    "rsidCleanName": "coverscom",
+    "geocountry": "Thailand",
+    "segmentId": "s3938_6863d665d33a62bb80cb5fda",
+    "visits": 3874
+  },
+  {
+    "rsidCleanName": "coverscom",
+    "geocountry": "Curacao",
+    "segmentId": "s3938_6863d6d40bb9cb6dfeac951d",
+    "visits": 3831
+  },
+  {
+    "rsidCleanName": "coverscom",
+    "geocountry": "Romania",
+    "segmentId": "s3938_6863d667d33a62bb80cb5fdb",
+    "visits": 3634
+  },
+  {
+    "rsidCleanName": "coverscom",
+    "geocountry": "Hungary",
+    "segmentId": "s3938_6863d663e981a01ef4d23034",
+    "visits": 3450
+  },
+  {
+    "rsidCleanName": "coverscom",
+    "geocountry": "Norway",
+    "segmentId": "s3938_6863d66de981a01ef4d23036",
+    "visits": 3433
+  },
+  {
+    "rsidCleanName": "coverscom",
+    "geocountry": "Costa Rica",
+    "segmentId": "s3938_6863d685feff97c4e3c73cb5",
+    "visits": 3383
+  },
+  {
+    "rsidCleanName": "coverscom",
+    "geocountry": "Czech Republic",
+    "segmentId": "s3938_6863d671feff97c4e3c73cb1",
+    "visits": 3189
+  },
+  {
+    "rsidCleanName": "coverscom",
+    "geocountry": "Belgium",
+    "segmentId": "s3938_6863d656e981a01ef4d23032",
+    "visits": 3117
+  },
+  {
+    "rsidCleanName": "coverscom",
+    "geocountry": "Italy",
+    "segmentId": "s3938_68528664e90051508f0577a3",
+    "visits": 3085
+  },
+  {
+    "rsidCleanName": "coverscom",
+    "geocountry": "Austria",
+    "segmentId": "s3938_6863d65f0bb9cb6dfeac950f",
+    "visits": 2680
+  },
+  {
+    "rsidCleanName": "coverscom",
+    "geocountry": "Bulgaria",
+    "segmentId": "s3938_6863d6770d663b6430dd08d8",
+    "visits": 2599
+  },
+  {
+    "rsidCleanName": "coverscom",
+    "geocountry": "Slovakia (Slovak Republic)",
+    "segmentId": "s3938_6863d693f87da74cae7e356f",
+    "visits": 2536
+  },
+  {
+    "rsidCleanName": "coverscom",
+    "geocountry": "South Africa",
+    "segmentId": "s3938_68528652e90051508f05779d",
+    "visits": 2503
+  },
+  {
+    "rsidCleanName": "elcomparadorcom",
+    "geocountry": "Spain",
+    "segmentId": "s3938_6852864ce90051508f05779b",
+    "visits": 30334
+  }
+]
+
+module.exports = botInvestigationRsidCountriesMinThreshold;

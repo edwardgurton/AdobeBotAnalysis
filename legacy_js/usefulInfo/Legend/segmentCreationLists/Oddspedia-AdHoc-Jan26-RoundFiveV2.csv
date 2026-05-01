@@ -1,0 +1,5 @@
+"CompareValidate","SegmentName","RSIDCleanName","Dimension1","Dimension1Item","Dimension2","Dimension2Item"
+"Compare","BOTCOMPARE_AdHoc-Oddspedia-Dec25-RoundFive_10: Legend - OperatingSystem = Chrome OS 13000 AND MarketingChannel = Internal","Legend","OperatingSystem","Chrome OS 130.0.0","MarketingChannel","Internal"
+"Compare","BOTCOMPARE_AdHoc-Oddspedia-Dec25-RoundFive_11: Legend - Region = Ilhas De Sotavento (Cape Verde) AND MarketingChannel = Internal","Legend","Region","Ilhas De Sotavento (Cape Verde)","MarketingChannel","Internal"
+"Compare","BOTCOMPARE_AdHoc-Oddspedia-Dec25-RoundFive_17: Oddspediacom - Region = English River (Seychelles) AND MonitorResolution = 1366 x 768","Oddspediacom","Region","English River (Seychelles)","MonitorResolution","1366 x 768"
+"Compare","BOTCOMPARE_AdHoc-Oddspedia-Dec25-RoundFive_22: Onlinecasinosca - Referring Domain = bingcom AND Region = Wyoming (United States)","OnlineCasinoca","Referring Domain","bing.com","Region","Wyoming (United States)"

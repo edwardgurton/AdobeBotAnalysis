@@ -1,0 +1,50 @@
+[
+  {
+    "id": "s3938_6720bc520b449925067ecad8",
+    "name": "variables/geocountry = United States"
+  },
+  {
+    "id": "s3938_6720bc522202487e6f583540",
+    "name": "variables/geocountry = Canada"
+  },
+  {
+    "id": "s3938_6720bc53f43cd135c4b891af",
+    "name": "variables/geocountry = United Kingdom"
+  },
+  {
+    "id": "s3938_6720bc53af6db442b176c544",
+    "name": "variables/geocountry = Australia"
+  },
+  {
+    "id": "s3938_6720bc541fb7f9070b1d504d",
+    "name": "variables/geocountry = Germany"
+  },
+  {
+    "id": "s3938_6720bc54af6db442b176c545",
+    "name": "variables/geocountry = Brazil"
+  },
+  {
+    "id": "s3938_6720bc55f43cd135c4b891b0",
+    "name": "variables/geocountry = India"
+  },
+  {
+    "id": "s3938_6720bc55f43cd135c4b891b1",
+    "name": "variables/geocountry = Bermuda"
+  },
+  {
+    "id": "s3938_6720bc56af6db442b176c546",
+    "name": "variables/geocountry = Ukraine"
+  },
+  {
+    "id": "s3938_6720bc560b449925067ecad9",
+    "name": "variables/geocountry = Argentina"
+  },
+  {
+    "id": "s3938_6720bc5a1fb7f9070b1d504e",
+    "name": "variables/geocountry = Belgium"
+  },
+  {
+    "id": "s3938_6720bc5b2202487e6f583541",
+    "name": "variables/geocountry = France"
+  }
+]

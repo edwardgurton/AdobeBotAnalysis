@@ -1,0 +1,6 @@
+CompareValidate,SegmentName,RSIDCleanName,Dimension1,Dimension1Item,Dimension2,Dimension2Item
+"Compare","BOTCOMPARE_AdHoc-Oddspedia-Dec25-RoundFour_01: Oddspediacom - Domain = hwclouds-dnscom","Oddspediacom","Domain","hwclouds-dns.com","",""
+"Compare","BOTCOMPARE_AdHoc-Oddspedia-Dec25-RoundFour_02: Oddspediacom - OperatingSystem = OS X 10157","Oddspediacom","OperatingSystem","OS X 10.15.7","",""
+"Compare","BOTCOMPARE_AdHoc-Oddspedia-Dec25-RoundFour_03: Oddspediacom - MarketingChannel = Internal","Oddspediacom","MarketingChannel","Internal","",""
+"Compare","BOTCOMPARE_AdHoc-Oddspedia-Dec25-RoundFour_04: Oddspediacom - MonitorResolution = 1366 x 768","Oddspediacom","MonitorResolution","1366 x 768","",""
+"Compare","BOTCOMPARE_AdHoc-Oddspedia-Dec25-RoundFour_05: Oddspediacom - Domain = zenlayercom","Oddspediacom","Domain","zenlayer.com","",""

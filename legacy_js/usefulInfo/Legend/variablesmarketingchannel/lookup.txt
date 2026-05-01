@@ -1,0 +1,26 @@
+/**
+ * Lookup Table for variables/marketingchannel
+ * 
+ * Maps string values to their numeric IDs for use in Adobe Analytics segments.
+ * 
+ * Client: Legend
+ * RSID: trillioncoverscom
+ * Date Range: 2024-12-23 to 2025-12-23
+ * Last Updated: 2025-12-23
+ * 
+ * Format: stringValue|numericId
+ */
+
+Organic Search|2
+Direct|3
+Internal|4
+Programmatic Viewthrough|12
+Email|8
+Referring|6
+Social Media|5
+Programmatic Clickthrough|9
+None|0
+Paid Social|10
+AI Traffic|19
+AI Traffic [old]|17
+Paid Search|1

@@ -1,0 +1,35 @@
+# Ignore the localTestConfig.yaml file
+localTestConfig.yaml
+
+# Ignore the Example req with 2 segs.json file
+Example req with 2 segs.json
+
+# Ignore the node_modules directory
+node_modules/
+
+#Ignore the specific request files
+campaignRequest
+regionChannelRequest
+
+#Ignore the package lock file
+package-lock
+
+#ignore any .zip files created for uploading
+.*.zip
+
+#Ignore any downloaded JSON files
+.json
+Adobe Downloads/
+reportSuiteChecks/
+temp/
+
+# Ignore test segment outputs and saved segments
+usefulInfo/Legend/testOutput/
+usefulInfo/Legend/Segments
+
+# Hide non Legend client_config files from Repo
+config\client_configs\clientCapita.yaml
+usefulInfo\Capita\
+
+config/client_configs/clientCapita.yaml
+usefulInfo/Capita/CapitaUsefulIds.txt

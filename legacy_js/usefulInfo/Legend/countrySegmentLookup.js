@@ -1,0 +1,1391 @@
+
+const countrySegmentLookup = [
+  {
+    "SegmentId": "s3938_6852864ce90051508f05779b",
+    "SegmentName": "variables/geocountry = Spain",
+    "DimValueId": "2155215220",
+    "DimValueName": "Spain"
+  },
+  {
+    "SegmentId": "s3938_6852864e2edc2b6d3f462848",
+    "SegmentName": "variables/geocountry = United States",
+    "DimValueId": "1173709922",
+    "DimValueName": "United States"
+  },
+  {
+    "SegmentId": "s3938_6852864f66b0b8fc854865dc",
+    "SegmentName": "variables/geocountry = Germany",
+    "DimValueId": "1888766268",
+    "DimValueName": "Germany"
+  },
+  {
+    "SegmentId": "s3938_68528650e90051508f05779c",
+    "SegmentName": "variables/geocountry = Canada",
+    "DimValueId": "3228380618",
+    "DimValueName": "Canada"
+  },
+  {
+    "SegmentId": "s3938_68528652e90051508f05779d",
+    "SegmentName": "variables/geocountry = South Africa",
+    "DimValueId": "2697929101",
+    "DimValueName": "South Africa"
+  },
+  {
+    "SegmentId": "s3938_68528653e90051508f05779e",
+    "SegmentName": "variables/geocountry = Brazil",
+    "DimValueId": "824085840",
+    "DimValueName": "Brazil"
+  },
+  {
+    "SegmentId": "s3938_685286552edc2b6d3f462849",
+    "SegmentName": "variables/geocountry = United Kingdom",
+    "DimValueId": "3423869995",
+    "DimValueName": "United Kingdom"
+  },
+  {
+    "SegmentId": "s3938_6852865666b0b8fc854865dd",
+    "SegmentName": "variables/geocountry = Argentina",
+    "DimValueId": "3089751146",
+    "DimValueName": "Argentina"
+  },
+  {
+    "SegmentId": "s3938_68528658e90051508f05779f",
+    "SegmentName": "variables/geocountry = Australia",
+    "DimValueId": "1177125985",
+    "DimValueName": "Australia"
+  },
+  {
+    "SegmentId": "s3938_685286592edc2b6d3f46284a",
+    "SegmentName": "variables/geocountry = France",
+    "DimValueId": "2393484539",
+    "DimValueName": "France"
+  },
+  {
+    "SegmentId": "s3938_6852865be90051508f0577a0",
+    "SegmentName": "variables/geocountry = Netherlands",
+    "DimValueId": "1718674691",
+    "DimValueName": "Netherlands"
+  },
+  {
+    "SegmentId": "s3938_6852865c2edc2b6d3f46284b",
+    "SegmentName": "variables/geocountry = Philippines",
+    "DimValueId": "1006742768",
+    "DimValueName": "Philippines"
+  },
+  {
+    "SegmentId": "s3938_6852865d66b0b8fc854865de",
+    "SegmentName": "variables/geocountry = India",
+    "DimValueId": "1813761673",
+    "DimValueName": "India"
+  },
+  {
+    "SegmentId": "s3938_6852865f66b0b8fc854865df",
+    "SegmentName": "variables/geocountry = Bangladesh",
+    "DimValueId": "986772634",
+    "DimValueName": "Bangladesh"
+  },
+  {
+    "SegmentId": "s3938_68528660e90051508f0577a1",
+    "SegmentName": "variables/geocountry = New Zealand",
+    "DimValueId": "4262610955",
+    "DimValueName": "New Zealand"
+  },
+  {
+    "SegmentId": "s3938_68528662e90051508f0577a2",
+    "SegmentName": "variables/geocountry = Mexico",
+    "DimValueId": "927049179",
+    "DimValueName": "Mexico"
+  },
+  {
+    "SegmentId": "s3938_685286632edc2b6d3f46284c",
+    "SegmentName": "variables/geocountry = Greece",
+    "DimValueId": "3973863131",
+    "DimValueName": "Greece"
+  },
+  {
+    "SegmentId": "s3938_68528664e90051508f0577a3",
+    "SegmentName": "variables/geocountry = Italy",
+    "DimValueId": "3746356729",
+    "DimValueName": "Italy"
+  },
+  {
+    "SegmentId": "s3938_685286662edc2b6d3f46284d",
+    "SegmentName": "variables/geocountry = Peru",
+    "DimValueId": "3558300739",
+    "DimValueName": "Peru"
+  },
+  {
+    "SegmentId": "s3938_685286672edc2b6d3f46284e",
+    "SegmentName": "variables/geocountry = Kenya",
+    "DimValueId": "2369788029",
+    "DimValueName": "Kenya"
+  },
+  {
+    "SegmentId": "s3938_68528669e90051508f0577a4",
+    "SegmentName": "variables/geocountry = Nigeria",
+    "DimValueId": "1836967238",
+    "DimValueName": "Nigeria"
+  },
+  {
+    "SegmentId": "s3938_6852866ae90051508f0577a5",
+    "SegmentName": "variables/geocountry = Venezuela",
+    "DimValueId": "3157173422",
+    "DimValueName": "Venezuela"
+  },
+  {
+    "SegmentId": "s3938_6852866ce90051508f0577a6",
+    "SegmentName": "variables/geocountry = Dominican Republic",
+    "DimValueId": "3883728058",
+    "DimValueName": "Dominican Republic"
+  },
+  {
+    "SegmentId": "s3938_6852866d66b0b8fc854865e0",
+    "SegmentName": "variables/geocountry = South Korea",
+    "DimValueId": "2973880281",
+    "DimValueName": "South Korea"
+  },
+  {
+    "SegmentId": "s3938_6852866f66b0b8fc854865e1",
+    "SegmentName": "variables/geocountry = Taiwan region",
+    "DimValueId": "3047707419",
+    "DimValueName": "Taiwan region"
+  },
+  {
+    "SegmentId": "s3938_6852867066b0b8fc854865e2",
+    "SegmentName": "variables/geocountry = Chile",
+    "DimValueId": "3555154152",
+    "DimValueName": "Chile"
+  },
+  {
+    "SegmentId": "s3938_68528671e90051508f0577a7",
+    "SegmentName": "variables/geocountry = Colombia",
+    "DimValueId": "4234434262",
+    "DimValueName": "Colombia"
+  },
+  {
+    "SegmentId": "s3938_6863cf670d663b6430dd08aa",
+    "SegmentName": "variables/geocountry = Singapore",
+    "DimValueId": "4007560033",
+    "DimValueName": "Singapore"
+  },
+  {
+    "SegmentId": "s3938_6863d64a0bb9cb6dfeac950c",
+    "SegmentName": "variables/geocountry = Tunisia",
+    "DimValueId": "3993900130",
+    "DimValueName": "Tunisia"
+  },
+  {
+    "SegmentId": "s3938_6863d651d33a62bb80cb5fd7",
+    "SegmentName": "variables/geocountry = Japan",
+    "DimValueId": "506321431",
+    "DimValueName": "Japan"
+  },
+  {
+    "SegmentId": "s3938_6863d652e981a01ef4d23031",
+    "SegmentName": "variables/geocountry = Georgia",
+    "DimValueId": "2870784994",
+    "DimValueName": "Georgia"
+  },
+  {
+    "SegmentId": "s3938_6863d656e981a01ef4d23032",
+    "SegmentName": "variables/geocountry = Belgium",
+    "DimValueId": "3094747106",
+    "DimValueName": "Belgium"
+  },
+  {
+    "SegmentId": "s3938_6863d65cd33a62bb80cb5fd8",
+    "SegmentName": "variables/geocountry = Portugal",
+    "DimValueId": "2985882616",
+    "DimValueName": "Portugal"
+  },
+  {
+    "SegmentId": "s3938_6863d65d0bb9cb6dfeac950d",
+    "SegmentName": "variables/geocountry = Switzerland",
+    "DimValueId": "2849325920",
+    "DimValueName": "Switzerland"
+  },
+  {
+    "SegmentId": "s3938_6863d65f0bb9cb6dfeac950f",
+    "SegmentName": "variables/geocountry = Austria",
+    "DimValueId": "2309279173",
+    "DimValueName": "Austria"
+  },
+  {
+    "SegmentId": "s3938_6863d6610bb9cb6dfeac9510",
+    "SegmentName": "variables/geocountry = Sweden",
+    "DimValueId": "2756077237",
+    "DimValueName": "Sweden"
+  },
+  {
+    "SegmentId": "s3938_6863d662d33a62bb80cb5fd9",
+    "SegmentName": "variables/geocountry = Israel",
+    "DimValueId": "1617491890",
+    "DimValueName": "Israel"
+  },
+  {
+    "SegmentId": "s3938_6863d663e981a01ef4d23034",
+    "SegmentName": "variables/geocountry = Hungary",
+    "DimValueId": "2117297930",
+    "DimValueName": "Hungary"
+  },
+  {
+    "SegmentId": "s3938_6863d665d33a62bb80cb5fda",
+    "SegmentName": "variables/geocountry = Thailand",
+    "DimValueId": "2346951077",
+    "DimValueName": "Thailand"
+  },
+  {
+    "SegmentId": "s3938_6863d667d33a62bb80cb5fdb",
+    "SegmentName": "variables/geocountry = Romania",
+    "DimValueId": "1084274778",
+    "DimValueName": "Romania"
+  },
+  {
+    "SegmentId": "s3938_6863d668d33a62bb80cb5fdc",
+    "SegmentName": "variables/geocountry = Pakistan",
+    "DimValueId": "1448029111",
+    "DimValueName": "Pakistan"
+  },
+  {
+    "SegmentId": "s3938_6863d66ae981a01ef4d23035",
+    "SegmentName": "variables/geocountry = Ireland",
+    "DimValueId": "2296081294",
+    "DimValueName": "Ireland"
+  },
+  {
+    "SegmentId": "s3938_6863d66b0bb9cb6dfeac9511",
+    "SegmentName": "variables/geocountry = Hong Kong SAR of China",
+    "DimValueId": "3956704230",
+    "DimValueName": "Hong Kong SAR of China"
+  },
+  {
+    "SegmentId": "s3938_6863d66de981a01ef4d23036",
+    "SegmentName": "variables/geocountry = Norway",
+    "DimValueId": "2984798737",
+    "DimValueName": "Norway"
+  },
+  {
+    "SegmentId": "s3938_6863d66ed33a62bb80cb5fdd",
+    "SegmentName": "variables/geocountry = Ukraine",
+    "DimValueId": "1823883788",
+    "DimValueName": "Ukraine"
+  },
+  {
+    "SegmentId": "s3938_6863d66ffeff97c4e3c73cb0",
+    "SegmentName": "variables/geocountry = Denmark",
+    "DimValueId": "2218348079",
+    "DimValueName": "Denmark"
+  },
+  {
+    "SegmentId": "s3938_6863d671feff97c4e3c73cb1",
+    "SegmentName": "variables/geocountry = Czech Republic",
+    "DimValueId": "437835312",
+    "DimValueName": "Czech Republic"
+  },
+  {
+    "SegmentId": "s3938_6863d672f87da74cae7e356a",
+    "SegmentName": "variables/geocountry = Indonesia",
+    "DimValueId": "2891552242",
+    "DimValueName": "Indonesia"
+  },
+  {
+    "SegmentId": "s3938_6863d674f87da74cae7e356b",
+    "SegmentName": "variables/geocountry = Ecuador",
+    "DimValueId": "3174911143",
+    "DimValueName": "Ecuador"
+  },
+  {
+    "SegmentId": "s3938_6863d6752ecbd0d04d46fad3",
+    "SegmentName": "variables/geocountry = Morocco",
+    "DimValueId": "152718535",
+    "DimValueName": "Morocco"
+  },
+  {
+    "SegmentId": "s3938_6863d6770d663b6430dd08d8",
+    "SegmentName": "variables/geocountry = Bulgaria",
+    "DimValueId": "245561251",
+    "DimValueName": "Bulgaria"
+  },
+  {
+    "SegmentId": "s3938_6863d6780d663b6430dd08d9",
+    "SegmentName": "variables/geocountry = Finland",
+    "DimValueId": "2841441794",
+    "DimValueName": "Finland"
+  },
+  {
+    "SegmentId": "s3938_6863d67afeff97c4e3c73cb3",
+    "SegmentName": "variables/geocountry = Bolivia",
+    "DimValueId": "1360504006",
+    "DimValueName": "Bolivia"
+  },
+  {
+    "SegmentId": "s3938_6863d67b9ffeefbd9c35e601",
+    "SegmentName": "variables/geocountry = Russian Federation",
+    "DimValueId": "1255785488",
+    "DimValueName": "Russian Federation"
+  },
+  {
+    "SegmentId": "s3938_6863d67cfeff97c4e3c73cb4",
+    "SegmentName": "variables/geocountry = Poland",
+    "DimValueId": "191637189",
+    "DimValueName": "Poland"
+  },
+  {
+    "SegmentId": "s3938_6863d67e2ecbd0d04d46fad4",
+    "SegmentName": "variables/geocountry = Lithuania",
+    "DimValueId": "886547519",
+    "DimValueName": "Lithuania"
+  },
+  {
+    "SegmentId": "s3938_6863d67ff87da74cae7e356c",
+    "SegmentName": "variables/geocountry = Paraguay",
+    "DimValueId": "1516319432",
+    "DimValueName": "Paraguay"
+  },
+  {
+    "SegmentId": "s3938_6863d681f87da74cae7e356d",
+    "SegmentName": "variables/geocountry = Slovenia",
+    "DimValueId": "3653427037",
+    "DimValueName": "Slovenia"
+  },
+  {
+    "SegmentId": "s3938_6863d6820d663b6430dd08db",
+    "SegmentName": "variables/geocountry = Viet Nam",
+    "DimValueId": "3460799111",
+    "DimValueName": "Viet Nam"
+  },
+  {
+    "SegmentId": "s3938_6863d6849ffeefbd9c35e602",
+    "SegmentName": "variables/geocountry = Serbia",
+    "DimValueId": "3484402194",
+    "DimValueName": "Serbia"
+  },
+  {
+    "SegmentId": "s3938_6863d685feff97c4e3c73cb5",
+    "SegmentName": "variables/geocountry = Costa Rica",
+    "DimValueId": "4217439089",
+    "DimValueName": "Costa Rica"
+  },
+  {
+    "SegmentId": "s3938_6863d6872ecbd0d04d46fad5",
+    "SegmentName": "variables/geocountry = Latvia",
+    "DimValueId": "1553490540",
+    "DimValueName": "Latvia"
+  },
+  {
+    "SegmentId": "s3938_6863d6882ecbd0d04d46fad6",
+    "SegmentName": "variables/geocountry = Croatia",
+    "DimValueId": "2939867074",
+    "DimValueName": "Croatia"
+  },
+  {
+    "SegmentId": "s3938_6863d68afeff97c4e3c73cb6",
+    "SegmentName": "variables/geocountry = Estonia",
+    "DimValueId": "255097516",
+    "DimValueName": "Estonia"
+  },
+  {
+    "SegmentId": "s3938_6863d68b2ecbd0d04d46fad7",
+    "SegmentName": "variables/geocountry = Algeria",
+    "DimValueId": "1306398615",
+    "DimValueName": "Algeria"
+  },
+  {
+    "SegmentId": "s3938_6863d68df87da74cae7e356e",
+    "SegmentName": "variables/geocountry = Egypt",
+    "DimValueId": "2890084639",
+    "DimValueName": "Egypt"
+  },
+  {
+    "SegmentId": "s3938_6863d68efeff97c4e3c73cb7",
+    "SegmentName": "variables/geocountry = Turkey",
+    "DimValueId": "3700928874",
+    "DimValueName": "Turkey"
+  },
+  {
+    "SegmentId": "s3938_6863d6902ecbd0d04d46fad8",
+    "SegmentName": "variables/geocountry = Malaysia",
+    "DimValueId": "553496980",
+    "DimValueName": "Malaysia"
+  },
+  {
+    "SegmentId": "s3938_6863d6910d663b6430dd08dc",
+    "SegmentName": "variables/geocountry = Malta",
+    "DimValueId": "1716347066",
+    "DimValueName": "Malta"
+  },
+  {
+    "SegmentId": "s3938_6863d693f87da74cae7e356f",
+    "SegmentName": "variables/geocountry = Slovakia (Slovak Republic)",
+    "DimValueId": "946780485",
+    "DimValueName": "Slovakia (Slovak Republic)"
+  },
+  {
+    "SegmentId": "s3938_6863d694feff97c4e3c73cb8",
+    "SegmentName": "variables/geocountry = Puerto Rico",
+    "DimValueId": "874950837",
+    "DimValueName": "Puerto Rico"
+  },
+  {
+    "SegmentId": "s3938_6863d6962ecbd0d04d46fad9",
+    "SegmentName": "variables/geocountry = Panama",
+    "DimValueId": "2571843217",
+    "DimValueName": "Panama"
+  },
+  {
+    "SegmentId": "s3938_6863d697feff97c4e3c73cb9",
+    "SegmentName": "variables/geocountry = Lebanon",
+    "DimValueId": "1069666923",
+    "DimValueName": "Lebanon"
+  },
+  {
+    "SegmentId": "s3938_6863d6992ecbd0d04d46fada",
+    "SegmentName": "variables/geocountry = United Arab Emirates",
+    "DimValueId": "4002193968",
+    "DimValueName": "United Arab Emirates"
+  },
+  {
+    "SegmentId": "s3938_6863d69a0d663b6430dd08dd",
+    "SegmentName": "variables/geocountry = Reunion",
+    "DimValueId": "3330289176",
+    "DimValueName": "Reunion"
+  },
+  {
+    "SegmentId": "s3938_6863d69cfeff97c4e3c73cba",
+    "SegmentName": "variables/geocountry = Cambodia",
+    "DimValueId": "3467342675",
+    "DimValueName": "Cambodia"
+  },
+  {
+    "SegmentId": "s3938_6863d69d0d663b6430dd08de",
+    "SegmentName": "variables/geocountry = Luxembourg",
+    "DimValueId": "4229735548",
+    "DimValueName": "Luxembourg"
+  },
+  {
+    "SegmentId": "s3938_6863d69e2ecbd0d04d46fadb",
+    "SegmentName": "variables/geocountry = Jordan",
+    "DimValueId": "2011389551",
+    "DimValueName": "Jordan"
+  },
+  {
+    "SegmentId": "s3938_6863d6a00d663b6430dd08df",
+    "SegmentName": "variables/geocountry = Sri Lanka",
+    "DimValueId": "1488936833",
+    "DimValueName": "Sri Lanka"
+  },
+  {
+    "SegmentId": "s3938_6863d6a10d663b6430dd08e0",
+    "SegmentName": "variables/geocountry = El Salvador",
+    "DimValueId": "557817137",
+    "DimValueName": "El Salvador"
+  },
+  {
+    "SegmentId": "s3938_6863d6a3feff97c4e3c73cbb",
+    "SegmentName": "variables/geocountry = Macau SAR of China",
+    "DimValueId": "2796781492",
+    "DimValueName": "Macau SAR of China"
+  },
+  {
+    "SegmentId": "s3938_6863d6a4feff97c4e3c73cbc",
+    "SegmentName": "variables/geocountry = Uruguay",
+    "DimValueId": "1482301699",
+    "DimValueName": "Uruguay"
+  },
+  {
+    "SegmentId": "s3938_6863d6a60d663b6430dd08e1",
+    "SegmentName": "variables/geocountry = Macedonia",
+    "DimValueId": "2543284531",
+    "DimValueName": "Macedonia"
+  },
+  {
+    "SegmentId": "s3938_6863d6a79ffeefbd9c35e603",
+    "SegmentName": "variables/geocountry = Moldova",
+    "DimValueId": "3231033346",
+    "DimValueName": "Moldova"
+  },
+  {
+    "SegmentId": "s3938_6863d6a8f87da74cae7e3570",
+    "SegmentName": "variables/geocountry = Mauritius",
+    "DimValueId": "2087263304",
+    "DimValueName": "Mauritius"
+  },
+  {
+    "SegmentId": "s3938_6863d6aa9ffeefbd9c35e604",
+    "SegmentName": "variables/geocountry = Guatemala",
+    "DimValueId": "2270237589",
+    "DimValueName": "Guatemala"
+  },
+  {
+    "SegmentId": "s3938_6863d6abe981a01ef4d23038",
+    "SegmentName": "variables/geocountry = China",
+    "DimValueId": "3104901604",
+    "DimValueName": "China"
+  },
+  {
+    "SegmentId": "s3938_6863d6add33a62bb80cb5fe5",
+    "SegmentName": "variables/geocountry = Trinidad and Tobago",
+    "DimValueId": "298381923",
+    "DimValueName": "Trinidad and Tobago"
+  },
+  {
+    "SegmentId": "s3938_6863d6aed33a62bb80cb5fe6",
+    "SegmentName": "variables/geocountry = Albania",
+    "DimValueId": "1934335887",
+    "DimValueName": "Albania"
+  },
+  {
+    "SegmentId": "s3938_6863d6b0e981a01ef4d23039",
+    "SegmentName": "variables/geocountry = Bosnia and Herzegovina",
+    "DimValueId": "3150618885",
+    "DimValueName": "Bosnia and Herzegovina"
+  },
+  {
+    "SegmentId": "s3938_6863d6b10bb9cb6dfeac9512",
+    "SegmentName": "variables/geocountry = Armenia",
+    "DimValueId": "2820596834",
+    "DimValueName": "Armenia"
+  },
+  {
+    "SegmentId": "s3938_6863d6b2e981a01ef4d2303a",
+    "SegmentName": "variables/geocountry = Kuwait",
+    "DimValueId": "642107786",
+    "DimValueName": "Kuwait"
+  },
+  {
+    "SegmentId": "s3938_6863d6b40bb9cb6dfeac9513",
+    "SegmentName": "variables/geocountry = Myanmar",
+    "DimValueId": "850183191",
+    "DimValueName": "Myanmar"
+  },
+  {
+    "SegmentId": "s3938_6863d6b5d33a62bb80cb5fe7",
+    "SegmentName": "variables/geocountry = Papua New Guinea",
+    "DimValueId": "4151776307",
+    "DimValueName": "Papua New Guinea"
+  },
+  {
+    "SegmentId": "s3938_6863d6b70bb9cb6dfeac9515",
+    "SegmentName": "variables/geocountry = Madagascar",
+    "DimValueId": "1282208978",
+    "DimValueName": "Madagascar"
+  },
+  {
+    "SegmentId": "s3938_6863d6b8d33a62bb80cb5fe8",
+    "SegmentName": "variables/geocountry = Uzbekistan",
+    "DimValueId": "3826923149",
+    "DimValueName": "Uzbekistan"
+  },
+  {
+    "SegmentId": "s3938_6863d6ba0bb9cb6dfeac9516",
+    "SegmentName": "variables/geocountry = Ethiopia",
+    "DimValueId": "180587719",
+    "DimValueName": "Ethiopia"
+  },
+  {
+    "SegmentId": "s3938_6863d6bbd33a62bb80cb5fe9",
+    "SegmentName": "variables/geocountry = Nicaragua",
+    "DimValueId": "1704276907",
+    "DimValueName": "Nicaragua"
+  },
+  {
+    "SegmentId": "s3938_6863d6bcd33a62bb80cb5fea",
+    "SegmentName": "variables/geocountry = Cyprus",
+    "DimValueId": "3391892495",
+    "DimValueName": "Cyprus"
+  },
+  {
+    "SegmentId": "s3938_6863d6bee981a01ef4d2303b",
+    "SegmentName": "variables/geocountry = Nepal",
+    "DimValueId": "3436324255",
+    "DimValueName": "Nepal"
+  },
+  {
+    "SegmentId": "s3938_6863d6bf0bb9cb6dfeac9517",
+    "SegmentName": "variables/geocountry = Bahamas",
+    "DimValueId": "3225550346",
+    "DimValueName": "Bahamas"
+  },
+  {
+    "SegmentId": "s3938_6863d6c1e981a01ef4d2303c",
+    "SegmentName": "variables/geocountry = Jamaica",
+    "DimValueId": "2294923469",
+    "DimValueName": "Jamaica"
+  },
+  {
+    "SegmentId": "s3938_6863d6c2e981a01ef4d2303d",
+    "SegmentName": "variables/geocountry = Iceland",
+    "DimValueId": "1633222208",
+    "DimValueName": "Iceland"
+  },
+  {
+    "SegmentId": "s3938_6863d6c30bb9cb6dfeac9519",
+    "SegmentName": "variables/geocountry = Iraq",
+    "DimValueId": "1647166342",
+    "DimValueName": "Iraq"
+  },
+  {
+    "SegmentId": "s3938_6863d6c5e981a01ef4d2303e",
+    "SegmentName": "variables/geocountry = Qatar",
+    "DimValueId": "1383990895",
+    "DimValueName": "Qatar"
+  },
+  {
+    "SegmentId": "s3938_6863d6c6e981a01ef4d2303f",
+    "SegmentName": "variables/geocountry = Zimbabwe",
+    "DimValueId": "3256595345",
+    "DimValueName": "Zimbabwe"
+  },
+  {
+    "SegmentId": "s3938_6863d6c8e981a01ef4d23040",
+    "SegmentName": "variables/geocountry = Mayotte",
+    "DimValueId": "1596874523",
+    "DimValueName": "Mayotte"
+  },
+  {
+    "SegmentId": "s3938_6863d6c9d33a62bb80cb5fed",
+    "SegmentName": "variables/geocountry = Senegal",
+    "DimValueId": "4006661762",
+    "DimValueName": "Senegal"
+  },
+  {
+    "SegmentId": "s3938_6863d6cad33a62bb80cb5fee",
+    "SegmentName": "variables/geocountry = New Caledonia",
+    "DimValueId": "2717743113",
+    "DimValueName": "New Caledonia"
+  },
+  {
+    "SegmentId": "s3938_6863d6cc0bb9cb6dfeac951b",
+    "SegmentName": "variables/geocountry = Isle of Man",
+    "DimValueId": "2808182762",
+    "DimValueName": "Isle of Man"
+  },
+  {
+    "SegmentId": "s3938_6863d6cd0bb9cb6dfeac951c",
+    "SegmentName": "variables/geocountry = Uganda",
+    "DimValueId": "4072579384",
+    "DimValueName": "Uganda"
+  },
+  {
+    "SegmentId": "s3938_6863d6cfd33a62bb80cb5fef",
+    "SegmentName": "variables/geocountry = Guam",
+    "DimValueId": "1726691306",
+    "DimValueName": "Guam"
+  },
+  {
+    "SegmentId": "s3938_6863d6d0e981a01ef4d23041",
+    "SegmentName": "variables/geocountry = Honduras",
+    "DimValueId": "202358084",
+    "DimValueName": "Honduras"
+  },
+  {
+    "SegmentId": "s3938_6863d6d2e981a01ef4d23042",
+    "SegmentName": "variables/geocountry = Martinique",
+    "DimValueId": "1177195403",
+    "DimValueName": "Martinique"
+  },
+  {
+    "SegmentId": "s3938_6863d6d3d33a62bb80cb5ff0",
+    "SegmentName": "variables/geocountry = Cote D Ivoire",
+    "DimValueId": "2791644949",
+    "DimValueName": "Cote D Ivoire"
+  },
+  {
+    "SegmentId": "s3938_6863d6d40bb9cb6dfeac951d",
+    "SegmentName": "variables/geocountry = Curacao",
+    "DimValueId": "3935015791",
+    "DimValueName": "Curacao"
+  },
+  {
+    "SegmentId": "s3938_6863d6d6e981a01ef4d23043",
+    "SegmentName": "variables/geocountry = Ghana",
+    "DimValueId": "3203374993",
+    "DimValueName": "Ghana"
+  },
+  {
+    "SegmentId": "s3938_6863d6d7d33a62bb80cb5ff1",
+    "SegmentName": "variables/geocountry = Lao Peoples Democratic Republic",
+    "DimValueId": "731963020",
+    "DimValueName": "Lao Peoples Democratic Republic"
+  },
+  {
+    "SegmentId": "s3938_6863d6d90bb9cb6dfeac9520",
+    "SegmentName": "variables/geocountry = Belize",
+    "DimValueId": "2428523610",
+    "DimValueName": "Belize"
+  },
+  {
+    "SegmentId": "s3938_6863d6dad33a62bb80cb5ff2",
+    "SegmentName": "variables/geocountry = Jersey",
+    "DimValueId": "338375829",
+    "DimValueName": "Jersey"
+  },
+  {
+    "SegmentId": "s3938_6863d6dcd33a62bb80cb5ff3",
+    "SegmentName": "variables/geocountry = Montenegro",
+    "DimValueId": "3251205079",
+    "DimValueName": "Montenegro"
+  },
+  {
+    "SegmentId": "s3938_6863d6dd0bb9cb6dfeac9521",
+    "SegmentName": "variables/geocountry = Andorra",
+    "DimValueId": "914857137",
+    "DimValueName": "Andorra"
+  },
+  {
+    "SegmentId": "s3938_6863d6dee981a01ef4d23044",
+    "SegmentName": "variables/geocountry = Mozambique",
+    "DimValueId": "3597011872",
+    "DimValueName": "Mozambique"
+  },
+  {
+    "SegmentId": "s3938_6863d6e00bb9cb6dfeac9522",
+    "SegmentName": "variables/geocountry = Cameroon",
+    "DimValueId": "2215307081",
+    "DimValueName": "Cameroon"
+  },
+  {
+    "SegmentId": "s3938_6863d6e1e981a01ef4d23045",
+    "SegmentName": "variables/geocountry = French Guiana",
+    "DimValueId": "2399895656",
+    "DimValueName": "French Guiana"
+  },
+  {
+    "SegmentId": "s3938_6863d6e3e981a01ef4d23046",
+    "SegmentName": "variables/geocountry = Azerbaijan",
+    "DimValueId": "3214060502",
+    "DimValueName": "Azerbaijan"
+  },
+  {
+    "SegmentId": "s3938_6863d6e4e981a01ef4d23047",
+    "SegmentName": "variables/geocountry = Suriname",
+    "DimValueId": "535132834",
+    "DimValueName": "Suriname"
+  },
+  {
+    "SegmentId": "s3938_6863d6e50bb9cb6dfeac9523",
+    "SegmentName": "variables/geocountry = Botswana",
+    "DimValueId": "751593820",
+    "DimValueName": "Botswana"
+  },
+  {
+    "SegmentId": "s3938_6863d6e7e981a01ef4d23048",
+    "SegmentName": "variables/geocountry = Guyana",
+    "DimValueId": "3741335794",
+    "DimValueName": "Guyana"
+  },
+  {
+    "SegmentId": "s3938_6863d6e8e981a01ef4d23049",
+    "SegmentName": "variables/geocountry = Guadeloupe",
+    "DimValueId": "3005330290",
+    "DimValueName": "Guadeloupe"
+  },
+  {
+    "SegmentId": "s3938_6863d6ea0bb9cb6dfeac9524",
+    "SegmentName": "variables/geocountry = Namibia",
+    "DimValueId": "2439207153",
+    "DimValueName": "Namibia"
+  },
+  {
+    "SegmentId": "s3938_6863d6eb0bb9cb6dfeac9525",
+    "SegmentName": "variables/geocountry = Zambia",
+    "DimValueId": "155706886",
+    "DimValueName": "Zambia"
+  },
+  {
+    "SegmentId": "s3938_6863d6ed0bb9cb6dfeac9526",
+    "SegmentName": "variables/geocountry = Belarus",
+    "DimValueId": "1844454344",
+    "DimValueName": "Belarus"
+  },
+  {
+    "SegmentId": "s3938_6863d6eee981a01ef4d2304a",
+    "SegmentName": "variables/geocountry = Federated States of Micronesia",
+    "DimValueId": "1927376610",
+    "DimValueName": "Federated States of Micronesia"
+  },
+  {
+    "SegmentId": "s3938_6863d6efe981a01ef4d2304b",
+    "SegmentName": "variables/geocountry = Gibraltar",
+    "DimValueId": "399396516",
+    "DimValueName": "Gibraltar"
+  },
+  {
+    "SegmentId": "s3938_6863d6f10bb9cb6dfeac9527",
+    "SegmentName": "variables/geocountry = Somalia",
+    "DimValueId": "1797355945",
+    "DimValueName": "Somalia"
+  },
+  {
+    "SegmentId": "s3938_6863d6f20bb9cb6dfeac9528",
+    "SegmentName": "variables/geocountry = Aruba",
+    "DimValueId": "3153696852",
+    "DimValueName": "Aruba"
+  },
+  {
+    "SegmentId": "s3938_6863d6f4d33a62bb80cb5ff4",
+    "SegmentName": "variables/geocountry = Democratic Republic of The Congo",
+    "DimValueId": "172398846",
+    "DimValueName": "Democratic Republic of The Congo"
+  },
+  {
+    "SegmentId": "s3938_6863d6f5d33a62bb80cb5ff5",
+    "SegmentName": "variables/geocountry = Saudi Arabia",
+    "DimValueId": "3589483000",
+    "DimValueName": "Saudi Arabia"
+  },
+  {
+    "SegmentId": "s3938_6863d6f6e981a01ef4d2304c",
+    "SegmentName": "variables/geocountry = French Polynesia",
+    "DimValueId": "1190382565",
+    "DimValueName": "French Polynesia"
+  },
+  {
+    "SegmentId": "s3938_6863d6f80bb9cb6dfeac9529",
+    "SegmentName": "variables/geocountry = Maldives",
+    "DimValueId": "2366897706",
+    "DimValueName": "Maldives"
+  },
+  {
+    "SegmentId": "s3938_6863d6f90bb9cb6dfeac952a",
+    "SegmentName": "variables/geocountry = Kazakhstan",
+    "DimValueId": "2611517738",
+    "DimValueName": "Kazakhstan"
+  },
+  {
+    "SegmentId": "s3938_6863d6fb0bb9cb6dfeac952b",
+    "SegmentName": "variables/geocountry = Saint Lucia",
+    "DimValueId": "2561205181",
+    "DimValueName": "Saint Lucia"
+  },
+  {
+    "SegmentId": "s3938_6863d6fc0bb9cb6dfeac952c",
+    "SegmentName": "variables/geocountry = Angola",
+    "DimValueId": "3631882659",
+    "DimValueName": "Angola"
+  },
+  {
+    "SegmentId": "s3938_6863d6fe0bb9cb6dfeac952e",
+    "SegmentName": "variables/geocountry = Cape Verde",
+    "DimValueId": "3722741145",
+    "DimValueName": "Cape Verde"
+  },
+  {
+    "SegmentId": "s3938_6863d6ffe981a01ef4d2304e",
+    "SegmentName": "variables/geocountry = US Virgin Islands",
+    "DimValueId": "4258910208",
+    "DimValueName": "US Virgin Islands"
+  },
+  {
+    "SegmentId": "s3938_6863d700e981a01ef4d2304f",
+    "SegmentName": "variables/geocountry = Libyan Arab Jamahiriya",
+    "DimValueId": "2637176371",
+    "DimValueName": "Libyan Arab Jamahiriya"
+  },
+  {
+    "SegmentId": "s3938_6863d702d33a62bb80cb5ff6",
+    "SegmentName": "variables/geocountry = Fiji",
+    "DimValueId": "2548127537",
+    "DimValueName": "Fiji"
+  },
+  {
+    "SegmentId": "s3938_6863d7030bb9cb6dfeac952f",
+    "SegmentName": "variables/geocountry = Bonaire/Sint Eustatius/Saba",
+    "DimValueId": "611013511",
+    "DimValueName": "Bonaire/Sint Eustatius/Saba"
+  },
+  {
+    "SegmentId": "s3938_6863d7050bb9cb6dfeac9530",
+    "SegmentName": "variables/geocountry = Lesotho",
+    "DimValueId": "755508512",
+    "DimValueName": "Lesotho"
+  },
+  {
+    "SegmentId": "s3938_6863d7060bb9cb6dfeac9531",
+    "SegmentName": "variables/geocountry = Monaco",
+    "DimValueId": "1339970340",
+    "DimValueName": "Monaco"
+  },
+  {
+    "SegmentId": "s3938_6863d707d33a62bb80cb5ff7",
+    "SegmentName": "variables/geocountry = Cayman Islands",
+    "DimValueId": "826262613",
+    "DimValueName": "Cayman Islands"
+  },
+  {
+    "SegmentId": "s3938_6863d709d33a62bb80cb5ff8",
+    "SegmentName": "variables/geocountry = Seychelles",
+    "DimValueId": "3090884918",
+    "DimValueName": "Seychelles"
+  },
+  {
+    "SegmentId": "s3938_6863d70ad33a62bb80cb5ff9",
+    "SegmentName": "variables/geocountry = Barbados",
+    "DimValueId": "3500175871",
+    "DimValueName": "Barbados"
+  },
+  {
+    "SegmentId": "s3938_6863d70c0bb9cb6dfeac9532",
+    "SegmentName": "variables/geocountry = Bahrain",
+    "DimValueId": "3096129737",
+    "DimValueName": "Bahrain"
+  },
+  {
+    "SegmentId": "s3938_6863d70dd33a62bb80cb5ffa",
+    "SegmentName": "variables/geocountry = Brunei Darussalam",
+    "DimValueId": "2464260405",
+    "DimValueName": "Brunei Darussalam"
+  },
+  {
+    "SegmentId": "s3938_6863d70fd33a62bb80cb5ffb",
+    "SegmentName": "variables/geocountry = British Virgin Islands",
+    "DimValueId": "1134532561",
+    "DimValueName": "British Virgin Islands"
+  },
+  {
+    "SegmentId": "s3938_6863d7100bb9cb6dfeac9533",
+    "SegmentName": "variables/geocountry = Bermuda",
+    "DimValueId": "623673642",
+    "DimValueName": "Bermuda"
+  },
+  {
+    "SegmentId": "s3938_6863d711d33a62bb80cb5ffc",
+    "SegmentName": "variables/geocountry = Burkina Faso",
+    "DimValueId": "1526438420",
+    "DimValueName": "Burkina Faso"
+  },
+  {
+    "SegmentId": "s3938_6863d713e981a01ef4d23050",
+    "SegmentName": "variables/geocountry = Benin",
+    "DimValueId": "2841164084",
+    "DimValueName": "Benin"
+  },
+  {
+    "SegmentId": "s3938_6863d714d33a62bb80cb5ffd",
+    "SegmentName": "variables/geocountry = Tonga",
+    "DimValueId": "2129810383",
+    "DimValueName": "Tonga"
+  },
+  {
+    "SegmentId": "s3938_6863d716e981a01ef4d23051",
+    "SegmentName": "variables/geocountry = Mali",
+    "DimValueId": "515860964",
+    "DimValueName": "Mali"
+  },
+  {
+    "SegmentId": "s3938_6863d7170bb9cb6dfeac9534",
+    "SegmentName": "variables/geocountry = Greenland",
+    "DimValueId": "2032732603",
+    "DimValueName": "Greenland"
+  },
+  {
+    "SegmentId": "s3938_6863d7180bb9cb6dfeac9535",
+    "SegmentName": "variables/geocountry = Palestinian Territories",
+    "DimValueId": "3062986901",
+    "DimValueName": "Palestinian Territories"
+  },
+  {
+    "SegmentId": "s3938_6863d71ad33a62bb80cb6000",
+    "SegmentName": "variables/geocountry = Liechtenstein",
+    "DimValueId": "957341365",
+    "DimValueName": "Liechtenstein"
+  },
+  {
+    "SegmentId": "s3938_6863d71b0bb9cb6dfeac9536",
+    "SegmentName": "variables/geocountry = Unspecified",
+    "DimValueId": "0",
+    "DimValueName": "Unspecified"
+  },
+  {
+    "SegmentId": "s3938_6863d71de981a01ef4d23052",
+    "SegmentName": "variables/geocountry = Sint Maarten",
+    "DimValueId": "548149091",
+    "DimValueName": "Sint Maarten"
+  },
+  {
+    "SegmentId": "s3938_6863d71ed33a62bb80cb6001",
+    "SegmentName": "variables/geocountry = Rwanda",
+    "DimValueId": "1894473748",
+    "DimValueName": "Rwanda"
+  },
+  {
+    "SegmentId": "s3938_6863d720e981a01ef4d23053",
+    "SegmentName": "variables/geocountry = Haiti",
+    "DimValueId": "4121158988",
+    "DimValueName": "Haiti"
+  },
+  {
+    "SegmentId": "s3938_6863d7210bb9cb6dfeac9537",
+    "SegmentName": "variables/geocountry = Kyrgyzstan",
+    "DimValueId": "2375323248",
+    "DimValueName": "Kyrgyzstan"
+  },
+  {
+    "SegmentId": "s3938_6863d722d33a62bb80cb6003",
+    "SegmentName": "variables/geocountry = Tajikistan",
+    "DimValueId": "2702317341",
+    "DimValueName": "Tajikistan"
+  },
+  {
+    "SegmentId": "s3938_6863d724d33a62bb80cb6004",
+    "SegmentName": "variables/geocountry = Liberia",
+    "DimValueId": "3702105856",
+    "DimValueName": "Liberia"
+  },
+  {
+    "SegmentId": "s3938_6863d725d33a62bb80cb6005",
+    "SegmentName": "variables/geocountry = Turks and Caicos Islands",
+    "DimValueId": "4097148735",
+    "DimValueName": "Turks and Caicos Islands"
+  },
+  {
+    "SegmentId": "s3938_6863d727e981a01ef4d23055",
+    "SegmentName": "variables/geocountry = Swaziland",
+    "DimValueId": "1433886021",
+    "DimValueName": "Swaziland"
+  },
+  {
+    "SegmentId": "s3938_6863d7280bb9cb6dfeac9538",
+    "SegmentName": "variables/geocountry = Malawi",
+    "DimValueId": "452026331",
+    "DimValueName": "Malawi"
+  },
+  {
+    "SegmentId": "s3938_6863d729e981a01ef4d23057",
+    "SegmentName": "variables/geocountry = American Samoa",
+    "DimValueId": "105086985",
+    "DimValueName": "American Samoa"
+  },
+  {
+    "SegmentId": "s3938_6863d72b0bb9cb6dfeac953b",
+    "SegmentName": "variables/geocountry = Tanzania",
+    "DimValueId": "1602670039",
+    "DimValueName": "Tanzania"
+  },
+  {
+    "SegmentId": "s3938_6863d72c0bb9cb6dfeac953c",
+    "SegmentName": "variables/geocountry = Guernsey",
+    "DimValueId": "4128441213",
+    "DimValueName": "Guernsey"
+  },
+  {
+    "SegmentId": "s3938_6863d72ed33a62bb80cb6006",
+    "SegmentName": "variables/geocountry = Togo",
+    "DimValueId": "801857873",
+    "DimValueName": "Togo"
+  },
+  {
+    "SegmentId": "s3938_6863d72fd33a62bb80cb6008",
+    "SegmentName": "variables/geocountry = Saint Martin",
+    "DimValueId": "2697558322",
+    "DimValueName": "Saint Martin"
+  },
+  {
+    "SegmentId": "s3938_6863d731e981a01ef4d23059",
+    "SegmentName": "variables/geocountry = Gabon",
+    "DimValueId": "3779824878",
+    "DimValueName": "Gabon"
+  },
+  {
+    "SegmentId": "s3938_6863d7320bb9cb6dfeac953d",
+    "SegmentName": "variables/geocountry = Dominica",
+    "DimValueId": "1055513876",
+    "DimValueName": "Dominica"
+  },
+  {
+    "SegmentId": "s3938_6863d733d33a62bb80cb6009",
+    "SegmentName": "variables/geocountry = Congo",
+    "DimValueId": "705648675",
+    "DimValueName": "Congo"
+  },
+  {
+    "SegmentId": "s3938_6863d735e981a01ef4d2305a",
+    "SegmentName": "variables/geocountry = Gambia",
+    "DimValueId": "3345291608",
+    "DimValueName": "Gambia"
+  },
+  {
+    "SegmentId": "s3938_6863d7360bb9cb6dfeac953e",
+    "SegmentName": "variables/geocountry = Antigua and Barbuda",
+    "DimValueId": "543835974",
+    "DimValueName": "Antigua and Barbuda"
+  },
+  {
+    "SegmentId": "s3938_6863d738d33a62bb80cb600a",
+    "SegmentName": "variables/geocountry = Afghanistan",
+    "DimValueId": "749295988",
+    "DimValueName": "Afghanistan"
+  },
+  {
+    "SegmentId": "s3938_6863d739e981a01ef4d2305b",
+    "SegmentName": "variables/geocountry = Faroe Islands",
+    "DimValueId": "2490474427",
+    "DimValueName": "Faroe Islands"
+  },
+  {
+    "SegmentId": "s3938_6863d73bd33a62bb80cb600b",
+    "SegmentName": "variables/geocountry = Yemen",
+    "DimValueId": "2210777200",
+    "DimValueName": "Yemen"
+  },
+  {
+    "SegmentId": "s3938_6863d73ce981a01ef4d2305c",
+    "SegmentName": "variables/geocountry = Vanuatu",
+    "DimValueId": "2966445269",
+    "DimValueName": "Vanuatu"
+  },
+  {
+    "SegmentId": "s3938_6863d73dd33a62bb80cb600c",
+    "SegmentName": "variables/geocountry = Cook Islands",
+    "DimValueId": "2336252342",
+    "DimValueName": "Cook Islands"
+  },
+  {
+    "SegmentId": "s3938_6863d73fd33a62bb80cb600d",
+    "SegmentName": "variables/geocountry = Mongolia",
+    "DimValueId": "3959866209",
+    "DimValueName": "Mongolia"
+  },
+  {
+    "SegmentId": "s3938_6863d7400bb9cb6dfeac953f",
+    "SegmentName": "variables/geocountry = Guinea",
+    "DimValueId": "1342361316",
+    "DimValueName": "Guinea"
+  },
+  {
+    "SegmentId": "s3938_6863d7420bb9cb6dfeac9540",
+    "SegmentName": "variables/geocountry = Saint Kitts and Nevis",
+    "DimValueId": "3538559908",
+    "DimValueName": "Saint Kitts and Nevis"
+  },
+  {
+    "SegmentId": "s3938_6863d743e981a01ef4d2305d",
+    "SegmentName": "variables/geocountry = Northern Mariana Islands",
+    "DimValueId": "1782833650",
+    "DimValueName": "Northern Mariana Islands"
+  },
+  {
+    "SegmentId": "s3938_6863d744e981a01ef4d2305e",
+    "SegmentName": "variables/geocountry = Bhutan",
+    "DimValueId": "370943811",
+    "DimValueName": "Bhutan"
+  },
+  {
+    "SegmentId": "s3938_6863d746e981a01ef4d2305f",
+    "SegmentName": "variables/geocountry = Samoa",
+    "DimValueId": "3513815597",
+    "DimValueName": "Samoa"
+  },
+  {
+    "SegmentId": "s3938_6863d7470bb9cb6dfeac9541",
+    "SegmentName": "variables/geocountry = Solomon Islands",
+    "DimValueId": "4275181022",
+    "DimValueName": "Solomon Islands"
+  },
+  {
+    "SegmentId": "s3938_6863d7490bb9cb6dfeac9542",
+    "SegmentName": "variables/geocountry = Palau",
+    "DimValueId": "2465631166",
+    "DimValueName": "Palau"
+  },
+  {
+    "SegmentId": "s3938_6863d74ad33a62bb80cb600e",
+    "SegmentName": "variables/geocountry = South Sudan",
+    "DimValueId": "3556491057",
+    "DimValueName": "South Sudan"
+  },
+  {
+    "SegmentId": "s3938_6863d74be981a01ef4d23060",
+    "SegmentName": "variables/geocountry = Grenada",
+    "DimValueId": "2432935727",
+    "DimValueName": "Grenada"
+  },
+  {
+    "SegmentId": "s3938_6863d74dd33a62bb80cb600f",
+    "SegmentName": "variables/geocountry = Chad",
+    "DimValueId": "3655886880",
+    "DimValueName": "Chad"
+  },
+  {
+    "SegmentId": "s3938_6863d74e0bb9cb6dfeac9543",
+    "SegmentName": "variables/geocountry = Saint Vincent and The Grenadines",
+    "DimValueId": "1006554360",
+    "DimValueName": "Saint Vincent and The Grenadines"
+  },
+  {
+    "SegmentId": "s3938_6863d750e981a01ef4d23061",
+    "SegmentName": "variables/geocountry = Oman",
+    "DimValueId": "7307",
+    "DimValueName": "Oman"
+  },
+  {
+    "SegmentId": "s3938_6863d751e981a01ef4d23062",
+    "SegmentName": "variables/geocountry = Djibouti",
+    "DimValueId": "1279477331",
+    "DimValueName": "Djibouti"
+  },
+  {
+    "SegmentId": "s3938_6863d753e981a01ef4d23063",
+    "SegmentName": "variables/geocountry = Mauritania",
+    "DimValueId": "1238180626",
+    "DimValueName": "Mauritania"
+  },
+  {
+    "SegmentId": "s3938_6863d7540bb9cb6dfeac9544",
+    "SegmentName": "variables/geocountry = San Marino",
+    "DimValueId": "1049681843",
+    "DimValueName": "San Marino"
+  },
+  {
+    "SegmentId": "s3938_6863d755d33a62bb80cb6010",
+    "SegmentName": "variables/geocountry = Timor-Leste",
+    "DimValueId": "3420000337",
+    "DimValueName": "Timor-Leste"
+  },
+  {
+    "SegmentId": "s3938_6863d757e981a01ef4d23064",
+    "SegmentName": "variables/geocountry = St. Pierre and Miquelon",
+    "DimValueId": "3272838001",
+    "DimValueName": "St. Pierre and Miquelon"
+  },
+  {
+    "SegmentId": "s3938_6863d758d33a62bb80cb6011",
+    "SegmentName": "variables/geocountry = Niger",
+    "DimValueId": "4198631729",
+    "DimValueName": "Niger"
+  },
+  {
+    "SegmentId": "s3938_6863d75a0bb9cb6dfeac9545",
+    "SegmentName": "variables/geocountry = Equatorial Guinea",
+    "DimValueId": "3736370786",
+    "DimValueName": "Equatorial Guinea"
+  },
+  {
+    "SegmentId": "s3938_6863d75be981a01ef4d23066",
+    "SegmentName": "variables/geocountry = Sierra Leone",
+    "DimValueId": "582409011",
+    "DimValueName": "Sierra Leone"
+  },
+  {
+    "SegmentId": "s3938_6863d75cd33a62bb80cb6012",
+    "SegmentName": "variables/geocountry = Europe (Unknown Country)",
+    "DimValueId": "2556457689",
+    "DimValueName": "Europe (Unknown Country)"
+  },
+  {
+    "SegmentId": "s3938_6863d75e0bb9cb6dfeac9546",
+    "SegmentName": "variables/geocountry = Comoros",
+    "DimValueId": "1591869505",
+    "DimValueName": "Comoros"
+  },
+  {
+    "SegmentId": "s3938_6863d75f0bb9cb6dfeac9547",
+    "SegmentName": "variables/geocountry = Aland Islands",
+    "DimValueId": "317525152",
+    "DimValueName": "Aland Islands"
+  },
+  {
+    "SegmentId": "s3938_6863d761e981a01ef4d23067",
+    "SegmentName": "variables/geocountry = Burundi",
+    "DimValueId": "2298123736",
+    "DimValueName": "Burundi"
+  },
+  {
+    "SegmentId": "s3938_6863d7620bb9cb6dfeac9548",
+    "SegmentName": "variables/geocountry = Central African Republic",
+    "DimValueId": "3639208525",
+    "DimValueName": "Central African Republic"
+  },
+  {
+    "SegmentId": "s3938_6863d7640bb9cb6dfeac9549",
+    "SegmentName": "variables/geocountry = Nauru",
+    "DimValueId": "659392987",
+    "DimValueName": "Nauru"
+  },
+  {
+    "SegmentId": "s3938_6863d7650bb9cb6dfeac954a",
+    "SegmentName": "variables/geocountry = Sao Tome and Principe",
+    "DimValueId": "3488977716",
+    "DimValueName": "Sao Tome and Principe"
+  },
+  {
+    "SegmentId": "s3938_6863d7660bb9cb6dfeac954b",
+    "SegmentName": "variables/geocountry = Turkmenistan",
+    "DimValueId": "2021948016",
+    "DimValueName": "Turkmenistan"
+  },
+  {
+    "SegmentId": "s3938_6863d768e981a01ef4d23068",
+    "SegmentName": "variables/geocountry = Wallis and Futuna Islands",
+    "DimValueId": "1343921003",
+    "DimValueName": "Wallis and Futuna Islands"
+  },
+  {
+    "SegmentId": "s3938_6863d7690bb9cb6dfeac954c",
+    "SegmentName": "variables/geocountry = Anguilla",
+    "DimValueId": "41728927",
+    "DimValueName": "Anguilla"
+  },
+  {
+    "SegmentId": "s3938_6863d76bd33a62bb80cb6014",
+    "SegmentName": "variables/geocountry = Marshall Islands",
+    "DimValueId": "1897224002",
+    "DimValueName": "Marshall Islands"
+  },
+  {
+    "SegmentId": "s3938_6863d76cd33a62bb80cb6015",
+    "SegmentName": "variables/geocountry = Svalbard and Jan Mayen Islands",
+    "DimValueId": "82034475",
+    "DimValueName": "Svalbard and Jan Mayen Islands"
+  },
+  {
+    "SegmentId": "s3938_6863d76ee981a01ef4d23069",
+    "SegmentName": "variables/geocountry = Montserrat",
+    "DimValueId": "3356316555",
+    "DimValueName": "Montserrat"
+  },
+  {
+    "SegmentId": "s3938_6863d76fe981a01ef4d2306a",
+    "SegmentName": "variables/geocountry = Saint Barthelemy",
+    "DimValueId": "1616724130",
+    "DimValueName": "Saint Barthelemy"
+  },
+  {
+    "SegmentId": "s3938_6863d770e981a01ef4d2306b",
+    "SegmentName": "variables/geocountry = Niue",
+    "DimValueId": "3799524866",
+    "DimValueName": "Niue"
+  },
+  {
+    "SegmentId": "s3938_6863d772d33a62bb80cb6016",
+    "SegmentName": "variables/geocountry = Kiribati",
+    "DimValueId": "1786502341",
+    "DimValueName": "Kiribati"
+  },
+  {
+    "SegmentId": "s3938_6863d773d33a62bb80cb6017",
+    "SegmentName": "variables/geocountry = British Indian Ocean Territory",
+    "DimValueId": "1465081046",
+    "DimValueName": "British Indian Ocean Territory"
+  },
+  {
+    "SegmentId": "s3938_6863d775e981a01ef4d2306c",
+    "SegmentName": "variables/geocountry = Guinea-Bissau",
+    "DimValueId": "2396481462",
+    "DimValueName": "Guinea-Bissau"
+  },
+  {
+    "SegmentId": "s3938_6863d776d33a62bb80cb6018",
+    "SegmentName": "variables/geocountry = Cuba",
+    "DimValueId": "1686749082",
+    "DimValueName": "Cuba"
+  },
+  {
+    "SegmentId": "s3938_6863d777e981a01ef4d2306d",
+    "SegmentName": "variables/geocountry = Iran (Islamic Republic of)",
+    "DimValueId": "1847552420",
+    "DimValueName": "Iran (Islamic Republic of)"
+  }
+]
+
+module.exports = countrySegmentLookup

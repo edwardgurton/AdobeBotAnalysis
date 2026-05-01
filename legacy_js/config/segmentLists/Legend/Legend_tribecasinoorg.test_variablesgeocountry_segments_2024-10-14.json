@@ -1,0 +1,50 @@
+[
+  {
+    "id": "s3938_670d905a2f80af0aca99542c",
+    "name": "variables/geocountry = United States"
+  },
+  {
+    "id": "s3938_670d905a5c7f8444ab6ee270",
+    "name": "variables/geocountry = Canada"
+  },
+  {
+    "id": "s3938_670d905b2f80af0aca99542d",
+    "name": "variables/geocountry = Germany"
+  },
+  {
+    "id": "s3938_670d905f5c7f8444ab6ee271",
+    "name": "variables/geocountry = Philippines"
+  },
+  {
+    "id": "s3938_670d905f5c7f8444ab6ee272",
+    "name": "variables/geocountry = Argentina"
+  },
+  {
+    "id": "s3938_670d90602f80af0aca99542e",
+    "name": "variables/geocountry = India"
+  },
+  {
+    "id": "s3938_670d90602f80af0aca99542f",
+    "name": "variables/geocountry = United Kingdom"
+  },
+  {
+    "id": "s3938_670d90612f80af0aca995430",
+    "name": "variables/geocountry = Brazil"
+  },
+  {
+    "id": "s3938_670d90615c7f8444ab6ee273",
+    "name": "variables/geocountry = Australia"
+  },
+  {
+    "id": "s3938_670d9065c9ad30681f19f571",
+    "name": "variables/geocountry = France"
+  },
+  {
+    "id": "s3938_670d9065c9ad30681f19f572",
+    "name": "variables/geocountry = Bermuda"
+  },
+  {
+    "id": "s3938_670d90665c7f8444ab6ee274",
+    "name": "variables/geocountry = Netherlands"
+  }
+]
