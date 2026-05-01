@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "adobe-downloader"
+version = "0.1.0"
+description = "Adobe Analytics report downloader and transformer"
+requires-python = ">=3.12"
+dependencies = [
+    "click>=8.1",
+    "httpx>=0.27",
+    "pydantic>=2.7",
+    "pyyaml>=6.0",
+    "tenacity>=8.3",
+]
+
+[project.scripts]
+adobe-downloader = "adobe_downloader.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["adobe_downloader*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+ignore_missing_imports = true
