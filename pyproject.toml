@@ -18,9 +18,16 @@ dependencies = [
 [project.scripts]
 adobe-downloader = "adobe_downloader.cli:main"
 
+[project.optional-dependencies]
+dev = ["pytest>=8", "pytest-asyncio>=0.23"]
+
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["adobe_downloader*"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
 
 [tool.ruff]
 line-length = 100

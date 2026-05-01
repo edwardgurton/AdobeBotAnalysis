@@ -7,6 +7,7 @@ import httpx
 
 from adobe_downloader.config.loader import load_credentials
 from adobe_downloader.core.auth import fetch_token
+from adobe_downloader.core.rate_limiter import SlidingWindowRateLimiter, make_retry
 
 _API_BASE = "https://analytics.adobe.io/api"
 
@@ -24,6 +25,8 @@ class AdobeClient:
         self._token: str | None = None
         self._token_expiry: float = 0.0
         self._http = httpx.AsyncClient(timeout=120)
+        self._rate_limiter = SlidingWindowRateLimiter()
+        self._retry = make_retry(self._rate_limiter)
 
     async def _get_token(self) -> str:
         """Return a valid bearer token, refreshing if within the expiry buffer."""
@@ -41,19 +44,43 @@ class AdobeClient:
             "x-gw-ims-org-id": self._org_id,
         }
 
+    async def _get(self, url: str, **kwargs: Any) -> httpx.Response:
+        """Rate-limited GET with tenacity retry."""
+        token = await self._get_token()
+
+        @self._retry
+        async def _call() -> httpx.Response:
+            r = await self._rate_limiter.execute(
+                self._http.get, url, headers=self._headers(token), **kwargs
+            )
+            r.raise_for_status()
+            return r
+
+        return await _call()
+
+    async def _post(self, url: str, **kwargs: Any) -> httpx.Response:
+        """Rate-limited POST with tenacity retry."""
+        token = await self._get_token()
+
+        @self._retry
+        async def _call() -> httpx.Response:
+            r = await self._rate_limiter.execute(
+                self._http.post, url, headers=self._headers(token), **kwargs
+            )
+            r.raise_for_status()
+            return r
+
+        return await _call()
+
     async def get_users(self) -> list[dict[str, Any]]:
         """Fetch all Analytics users for the company, paginating as needed."""
-        token = await self._get_token()
-        headers = self._headers(token)
         users: list[dict[str, Any]] = []
         page = 0
         while True:
-            resp = await self._http.get(
+            resp = await self._get(
                 f"{_API_BASE}/{self._company_id}/users",
                 params={"limit": 100, "page": page},
-                headers=headers,
             )
-            resp.raise_for_status()
             data = resp.json()
             users.extend(data.get("content", []))
             if data.get("lastPage", True):
@@ -63,53 +90,37 @@ class AdobeClient:
 
     async def get_authenticated_user(self) -> dict[str, Any]:
         """Fetch the profile for the currently authenticated service account."""
-        token = await self._get_token()
-        resp = await self._http.get(
-            f"{_API_BASE}/{self._company_id}/users/me",
-            headers=self._headers(token),
-        )
-        resp.raise_for_status()
+        resp = await self._get(f"{_API_BASE}/{self._company_id}/users/me")
         return resp.json()  # type: ignore[return-value]
 
     async def get_report(self, request_body: dict[str, Any]) -> dict[str, Any]:
         """Submit a ranked report request. (Used from Step 5.)"""
-        token = await self._get_token()
-        resp = await self._http.post(
+        resp = await self._post(
             f"{_API_BASE}/{self._company_id}/reports",
             json=request_body,
-            headers=self._headers(token),
         )
-        resp.raise_for_status()
         return resp.json()  # type: ignore[return-value]
 
     async def get_report_suites(self, limit: int = 1000) -> dict[str, Any]:
         """Fetch report suites for the company. (Used from Step 18.)"""
-        token = await self._get_token()
-        resp = await self._http.get(
+        resp = await self._get(
             f"{_API_BASE}/{self._company_id}/collections/suites",
             params={"limit": limit},
-            headers=self._headers(token),
         )
-        resp.raise_for_status()
         return resp.json()  # type: ignore[return-value]
 
     async def create_segment(self, segment_def: dict[str, Any]) -> dict[str, Any]:
         """Create a segment and return the created object. (Used from Step 10.)"""
-        token = await self._get_token()
-        resp = await self._http.post(
+        resp = await self._post(
             f"{_API_BASE}/{self._company_id}/segments",
             json=segment_def,
-            headers=self._headers(token),
         )
-        resp.raise_for_status()
         return resp.json()  # type: ignore[return-value]
 
     async def share_segment(self, segment_id: str, user_ids: list[str]) -> None:
         """Share a segment with each user in user_ids. (Used from Step 10.)"""
-        token = await self._get_token()
-        headers = self._headers(token)
         for user_id in user_ids:
-            resp = await self._http.post(
+            await self._post(
                 f"{_API_BASE}/{self._company_id}/componentmetadata/shares",
                 json={
                     "componentType": "segment",
@@ -117,9 +128,7 @@ class AdobeClient:
                     "shareToId": user_id,
                     "shareToType": "user",
                 },
-                headers=headers,
             )
-            resp.raise_for_status()
 
     async def close(self) -> None:
         """Close the underlying HTTP client."""
