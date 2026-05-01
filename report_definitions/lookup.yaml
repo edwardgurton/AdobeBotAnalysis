@@ -1,0 +1,75 @@
+group: lookup
+description: "Dimension lookup reports — high row-limit requests for building lookup tables"
+transform_type: lookup
+
+defaults:
+  segments: []
+  metrics: []
+  row_limit: 50000
+
+reports:
+  Lookupvariablesbrowsertype:
+    dimension: variables/browsertype
+    csv_headers:
+      - id
+      - variablesbrowsertype
+      - unique_visitors
+      - visits
+      - fileName
+      - fromDate
+      - toDate
+
+  Lookupvariablesoperatingsystem:
+    dimension: variables/operatingsystem
+    csv_headers:
+      - id
+      - variablesoperatingsystem
+      - unique_visitors
+      - visits
+      - fileName
+      - fromDate
+      - toDate
+
+  Lookupvariablesmobilemanufacturer:
+    dimension: variables/mobilemanufacturer
+    csv_headers:
+      - id
+      - variablesmobilemanufacturer
+      - unique_visitors
+      - visits
+      - fileName
+      - fromDate
+      - toDate
+
+  Lookupvariablesmonitorresolution:
+    dimension: variables/monitorresolution
+    csv_headers:
+      - id
+      - variablesmonitorresolution
+      - unique_visitors
+      - visits
+      - fileName
+      - fromDate
+      - toDate
+
+  Lookupvariablesmarketingchannel:
+    dimension: variables/marketingchannel
+    csv_headers:
+      - id
+      - variablesmarketingchannel
+      - unique_visitors
+      - visits
+      - fileName
+      - fromDate
+      - toDate
+
+  Lookupvariablesgeoregion:
+    dimension: variables/georegion
+    csv_headers:
+      - id
+      - variablesgeoregion
+      - unique_visitors
+      - visits
+      - fileName
+      - fromDate
+      - toDate

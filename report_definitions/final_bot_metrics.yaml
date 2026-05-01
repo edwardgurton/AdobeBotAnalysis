@@ -1,0 +1,48 @@
+group: final_bot_metrics
+description: "Final annual bot metrics reports — unfiltered baseline and rule-specific include segments"
+transform_type: final_bot_metrics
+
+defaults:
+  segments: []
+  metrics: []
+  row_limit: 500
+
+reports:
+  LegendFinalBotMetricsUnfilteredVisitsByYear:
+    dimension: variables/daterangeyear
+    csv_headers:
+      - id
+      - variablesdaterangeyear
+      - unique_visitors
+      - visits
+      - fileName
+      - botRuleName
+      - rsidCleanName
+      - fromDate
+      - toDate
+
+  LegendFinalBotMetricsCurrentIncludeByYear:
+    dimension: variables/daterangeyear
+    segments:
+      - s3938_64b141c647aa8c3cec5a1a95  # Current approved bot rules (Include)
+    csv_headers:
+      - id
+      - variablesdaterangeyear
+      - unique_visitors
+      - visits
+      - fileName
+      - fromDate
+      - toDate
+
+  LegendFinalBotMetricsDevelopmentIncludeByYear:
+    dimension: variables/daterangeyear
+    segments:
+      - s3938_6892257b8fb8265765efa206  # Development bot rules (Include)
+    csv_headers:
+      - id
+      - variablesdaterangeyear
+      - unique_visitors
+      - visits
+      - fileName
+      - fromDate
+      - toDate

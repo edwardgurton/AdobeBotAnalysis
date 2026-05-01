@@ -1,0 +1,63 @@
+group: segment_builder
+description: "Dimension-only reports used as inputs for segment condition building"
+transform_type: segment_builder
+
+defaults:
+  segments: []
+  metrics: []
+  row_limit: 100
+
+reports:
+  SegmentsBuildervariablesgeocountry:
+    dimension: variables/geocountry
+    row_limit: 12
+    segments:
+      - s3938_66fe79408ff02713f66ed76b  # Master Bot Filter
+    csv_headers:
+      - id
+      - geo_country
+      - unique_visitors
+      - visits
+      - fileName
+      - fromDate
+      - toDate
+
+  SegmentsBuilderCountry50:
+    dimension: variables/geocountry
+    row_limit: 500
+    segments:
+      - s3938_66fe79408ff02713f66ed76b  # Master Bot Filter
+    csv_headers:
+      - id
+      - geo_country
+      - unique_visitors
+      - visits
+      - fileName
+      - fromDate
+      - toDate
+
+  SegmentsBuildervariablesgeoregion:
+    dimension: variables/georegion
+    segments:
+      - s3938_61bb0165a88ab931afa78e4c
+    csv_headers:
+      - id
+      - variablesgeoregion
+      - unique_visitors
+      - visits
+      - fileName
+      - fromDate
+      - toDate
+
+  SegmentsBuildervariablesmarketingchannelmarketing-channel-attribution:
+    dimension: variables/marketingchannel.marketing-channel-attribution
+    segments:
+      - s3938_61bb0165a88ab931afa78e4c
+    csv_headers:
+      - id
+      - variablesmarketingchannelmarketing-channel-attribution
+      - unique_visitors
+      - visits
+      - fileName
+      - fromDate
+      - toDate

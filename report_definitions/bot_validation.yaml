@@ -1,0 +1,168 @@
+group: bot_validation
+description: "Bot filter validation reports comparing exclude/include variants by month"
+transform_type: bot_validation
+
+defaults:
+  segments:
+    - s3938_66fe79408ff02713f66ed76b  # Master Bot Filter (Exclude)
+  metrics:
+    - metrics/event3
+    - cm3938_602b915cb99757640284234e
+    - cm3938_5fcf3ee998b6d77a9d7167ad
+    - cm3938_66d0bfba05c95b4eca739eb4
+    - metrics/itemtimespent
+    - metrics/pageviews
+  row_limit: 5000
+
+reports:
+  botFilterExcludeMetricsByMonth:
+    dimension: variables/daterangemonth
+    csv_headers:
+      - id
+      - month
+      - unique_visitors
+      - visits
+      - raw_clickouts
+      - engaged_visits
+      - engagement_rate
+      - First_Time_Visits
+      - Total_Seconds_Spent
+      - Page_Views
+      - fileName
+      - requestName
+      - botRuleName
+      - rsidName
+
+  botFilterExcludexBotRuleMetricsByMonth:
+    dimension: variables/daterangemonth
+    csv_headers:
+      - id
+      - month
+      - unique_visitors
+      - visits
+      - raw_clickouts
+      - engaged_visits
+      - engagement_rate
+      - First_Time_Visits
+      - Total_Seconds_Spent
+      - Page_Views
+      - fileName
+      - requestName
+      - botRuleName
+      - rsidName
+
+  botFilterIncludeMetricsByMonth:
+    dimension: variables/daterangemonth
+    segments:
+      - s3938_666ae77965ae5e6a3c2c1709  # Master Bot Filter (Include)
+    csv_headers:
+      - id
+      - month
+      - unique_visitors
+      - visits
+      - raw_clickouts
+      - engaged_visits
+      - engagement_rate
+      - First_Time_Visits
+      - Total_Seconds_Spent
+      - Page_Views
+      - fileName
+      - requestName
+      - botRuleName
+      - rsidName
+
+  botFilterIncludexBotRuleMetricsByMonth:
+    dimension: variables/daterangemonth
+    segments:
+      - s3938_666ae77965ae5e6a3c2c1709  # Master Bot Filter (Include)
+    csv_headers:
+      - id
+      - month
+      - unique_visitors
+      - visits
+      - raw_clickouts
+      - engaged_visits
+      - engagement_rate
+      - First_Time_Visits
+      - Total_Seconds_Spent
+      - Page_Views
+      - fileName
+      - requestName
+      - botRuleName
+      - rsidName
+
+  botFilterExcludexBotRuleXSuspiciousMarketingChannelsMetricsByMonth:
+    dimension: variables/daterangemonth
+    segments:
+      - s3938_66fe79408ff02713f66ed76b  # Master Bot Filter (Exclude)
+      - s3938_67c09bc9b1a3887faa7d3844  # Suspicious Marketing Channels
+    csv_headers:
+      - id
+      - month
+      - unique_visitors
+      - visits
+      - raw_clickouts
+      - engaged_visits
+      - engagement_rate
+      - fileName
+      - requestName
+      - botRuleName
+      - rsidName
+
+  botFilterExcludexBotRuleXDesktopMetricsByMonth:
+    dimension: variables/daterangemonth
+    segments:
+      - s3938_66fe79408ff02713f66ed76b  # Master Bot Filter (Exclude)
+      - s3938_67c09bfb5bc6d048a2295f86  # Desktop segment
+    csv_headers:
+      - id
+      - month
+      - unique_visitors
+      - visits
+      - raw_clickouts
+      - engaged_visits
+      - engagement_rate
+      - fileName
+      - requestName
+      - botRuleName
+      - rsidName
+
+  # Note: dimension is evar2 (page URL) but csv header says "month" — matches legacy JS output.
+  botFilterExcludexBotRuleMetricsByPageUrl:
+    dimension: variables/evar2
+    row_limit: 10
+    csv_headers:
+      - id
+      - month
+      - unique_visitors
+      - visits
+      - raw_clickouts
+      - engaged_visits
+      - engagement_rate
+      - First_Time_Visits
+      - Total_Seconds_Spent
+      - Page_Views
+      - fileName
+      - requestName
+      - botRuleName
+      - rsidName
+
+  JustSegmentMetricsByMonth:
+    dimension: variables/daterangemonth
+    segments: []
+    metrics:
+      - metrics/event3
+      - cm3938_602b915cb99757640284234e
+      - cm3938_5fcf3ee998b6d77a9d7167ad
+    csv_headers:
+      - id
+      - month
+      - unique_visitors
+      - visits
+      - raw_clickouts
+      - engaged_visits
+      - engagement_rate
+      - fileName
+      - requestName
+      - botRuleName
+      - rsidName

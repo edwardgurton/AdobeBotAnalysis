@@ -1,0 +1,59 @@
+group: clickouts
+description: "Clickout metric reports for Legend — geographic and AdCloud attribution breakdowns"
+transform_type: clickouts
+
+defaults:
+  segments: []
+  metrics:
+    - cm3938_67877f0e25c74e65d1f3f449
+    - cm3938_68655d7318c56ac719c11a44
+    - cm3938_68655dd05c74c471e8de44d0
+    - cm3938_68655e0b18c56ac719c11a47
+  row_limit: 500
+
+reports:
+  LegendClickoutsByGeoregionNAOnly:
+    dimension: variables/georegion
+    segments:
+      - s3938_61bb0165a88ab931afa78e4c
+      - s3938_681e521d16e3be6770921fa8  # NA-only geographic filter
+    csv_headers:
+      - id
+      - variablesgeoregion
+      - unique_visitors
+      - visits
+      - raw_clickouts_linear_7d
+      - raw_clickouts_participation_7d
+      - unique_visit_clickouts_linear_7d
+      - unique_visit_clickouts_participation_7d
+      - fileName
+      - fromDate
+      - toDate
+
+  LegendClickoutsAdCloudMetrics:
+    dimension: variables/marketingchannel.marketing-channel-attribution
+    segments:
+      - s3938_686797a0feff97c4e3c747c9  # AdCloud traffic segment
+    metrics:
+      - cm3938_67877f0e25c74e65d1f3f449
+      - cm3938_68655d7318c56ac719c11a44
+      - cm3938_68655dd05c74c471e8de44d0
+      - cm3938_68655e0b18c56ac719c11a47
+      - metrics/amo_cost
+      - metrics/amo_clicks
+      - metrics/amo_impressions
+    csv_headers:
+      - id
+      - variablesmarketingchannelmarketing-channel-attribution
+      - unique_visitors
+      - visits
+      - raw_clickouts_linear_7d
+      - raw_clickouts_participation_7d
+      - unique_visit_clickouts_linear_7d
+      - unique_visit_clickouts_participation_7d
+      - adobe_advertising_cost
+      - adobe_advertising_clicks
+      - adobe_advertising_impressions
+      - fileName
+      - fromDate
+      - toDate

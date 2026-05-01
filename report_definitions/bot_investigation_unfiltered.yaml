@@ -1,0 +1,225 @@
+group: bot_investigation_unfiltered
+description: "Bot investigation reports with no segment filter (all traffic)"
+transform_type: bot_investigation
+
+defaults:
+  segments: []
+  metrics:
+    - metrics/event3
+    - cm3938_602b915cb99757640284234e
+    - cm3938_66d0bfba05c95b4eca739eb4
+    - metrics/itemtimespent
+    - metrics/pageviews
+  row_limit: 500
+
+reports:
+  botInvestigationUnfilteredMetricsByDay:
+    dimension: variables/daterangeday
+    csv_headers:
+      - id
+      - day
+      - unique_visitors
+      - visits
+      - Raw_Clickouts
+      - Engaged_Visits
+      - First_Time_Visits
+      - Total_Seconds_Spent
+      - Page_Views
+      - fileName
+      - fromDate
+      - toDate
+
+  botInvestigationUnfilteredMetricsByMarketingChannel:
+    dimension: variables/marketingchannel
+    row_limit: 50
+    csv_headers:
+      - id
+      - marketing_channel
+      - unique_visitors
+      - visits
+      - Raw_Clickouts
+      - Engaged_Visits
+      - First_Time_Visits
+      - Total_Seconds_Spent
+      - Page_Views
+      - fileName
+      - fromDate
+      - toDate
+
+  botInvestigationUnfilteredMetricsByDevice:
+    dimension: variables/mobiledevicetype
+    csv_headers:
+      - id
+      - device
+      - unique_visitors
+      - visits
+      - Raw_Clickouts
+      - Engaged_Visits
+      - First_Time_Visits
+      - Total_Seconds_Spent
+      - Page_Views
+      - fileName
+      - fromDate
+      - toDate
+
+  botInvestigationUnfilteredMetricsByDomain:
+    dimension: variables/filtereddomain
+    csv_headers:
+      - id
+      - domain
+      - unique_visitors
+      - visits
+      - Raw_Clickouts
+      - Engaged_Visits
+      - First_Time_Visits
+      - Total_Seconds_Spent
+      - Page_Views
+      - fileName
+      - fromDate
+      - toDate
+
+  botInvestigationUnfilteredMetricsByMonitorResolution:
+    dimension: variables/monitorresolution
+    csv_headers:
+      - id
+      - monitor_resolution
+      - unique_visitors
+      - visits
+      - Raw_Clickouts
+      - Engaged_Visits
+      - First_Time_Visits
+      - Total_Seconds_Spent
+      - Page_Views
+      - fileName
+      - fromDate
+      - toDate
+
+  botInvestigationUnfilteredMetricsByHourOfDay:
+    dimension: variables/timeparthourofday
+    row_limit: 25
+    csv_headers:
+      - id
+      - hourofday
+      - unique_visitors
+      - visits
+      - Raw_Clickouts
+      - Engaged_Visits
+      - First_Time_Visits
+      - Total_Seconds_Spent
+      - Page_Views
+      - fileName
+      - fromDate
+      - toDate
+
+  botInvestigationUnfilteredMetricsByOperatingSystem:
+    dimension: variables/operatingsystem
+    csv_headers:
+      - id
+      - operating_system
+      - unique_visitors
+      - visits
+      - Raw_Clickouts
+      - Engaged_Visits
+      - First_Time_Visits
+      - Total_Seconds_Spent
+      - Page_Views
+      - fileName
+      - fromDate
+      - toDate
+
+  botInvestigationUnfilteredMetricsByPageURL:
+    dimension: variables/evar2
+    csv_headers:
+      - id
+      - page_url_evar2
+      - unique_visitors
+      - visits
+      - Raw_Clickouts
+      - Engaged_Visits
+      - First_Time_Visits
+      - Total_Seconds_Spent
+      - Page_Views
+      - fileName
+      - fromDate
+      - toDate
+
+  botInvestigationUnfilteredMetricsByRegion:
+    dimension: variables/georegion
+    csv_headers:
+      - id
+      - region
+      - unique_visitors
+      - visits
+      - Raw_Clickouts
+      - Engaged_Visits
+      - First_Time_Visits
+      - Total_Seconds_Spent
+      - Page_Views
+      - fileName
+      - fromDate
+      - toDate
+
+  botInvestigationUnfilteredMetricsByUserAgent:
+    dimension: variables/evar23
+    csv_headers:
+      - id
+      - user_agent_evar_23
+      - unique_visitors
+      - visits
+      - Raw_Clickouts
+      - Engaged_Visits
+      - First_Time_Visits
+      - Total_Seconds_Spent
+      - Page_Views
+      - fileName
+      - fromDate
+      - toDate
+
+  botInvestigationUnfilteredMetricsByBrowser:
+    dimension: variables/browser
+    csv_headers:
+      - id
+      - browser
+      - unique_visitors
+      - visits
+      - Raw_Clickouts
+      - Engaged_Visits
+      - First_Time_Visits
+      - Total_Seconds_Spent
+      - Page_Views
+      - fileName
+      - fromDate
+      - toDate
+
+  botInvestigationUnfilteredMetricsByBrowserType:
+    dimension: variables/browsertype
+    row_limit: 100
+    csv_headers:
+      - id
+      - browserType
+      - unique_visitors
+      - visits
+      - Raw_Clickouts
+      - Engaged_Visits
+      - First_Time_Visits
+      - Total_Seconds_Spent
+      - Page_Views
+      - fileName
+      - fromDate
+      - toDate
+
+  botInvestigationUnfilteredMetricsByMobileManufacturer:
+    dimension: variables/mobilemanufacturer
+    csv_headers:
+      - id
+      - mobileManufacturer
+      - unique_visitors
+      - visits
+      - Raw_Clickouts
+      - Engaged_Visits
+      - First_Time_Visits
+      - Total_Seconds_Spent
+      - Page_Views
+      - fileName
+      - fromDate
+      - toDate

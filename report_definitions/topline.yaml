@@ -1,0 +1,21 @@
+group: topline
+description: "Topline summary metrics — no dimension, visitors and visits only, used for RSID validation"
+transform_type: summary_total
+
+defaults:
+  segments: []
+  metrics: []
+  row_limit: 500
+
+reports:
+  toplineMetricsForRsidValidation:
+    dimension: null
+    row_limit: 10
+    segments:
+      - s3938_61bb0165a88ab931afa78e4c  # All-traffic base segment for validation
+    csv_headers:
+      - unique_visitors
+      - visits
+      - fileName
+      - fromDate
+      - toDate
