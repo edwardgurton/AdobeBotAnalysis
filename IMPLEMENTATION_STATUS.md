@@ -15,11 +15,11 @@ Status legend: `☐ todo` · `🔄 in-progress` · `✅ done` · `⚠️ blocked
 
 ## Current State
 
-**Active step:** *(none yet — build has not started)*
+**Active step:** Step 0.5 — Data migration
 
-**Last commit:** *(n/a)*
+**Last commit:** `Step 0: File inventory and disposition`
 
-**Next concrete action:** Begin Step 0 — File inventory and disposition. Open `Full__Repo_XML` in the project files, walk every JS file, and record disposition (port / consolidate / eliminate / data-migrate / archive / defer) in `docs/file_inventory.md`.
+**Next concrete action:** Begin Step 0.5 — Data migration. Run `scripts/migrate_data.py` to copy all `data-migrate` files from `legacy_js/` to their target locations (`data/`, `jobs/inputs/`, `jobs/templates/`, `docs/reference/`). Produce `docs/data_migration_guide.md`.
 
 **In-flight (uncommitted) work:** *(none)*
 
@@ -29,11 +29,11 @@ Status legend: `☐ todo` · `🔄 in-progress` · `✅ done` · `⚠️ blocked
 
 ## Phase 0 — Audit and Preparation
 
-### ☐ Step 0 — File inventory and disposition
-- **Started:** —
-- **Completed:** —
-- **Validation:** `docs/file_inventory.md` exists and lists every file in the JS repo with a disposition tag.
-- **Notes:**
+### ✅ Step 0 — File inventory and disposition
+- **Started:** 2026-05-01
+- **Completed:** 2026-05-01
+- **Validation:** `docs/file_inventory.md` exists and lists all 68 JS files + ~115 non-JS files with disposition tags.
+- **Notes:** `legacy_js/` is the authoritative source (replaces `Full__Repo_XML` project knowledge reference); CLAUDE.md and IMPLEMENTATION_STATUS.md updated to reflect this.
 
 ### ☐ Step 0.5 — Data migration
 - **Started:** —
@@ -200,4 +200,9 @@ Status legend: `☐ todo` · `🔄 in-progress` · `✅ done` · `⚠️ blocked
 - **Next action:** ...
 -->
 
-*(no entries yet)*
+### 2026-05-01
+- **Worked on:** Step 0
+- **Commits:** `Step 0: File inventory and disposition` (1 commit)
+- **Done this session:** Updated CLAUDE.md and IMPLEMENTATION_STATUS.md to replace `Full__Repo_XML` reference with `legacy_js/` directory. Inventoried all 68 JS files (28 root + 40 utils) and ~115 non-JS files (headers, configs, segment lists, lookup data, run input CSVs, temp/output files). Produced `docs/file_inventory.md` with disposition tags cross-referenced against the §3 module design.
+- **Left in flight:** Nothing.
+- **Next action:** Step 0.5 — Data migration. Write `scripts/migrate_data.py` to copy all `data-migrate` files to their target paths; produce `docs/data_migration_guide.md`.

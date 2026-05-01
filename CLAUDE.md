@@ -51,7 +51,7 @@ These are from §1 of the plan and are non-negotiable:
 
 - **Plan (spec):** `docs/Adobe_Downloader_Technical_Plan.md` — read on demand only
 - **Progress (log):** `IMPLEMENTATION_STATUS.md` — read every session
-- **Source repo (legacy JS):** referenced as `Full__Repo_XML` in project knowledge — read when porting a specific module
+- **Source repo (legacy JS):** `legacy_js/` directory in the repo root — read when porting a specific module
 - **Test fixtures:** `tests/fixtures/` (created in Step 0.75)
 - **Migrated reference data:** `data/` (created in Step 0.5)
 
