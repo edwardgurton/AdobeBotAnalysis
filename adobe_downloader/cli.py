@@ -453,6 +453,79 @@ def reset(config: Path, confirm: bool) -> None:
 
 
 @main.command()
+@click.option(
+    "--json-dir",
+    "-j",
+    required=True,
+    type=click.Path(exists=True, file_okay=False, path_type=Path),
+    help="Folder containing downloaded JSON files.",
+)
+@click.option(
+    "--pattern",
+    "-p",
+    default="*.json",
+    show_default=True,
+    help="Glob pattern to select JSON files (e.g. 'Legend_botInvestigation*.json').",
+)
+@click.option(
+    "--concat/--no-concat",
+    default=True,
+    show_default=True,
+    help="After transforming, concatenate all CSVs into a single output file.",
+)
+@click.option(
+    "--concat-output",
+    default=None,
+    type=click.Path(path_type=Path),
+    help="Path for the concatenated CSV (default: <csv_dir>/<pattern_stem>.csv).",
+)
+def transform(
+    json_dir: Path,
+    pattern: str,
+    concat: bool,
+    concat_output: Path | None,
+) -> None:
+    """Transform downloaded JSON files to CSV, then optionally concatenate them."""
+    import glob as _glob
+
+    from adobe_downloader.transforms.base import make_csv_output_path, transform_report
+    from adobe_downloader.transforms.concatenate import concatenate_csvs
+
+    json_files = sorted(json_dir.glob(pattern))
+    if not json_files:
+        click.secho(f"No JSON files matched {pattern!r} in {json_dir}", fg="yellow")
+        sys.exit(1)
+
+    click.echo(f"Transforming {len(json_files)} file(s) from {json_dir}")
+
+    ok = failed = 0
+    for jf in json_files:
+        csv_path = make_csv_output_path(jf)
+        try:
+            transform_report(jf, output_path=csv_path)
+            click.secho(f"  OK   {jf.name} -> {csv_path.name}", fg="green")
+            ok += 1
+        except Exception as exc:
+            click.secho(f"  FAIL {jf.name}: {exc}", fg="red")
+            failed += 1
+
+    click.echo(f"Transformed: {ok} ok, {failed} failed.")
+
+    if concat and ok > 0:
+        first_csv = make_csv_output_path(json_files[0])
+        csv_dir = first_csv.parent
+        csv_pattern = pattern.replace(".json", ".csv")
+        if concat_output is None:
+            stem = pattern.rstrip("*").rstrip("_").replace(".json", "") or "concat"
+            concat_output = csv_dir / f"{stem}_concat.csv"
+        count = concatenate_csvs(csv_dir, csv_pattern, concat_output)
+        if count:
+            click.secho(f"Concatenated {count} CSV(s) -> {concat_output}", fg="green")
+        else:
+            click.secho("No CSVs to concatenate.", fg="yellow")
+
+
+@main.command()
 @click.option("--client", "-c", required=True)
 @click.option("--last", default=10, show_default=True)
 def history(client: str, last: int) -> None:
