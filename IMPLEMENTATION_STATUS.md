@@ -15,11 +15,11 @@ Status legend: `☐ todo` · `🔄 in-progress` · `✅ done` · `⚠️ blocked
 
 ## Current State
 
-**Active step:** Step 8 — Base transform + CSV concatenation
+**Active step:** Step 9 — Specialised transforms
 
-**Last commit:** `Step 7.2: wire StateManager into run command (resume/skip/copy); status, retry, reset CLI subcommands`
+**Last commit:** `Step 8.2: wire transform CLI command — per-file JSON→CSV + optional concatenation`
 
-**Next concrete action:** Begin Step 8. Port the base JSON→CSV transform from `legacy_js/`. Create `adobe_downloader/transforms/base.py` with `transform_report()` — reads a downloaded JSON file, applies column header mapping, and writes a CSV. Then add `adobe_downloader/transforms/concatenate.py` to concatenate per-interval CSVs into a single output file. Wire into a `transform` CLI command or post-download step. Validation: transformed CSVs from Step 6 JSONs match JS output byte-for-byte.
+**Next concrete action:** Begin Step 9. Create specialised transform functions for the 5 non-base report types: `bot_investigation`, `bot_rule_compare`, `bot_validation`, `final_bot_rule_metrics`, `summary_total_only`. Port logic from `legacy_js/utils/jsonTransform*.js`. Validate against fixtures in `tests/fixtures/transforms/`.
 
 **In-flight (uncommitted) work:** *(none)*
 
@@ -101,11 +101,11 @@ Status legend: `☐ todo` · `🔄 in-progress` · `✅ done` · `⚠️ blocked
 
 ## Phase 3 — Transform + Concatenate
 
-### ☐ Step 8 — Base transform + CSV concatenation
-- **Started:** —
-- **Completed:** —
-- **Validation:** Transformed CSVs from Step 6 JSONs match JS output byte-for-byte.
-- **Notes:**
+### ✅ Step 8 — Base transform + CSV concatenation
+- **Started:** 2026-05-02
+- **Completed:** 2026-05-02
+- **Validation:** 99 tests passing (23 new). `transform_report()` matches fixtures byte-for-byte for both dimensional (rows) and summary (summaryData.totals) shapes. `concatenate_csvs()` merges multiple CSVs correctly, respects file patterns, and supports custom header renaming. `transform` CLI command wired.
+- **Notes:** `_parse_filename_parts()` uses longest-match against `data/report_headers/` YAMLs to correctly split `{report_name}` from `{file_name_extra}` (e.g. RSID suffix) in filenames. `make_csv_output_path()` converts `.../JSON/...json` to `.../CSV/...csv`.
 
 ### ☐ Step 9 — Specialised transforms
 - **Started:** —
@@ -248,6 +248,13 @@ Status legend: `☐ todo` · `🔄 in-progress` · `✅ done` · `⚠️ blocked
 - **Done this session:** Created `adobe_downloader/state_manager.py` — SQLite state DB with 3-table schema (jobs/requests/step_state), `StateManager` class with `track_request()` / `mark_complete()` / `mark_failed()` / `is_complete()` / `get_summary()` / `reset_failed()` / `reset_all()` / `full_reset()`. `canonical_request_id` auto-detected by matching `request_body_hash` within a job (enables shared-report file copy). Wired into `run` command: computes `job_id` from config hash, skips completed requests on resume, copies files for canonical-linked requests. Added `--no-resume` flag to `run`. Implemented `status`, `retry` (--failed-only), and `reset` (--confirm) CLI subcommands. 76 tests passing (21 new).
 - **Left in flight:** Nothing.
 - **Next action:** Step 8 — Base transform + CSV concatenation. Port JSON→CSV transform from `legacy_js/`. Wire `transform` command.
+
+### 2026-05-02 (session 9)
+- **Worked on:** Step 8
+- **Commits:** `Step 8.1: transforms/base.py — transform_report() JSON→CSV; transforms/concatenate.py — concatenate_csvs(); 23 passing tests`, `Step 8.2: wire transform CLI command — per-file JSON→CSV + optional concatenation` (2 commits)
+- **Done this session:** Created `adobe_downloader/transforms/__init__.py`, `adobe_downloader/transforms/base.py` — `transform_report()` handles both dimensional (rows) and summary (summaryData.totals) JSON shapes; `_parse_filename_parts()` uses longest-match YAML lookup to separate report_name from file_name_extra (e.g. RSID appended to stem); `make_csv_output_path()` mirrors JSON path under CSV/. Created `adobe_downloader/transforms/concatenate.py` — `concatenate_csvs()`. Wired `transform` CLI command (per-file JSON→CSV + optional concat). 99 tests pass total (23 new).
+- **Left in flight:** Nothing.
+- **Next action:** Step 9 — Specialised transforms for bot_investigation, bot_rule_compare, bot_validation, final_bot_rule_metrics, summary_total_only types.
 
 ### 2026-05-01 (session 3)
 - **Worked on:** Step 2
