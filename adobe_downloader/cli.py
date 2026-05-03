@@ -119,7 +119,7 @@ def run(config: Path, report: str | None, no_resume: bool) -> None:
     """Execute a report_download job: iterate all RSIDs x date intervals x segments."""
     from adobe_downloader.config.loader import load_config
     from adobe_downloader.config.report_definitions import load_report_group, load_report_registry
-    from adobe_downloader.config.schema import ReportDownloadConfig
+    from adobe_downloader.config.schema import ReportDownloadConfig, SegmentCreationJobConfig
     from adobe_downloader.core.api_client import AdobeClient
     from adobe_downloader.core.request_builder import build_request
     from adobe_downloader.flows.report_download import (
@@ -143,9 +143,14 @@ def run(config: Path, report: str | None, no_resume: bool) -> None:
         click.secho(f"Failed to load config: {exc}", fg="red", bold=True)
         sys.exit(1)
 
+    if isinstance(job, SegmentCreationJobConfig):
+        _run_segment_creation_job(job)
+        return
+
     if not isinstance(job, ReportDownloadConfig):
         click.secho(
-            f"'run' currently supports job_type=report_download (got {job.job_type!r})",
+            f"'run' currently supports job_type=report_download or segment_creation "
+            f"(got {job.job_type!r})",
             fg="yellow",
         )
         sys.exit(1)
@@ -313,6 +318,168 @@ def run(config: Path, report: str | None, no_resume: bool) -> None:
     except Exception as exc:
         click.secho(f"Error: {exc}", fg="red", bold=True)
         sys.exit(1)
+
+
+def _run_segment_creation_job(job: object) -> None:
+    """Dispatch helper for segment_creation jobs (called from `run`)."""
+    import asyncio
+
+    from adobe_downloader.config.schema import SegmentCreationJobConfig
+    from adobe_downloader.core.api_client import AdobeClient
+    from adobe_downloader.flows.segment_creation import run_segment_creation
+    from adobe_downloader.utils.rsid_lookup import find_latest_rsid_file
+
+    assert isinstance(job, SegmentCreationJobConfig)
+    sc = job.segment_creation
+    input_csv = Path(sc.input_csv)
+    if not input_csv.exists():
+        click.secho(f"Input CSV not found: {input_csv}", fg="red", bold=True)
+        sys.exit(1)
+
+    # Resolve output paths
+    compare_path = Path(sc.compare_list_path) if sc.compare_list_path else None
+    validate_path = Path(sc.validate_list_path) if sc.validate_list_path else None
+    segment_path = Path(sc.segment_list_path) if sc.segment_list_path else None
+
+    # Lookup files: data/ relative to repo root (discovered from CWD)
+    data_root = Path("data")
+    lookup_base = data_root / "lookups"
+    rsid_dir = data_root / "report_suite_lists"
+    rsid_file = find_latest_rsid_file(rsid_dir)
+    if rsid_file is None:
+        click.secho(f"No RSID lookup file found in {rsid_dir}", fg="red", bold=True)
+        sys.exit(1)
+
+    click.echo(f"Input CSV  : {input_csv}")
+    click.echo(f"RSID file  : {rsid_file.name}")
+    click.echo(f"Share with : {sc.share_with_users or '(none)'}")
+
+    async def _run() -> None:
+        ac = AdobeClient(job.client)
+        try:
+            result = await run_segment_creation(
+                client=ac,
+                input_csv=input_csv,
+                share_with_users=sc.share_with_users,
+                compare_list_path=compare_path,
+                validate_list_path=validate_path,
+                segment_list_path=segment_path,
+                lookup_base=lookup_base,
+                rsid_lookup_file=rsid_file,
+                test_mode_row=sc.test_mode_row,
+            )
+        finally:
+            await ac.close()
+
+        click.secho(
+            f"Done. Created: {result.created_count}, "
+            f"Special: {result.special_count}, "
+            f"Errors: {result.error_count}",
+            fg="green" if result.error_count == 0 else "yellow",
+        )
+        if result.compare_list_file:
+            click.echo(f"  Compare  -> {result.compare_list_file}")
+        if result.validate_list_file:
+            click.echo(f"  Validate -> {result.validate_list_file}")
+        if result.segment_list_file:
+            click.echo(f"  Segments -> {result.segment_list_file}")
+        for err in result.errors:
+            click.secho(f"  ERR {err}", fg="red")
+
+    try:
+        asyncio.run(_run())
+    except Exception as exc:
+        click.secho(f"Error: {exc}", fg="red", bold=True)
+        sys.exit(1)
+
+
+@main.command("get-segment")
+@click.option("--client", "-c", required=True, help="Client name.")
+@click.option("--segment-id", "-s", required=True, help="Adobe segment ID (e.g. s3938_...).")
+@click.option(
+    "--output",
+    "-o",
+    default=None,
+    type=click.Path(path_type=Path),
+    help="Output JSON file (default: data/saved_segments/<segment_id>.json).",
+)
+def get_segment(client: str, segment_id: str, output: Path | None) -> None:
+    """Fetch a segment definition from the Adobe API and save it locally."""
+    import asyncio
+
+    from adobe_downloader.core.api_client import AdobeClient
+    from adobe_downloader.segments.save_segment import save_segment
+
+    if output is None:
+        output = Path("data") / "saved_segments" / f"{segment_id}.json"
+
+    async def _run() -> None:
+        ac = AdobeClient(client)
+        try:
+            data = await save_segment(ac, segment_id, output)
+        finally:
+            await ac.close()
+        click.secho(
+            f"Saved segment {data.get('id', segment_id)} "
+            f"({data.get('name', '')!r}) -> {output}",
+            fg="green",
+        )
+
+    try:
+        asyncio.run(_run())
+    except Exception as exc:
+        click.secho(f"Error: {exc}", fg="red", bold=True)
+        sys.exit(1)
+
+
+@main.command("search-lookup")
+@click.option("--dimension", "-d", required=True, help="Friendly dimension name (e.g. 'BrowserType').")
+@click.option("--value", "-v", required=True, help="String value to look up.")
+def search_lookup(dimension: str, value: str) -> None:
+    """Search a local lookup file for a dimension value's numeric ID."""
+    from adobe_downloader.segments.create_segment import (
+        DIMENSIONS_REQUIRING_LOOKUP,
+        get_dimension_id,
+        load_lookup_file,
+        normalize_monitor_resolution,
+    )
+
+    if dimension not in DIMENSIONS_REQUIRING_LOOKUP:
+        click.secho(
+            f"{dimension!r} does not require a numeric lookup. "
+            f"Dimensions needing lookup: {sorted(DIMENSIONS_REQUIRING_LOOKUP)}",
+            fg="yellow",
+        )
+        sys.exit(0)
+
+    adobe_dim = get_dimension_id(dimension)
+    if not adobe_dim:
+        click.secho(f"Unknown dimension: {dimension!r}", fg="red")
+        sys.exit(1)
+
+    import re as _re
+
+    clean_dim = _re.sub(r"[^a-zA-Z0-9]", "", adobe_dim)
+    lookup_path = Path("data") / "lookups" / clean_dim / "lookup.txt"
+
+    processed = value
+    if "monitor" in dimension.lower() or "resolution" in dimension.lower():
+        processed = normalize_monitor_resolution(value)
+
+    lookup = load_lookup_file(lookup_path)
+    if not lookup:
+        click.secho(f"Lookup file not found or empty: {lookup_path}", fg="yellow")
+        sys.exit(1)
+
+    if processed in lookup:
+        click.secho(f"{processed!r} -> {lookup[processed]}", fg="green")
+    else:
+        click.secho(f"Value {processed!r} not found in {lookup_path}", fg="yellow")
+        close = [k for k in lookup if processed.lower() in k.lower()][:10]
+        if close:
+            click.echo("Similar entries:")
+            for k in close:
+                click.echo(f"  {k!r} -> {lookup[k]}")
 
 
 @main.command()
