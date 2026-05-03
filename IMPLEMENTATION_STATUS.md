@@ -15,11 +15,11 @@ Status legend: `☐ todo` · `🔄 in-progress` · `✅ done` · `⚠️ blocked
 
 ## Current State
 
-**Active step:** Step 11 — Lookup generation
+**Active step:** Step 12 — Composite job runner
 
-**Last commit:** `Step 10: segment creation`
+**Last commit:** `Step 11: lookup generation`
 
-**Next concrete action:** Begin Step 11. Implement `flows/lookup_generation.py` and `segments/lookup_generator.py` / `segments/lookup_searcher.py`. The lookup generator downloads all dimension values from a ranked report for a given dimension + RSID (no hardcoded client YAML mutation). Output a `lookup.txt` file in `data/lookups/{clean_dim_id}/lookup.txt` format. Wire `lookup-generation` job type to the `run` command. Validate by generating a lookup file for `BrowserType` and comparing it to the existing `data/lookups/variablesbrowsertype/lookup.txt`.
+**Next concrete action:** Begin Step 12. Implement `flows/composite_job.py` and wire composite job YAML configs. The composite runner executes a sequence of steps (report_download, segment_creation, lookup_generation, transform_concat) where each step's output can be referenced by later steps via `step_output` sources. Validate with a full bot investigation composite job (3 RSIDs × 2 days) that runs end-to-end and resolves inter-step references correctly.
 
 **In-flight (uncommitted) work:** *(none)*
 
@@ -123,11 +123,11 @@ Status legend: `☐ todo` · `🔄 in-progress` · `✅ done` · `⚠️ blocked
 - **Validation:** 35 new tests pass (154 total). `run_segment_creation()` creates single + dual condition segments, handles Compare/Validate/Special rows, writes compare CSV, validate CSV, and segment list JSON. `get-segment` and `search-lookup` CLI commands wired. Live API validation requires running against real credentials with a segment creation list CSV.
 - **Notes:** `segments/create_segment.py` — dimension mapping, predicate builders, lookup file resolver, `resolve_dimension_value()` (raises `LookupError` if value missing from local file). `flows/segment_creation.py` — `run_segment_creation()`, `transform_to_bot_rule_name()`, `transform_to_validate_bot_rule_name()`, `_ensure_max_length()`. `utils/rsid_lookup.py` — `load_rsid_lookup()`, `lookup_rsid()`, `find_latest_rsid_file()`. `segments/dim_to_segments.py` stub raises `NotImplementedError` — fully wired in Step 12. `AdobeClient.create_segment()` and `AdobeClient.share_segment()` were already implemented in Step 2.
 
-### ☐ Step 11 — Lookup generation
-- **Started:** —
-- **Completed:** —
-- **Validation:** Generated lookup file matches the existing JS-generated lookup file.
-- **Notes:**
+### ✅ Step 11 — Lookup generation
+- **Started:** 2026-05-03
+- **Completed:** 2026-05-03
+- **Validation:** 21 new tests pass (175 total). `generate_lookup_file()` downloads dimension values, writes sorted `value|id` pairs with header. `search_lookup_value()` checks local cache first, then iterates RSIDs and updates file incrementally. `run_lookup_generation()` wired to `run` CLI. Live API validation requires running against real credentials for `BrowserType` and comparing to `data/lookups/variablesbrowsertype/lookup.txt`.
+- **Notes:** `segments/lookup_generator.py` — `clean_dim_name()`, `write_lookup_file()`, `merge_into_lookup_file()`, `generate_lookup_file()`. `segments/lookup_searcher.py` — `search_lookup_value()` iterates RSID list, stops early when target found, skips failed RSIDs. `flows/lookup_generation.py` — thin orchestrator. CLI `run` command now dispatches `lookup_generation` job type via `_run_lookup_generation_job()`. `lookup_base` defaults to `data/lookups/` relative to CWD.
 
 ---
 
@@ -269,6 +269,13 @@ Status legend: `☐ todo` · `🔄 in-progress` · `✅ done` · `⚠️ blocked
 - **Done this session:** Created `adobe_downloader/utils/rsid_lookup.py` (RSID name→ID lookup from colon-separated files, auto-discovery of latest file). Created `adobe_downloader/segments/` package: `create_segment.py` (dimension mapping constants, predicate builders, lookup resolver), `share_segment.py`, `save_segment.py`, `dim_to_segments.py` (stub, wired in Step 12). Created `adobe_downloader/flows/segment_creation.py` — `run_segment_creation()` reads CSV, validates rows, creates single/dual condition segments via API, shares, writes compare/validate CSVs and segment list JSON; bot rule name transforms ported from JS. Updated `cli.py`: `run` command dispatches `segment_creation` job type; added `get-segment` and `search-lookup` commands. 35 new tests, 154 total.
 - **Left in flight:** Nothing.
 - **Next action:** Step 11 — Lookup generation. `flows/lookup_generation.py`, `segments/lookup_generator.py`, `segments/lookup_searcher.py`. Wire `lookup_generation` job type.
+
+### 2026-05-03 (session 12)
+- **Worked on:** Step 11
+- **Commits:** `Step 11: lookup generation` (1 commit)
+- **Done this session:** Created `adobe_downloader/segments/lookup_generator.py` — `clean_dim_name()`, `write_lookup_file()`, `merge_into_lookup_file()`, `_rows_to_pairs()`, `generate_lookup_file()`. Created `adobe_downloader/segments/lookup_searcher.py` — `search_lookup_value()` checks local file first, then iterates RSID list, merges new discoveries, stops early when target found. Created `adobe_downloader/flows/lookup_generation.py` — thin orchestrator calling `generate_lookup_file()`. Updated `cli.py`: `run` dispatches `lookup_generation` job type; added `_run_lookup_generation_job()` helper. 21 new tests, 175 total passing.
+- **Left in flight:** Nothing.
+- **Next action:** Step 12 — Composite job runner.
 
 ### 2026-05-01 (session 3)
 - **Worked on:** Step 2
