@@ -147,10 +147,16 @@ def run(config: Path, report: str | None, no_resume: bool) -> None:
         _run_segment_creation_job(job)
         return
 
+    from adobe_downloader.config.schema import LookupGenerationJobConfig
+
+    if isinstance(job, LookupGenerationJobConfig):
+        _run_lookup_generation_job(job)
+        return
+
     if not isinstance(job, ReportDownloadConfig):
         click.secho(
-            f"'run' currently supports job_type=report_download or segment_creation "
-            f"(got {job.job_type!r})",
+            f"'run' currently supports job_type=report_download, segment_creation, "
+            f"or lookup_generation (got {job.job_type!r})",
             fg="yellow",
         )
         sys.exit(1)
@@ -391,6 +397,52 @@ def _run_segment_creation_job(job: object) -> None:
     except Exception as exc:
         click.secho(f"Error: {exc}", fg="red", bold=True)
         sys.exit(1)
+
+
+def _run_lookup_generation_job(job: object) -> None:
+    """Dispatch helper for lookup_generation jobs (called from `run`)."""
+    import asyncio
+
+    from adobe_downloader.config.schema import LookupGenerationJobConfig
+    from adobe_downloader.core.api_client import AdobeClient
+    from adobe_downloader.flows.lookup_generation import run_lookup_generation
+
+    assert isinstance(job, LookupGenerationJobConfig)
+    lg = job.lookup_generation
+
+    if job.date_range is None:
+        click.secho("date_range is required for lookup_generation jobs.", fg="red", bold=True)
+        sys.exit(1)
+
+    data_root = Path("data")
+    lookup_base = data_root / "lookups"
+
+    click.echo(f"Dimension  : {lg.dimension}")
+    click.echo(f"RSID       : {lg.rsid}")
+    click.echo(f"Date range : {job.date_range.from_date} -> {job.date_range.to}")
+    if lg.segments:
+        click.echo(f"Segments   : {lg.segments}")
+
+    async def _run() -> Path:
+        ac = AdobeClient(job.client)
+        try:
+            return await run_lookup_generation(
+                client=ac,
+                client_name=job.client,
+                config=lg,
+                date_range=job.date_range,  # type: ignore[arg-type]
+                lookup_base=lookup_base,
+            )
+        finally:
+            await ac.close()
+
+    try:
+        dest = asyncio.run(_run())
+    except Exception as exc:
+        click.secho(f"Error: {exc}", fg="red", bold=True)
+        sys.exit(1)
+
+    click.secho(f"Lookup file generated: {dest}", fg="green", bold=True)
 
 
 @main.command("get-segment")
