@@ -15,11 +15,11 @@ Status legend: `☐ todo` · `🔄 in-progress` · `✅ done` · `⚠️ blocked
 
 ## Current State
 
-**Active step:** Step 9 — Specialised transforms
+**Active step:** Step 10 — Segment creation
 
-**Last commit:** `Step 8.2: wire transform CLI command — per-file JSON→CSV + optional concatenation`
+**Last commit:** `Step 9: specialized transforms`
 
-**Next concrete action:** Begin Step 9. Create specialised transform functions for the 5 non-base report types: `bot_investigation`, `bot_rule_compare`, `bot_validation`, `final_bot_rule_metrics`, `summary_total_only`. Port logic from `legacy_js/utils/jsonTransform*.js`. Validate against fixtures in `tests/fixtures/transforms/`.
+**Next concrete action:** Begin Step 10. Implement `create_segment()` in `AdobeClient` (calls POST `/segments` API), wire a `create-segment` CLI command or hook into the composite job runner. Validate by creating a test segment via real API and confirming it's listed. Write segment list JSON to `data/segment_lists/`.
 
 **In-flight (uncommitted) work:** *(none)*
 
@@ -107,11 +107,11 @@ Status legend: `☐ todo` · `🔄 in-progress` · `✅ done` · `⚠️ blocked
 - **Validation:** 99 tests passing (23 new). `transform_report()` matches fixtures byte-for-byte for both dimensional (rows) and summary (summaryData.totals) shapes. `concatenate_csvs()` merges multiple CSVs correctly, respects file patterns, and supports custom header renaming. `transform` CLI command wired.
 - **Notes:** `_parse_filename_parts()` uses longest-match against `data/report_headers/` YAMLs to correctly split `{report_name}` from `{file_name_extra}` (e.g. RSID suffix) in filenames. `make_csv_output_path()` converts `.../JSON/...json` to `.../CSV/...csv`.
 
-### ☐ Step 9 — Specialised transforms
-- **Started:** —
-- **Completed:** —
-- **Validation:** All 5 specialised transforms produce byte-for-byte matches against the fixtures captured in Step 0.75.
-- **Notes:**
+### ✅ Step 9 — Specialised transforms
+- **Started:** 2026-05-03
+- **Completed:** 2026-05-03
+- **Validation:** 20 new tests pass (119 total); all 5 specialised transforms produce byte-for-byte matches against fixtures.
+- **Notes:** Created `adobe_downloader/transforms/specialized.py` — `transform_bot_investigation` (delegates to base), `transform_bot_validation` (appends requestName/botRuleName/rsidName from parts[1..3]), `transform_bot_rule_compare` (hardcoded headers, complex filename parse), `transform_final_bot_rule_metrics` (appends botRuleName/rsidName from parts[4]/parts[3] + fromDate/toDate), `transform_summary_total_only` (delegates to base). `transform_report_dispatch()` + `_detect_transform_type()` for auto-routing. Fixed `LegendFinalBotMetricsCurrentIncludeByYear.yaml` and `LegendFinalBotMetricsDevelopmentIncludeByYear.yaml` (were missing botRuleName and rsidName columns); fixed `tests/fixtures/transforms/final_bot_rule_metrics/expected.csv` header accordingly.
 
 ---
 
@@ -255,6 +255,13 @@ Status legend: `☐ todo` · `🔄 in-progress` · `✅ done` · `⚠️ blocked
 - **Done this session:** Created `adobe_downloader/transforms/__init__.py`, `adobe_downloader/transforms/base.py` — `transform_report()` handles both dimensional (rows) and summary (summaryData.totals) JSON shapes; `_parse_filename_parts()` uses longest-match YAML lookup to separate report_name from file_name_extra (e.g. RSID appended to stem); `make_csv_output_path()` mirrors JSON path under CSV/. Created `adobe_downloader/transforms/concatenate.py` — `concatenate_csvs()`. Wired `transform` CLI command (per-file JSON→CSV + optional concat). 99 tests pass total (23 new).
 - **Left in flight:** Nothing.
 - **Next action:** Step 9 — Specialised transforms for bot_investigation, bot_rule_compare, bot_validation, final_bot_rule_metrics, summary_total_only types.
+
+### 2026-05-03 (session 10)
+- **Worked on:** Step 9
+- **Commits:** `Step 9: specialized transforms — bot_investigation, bot_validation, bot_rule_compare, final_bot_rule_metrics, summary_total_only` (1 commit)
+- **Done this session:** Created `adobe_downloader/transforms/specialized.py` with 5 specialised transform functions + `transform_report_dispatch()` auto-router. Fixed `LegendFinalBotMetrics*.yaml` header YAMLs (missing botRuleName/rsidName columns) and corrected `final_bot_rule_metrics/expected.csv` header line. 20 new tests, 119 total passing.
+- **Left in flight:** Nothing.
+- **Next action:** Step 10 — Segment creation. Implement `create_segment()` in `AdobeClient`, wire CLI, validate with real API, write segment list JSON to `data/segment_lists/`.
 
 ### 2026-05-01 (session 3)
 - **Worked on:** Step 2
