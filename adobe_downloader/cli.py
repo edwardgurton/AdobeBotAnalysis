@@ -1,7 +1,6 @@
 """CLI entry point for adobe-downloader."""
 
 import asyncio
-import shutil
 import sys
 from pathlib import Path
 
@@ -116,24 +115,21 @@ def list_users(client: str) -> None:
     help="Ignore existing state and re-download everything.",
 )
 def run(config: Path, report: str | None, no_resume: bool) -> None:
-    """Execute a report_download job: iterate all RSIDs x date intervals x segments."""
+    """Execute a job: report_download, segment_creation, lookup_generation, or composite."""
     from adobe_downloader.config.loader import load_config
     from adobe_downloader.config.report_definitions import load_report_group, load_report_registry
-    from adobe_downloader.config.schema import ReportDownloadConfig, SegmentCreationJobConfig
-    from adobe_downloader.core.api_client import AdobeClient
-    from adobe_downloader.core.request_builder import build_request
-    from adobe_downloader.flows.report_download import (
-        download_report,
-        iterate_dates,
-        iterate_rsids,
-        iterate_segments,
-        make_output_path,
+    from adobe_downloader.config.schema import (
+        CompositeJobConfig,
+        LookupGenerationJobConfig,
+        ReportDownloadConfig,
+        SegmentCreationJobConfig,
     )
+    from adobe_downloader.core.api_client import AdobeClient
+    from adobe_downloader.flows.report_download import iterate_dates, iterate_rsids
     from adobe_downloader.state_manager import (
         StateManager,
         compute_config_hash,
         compute_job_id,
-        compute_request_key,
         state_db_path,
     )
 
@@ -147,16 +143,18 @@ def run(config: Path, report: str | None, no_resume: bool) -> None:
         _run_segment_creation_job(job)
         return
 
-    from adobe_downloader.config.schema import LookupGenerationJobConfig
-
     if isinstance(job, LookupGenerationJobConfig):
         _run_lookup_generation_job(job)
         return
 
+    if isinstance(job, CompositeJobConfig):
+        _run_composite_job(job, config, no_resume)
+        return
+
     if not isinstance(job, ReportDownloadConfig):
         click.secho(
-            f"'run' currently supports job_type=report_download, segment_creation, "
-            f"or lookup_generation (got {job.job_type!r})",
+            f"'run' supports report_download, segment_creation, lookup_generation, "
+            f"or composite (got {job.job_type!r})",
             fg="yellow",
         )
         sys.exit(1)
@@ -230,90 +228,44 @@ def run(config: Path, report: str | None, no_resume: bool) -> None:
     )
 
     async def _run() -> None:
+        from adobe_downloader.flows.report_download import run_report_download
+
         ac = AdobeClient(job.client)
-        total = skipped = copied = failed_count = 0
-        sm.mark_job_started()
         try:
-            for rsid in rsid_list:
-                for date_interval in date_intervals:
-                    for seg_id, seg_ids in iterate_segments(job.segments):
-                        for rd in report_defs:
-                            req_key = compute_request_key(
-                                rsid,
-                                rd.name,
-                                date_interval.from_date,
-                                date_interval.to,
-                                seg_ids,
-                            )
-
-                            # Resume: skip already-completed requests
-                            if not no_resume and sm.is_complete(req_key):
-                                click.secho(
-                                    f"  SKIP {rsid} / {rd.name} (already done)", fg="cyan"
-                                )
-                                skipped += 1
-                                continue
-
-                            req_body = build_request(
-                                report_def=rd,
-                                date_range=date_interval,
-                                rsid=rsid,
-                                segments=seg_ids,
-                            )
-                            out_path = make_output_path(
-                                base_folder=job.output.base_folder,
-                                client=job.client,
-                                report_name=rd.name,
-                                date_range=date_interval,
-                                file_name_extra=job.file_name_extra,
-                                segment_id=seg_id,
-                            )
-
-                            req_id, canonical_id = sm.track_request(req_key, req_body, out_path)
-                            sm.mark_started(req_id)
-
-                            try:
-                                # Shared-report optimisation: copy instead of re-downloading
-                                if canonical_id is not None:
-                                    canonical_path = sm.get_canonical_output_path(canonical_id)
-                                    if canonical_path and canonical_path.exists():
-                                        out_path.parent.mkdir(parents=True, exist_ok=True)
-                                        shutil.copy2(canonical_path, out_path)
-                                        sm.mark_complete(req_id, out_path)
-                                        click.secho(
-                                            f"  COPY {rsid} / {rd.name} -> {out_path.name}",
-                                            fg="blue",
-                                        )
-                                        copied += 1
-                                        continue
-
-                                await download_report(ac, req_body, out_path)
-                                sm.mark_complete(req_id, out_path)
-                                click.secho(
-                                    f"  OK   {rsid} / {rd.name} -> {out_path.name}", fg="green"
-                                )
-                                total += 1
-                            except Exception as exc:
-                                sm.mark_failed(req_id, str(exc))
-                                click.secho(
-                                    f"  FAIL {rsid} / {rd.name}: {exc}", fg="red"
-                                )
-                                failed_count += 1
+            result = await run_report_download(
+                client=ac,
+                client_name=job.client,
+                report_defs=report_defs,
+                rsids=job.rsids,
+                date_range=job.date_range,  # type: ignore[arg-type]
+                interval=job.interval,
+                output_base=job.output.base_folder,
+                sm=sm,
+                segments=job.segments,
+                file_name_extra=job.file_name_extra,
+                no_resume=no_resume,
+                on_progress=lambda status, rsid, name: click.secho(
+                    f"  {status:<4} {rsid} / {name}",
+                    fg={"OK": "green", "COPY": "blue", "SKIP": "cyan", "FAIL": "red"}.get(
+                        status, "white"
+                    ),
+                ),
+            )
         finally:
             await ac.close()
 
-        if failed_count:
-            sm.mark_job_failed(f"{failed_count} request(s) failed")
+        if result.failed:
+            sm.mark_job_failed(f"{result.failed} request(s) failed")
         else:
             sm.mark_job_completed()
 
-        parts = [f"{total} downloaded"]
-        if skipped:
-            parts.append(f"{skipped} skipped")
-        if copied:
-            parts.append(f"{copied} copied")
-        if failed_count:
-            parts.append(f"{failed_count} failed")
+        parts = [f"{result.downloaded} downloaded"]
+        if result.skipped:
+            parts.append(f"{result.skipped} skipped")
+        if result.copied:
+            parts.append(f"{result.copied} copied")
+        if result.failed:
+            parts.append(f"{result.failed} failed")
         click.echo(f"Done. {', '.join(parts)}.")
 
     try:
@@ -324,6 +276,64 @@ def run(config: Path, report: str | None, no_resume: bool) -> None:
     except Exception as exc:
         click.secho(f"Error: {exc}", fg="red", bold=True)
         sys.exit(1)
+
+
+def _run_composite_job(job: object, config: Path, no_resume: bool) -> None:
+    """Dispatch helper for composite jobs (called from `run`)."""
+    from adobe_downloader.config.schema import CompositeJobConfig
+    from adobe_downloader.core.api_client import AdobeClient
+    from adobe_downloader.flows.composite_job import run_composite_job
+    from adobe_downloader.state_manager import (
+        StateManager,
+        compute_config_hash,
+        compute_job_id,
+        state_db_path,
+    )
+
+    assert isinstance(job, CompositeJobConfig)
+
+    if job.output is None:
+        click.secho(
+            "composite jobs require output.base_folder to be set for state DB location.",
+            fg="red",
+            bold=True,
+        )
+        sys.exit(1)
+
+    config_hash = compute_config_hash(config)
+    job_id = compute_job_id(config, config_hash)
+    db_path = state_db_path(job.output.base_folder, job.client, job_id)
+    sm = StateManager(db_path, job_id, config, config_hash)
+
+    click.echo(f"Job ID     : {job_id}")
+    click.echo(f"Steps      : {len(job.steps)}")
+    for s in job.steps:
+        click.echo(f"  {s.id} [{s.step}]")
+
+    def _progress(step_id: str, msg: str) -> None:
+        click.echo(f"  [{step_id}] {msg}")
+
+    async def _run() -> None:
+        ac = AdobeClient(job.client)
+        try:
+            await run_composite_job(
+                job=job,
+                config_path=config,
+                sm=sm,
+                ac=ac,
+                no_resume=no_resume,
+                on_progress=_progress,
+            )
+        finally:
+            await ac.close()
+
+    try:
+        asyncio.run(_run())
+    except Exception as exc:
+        click.secho(f"Error: {exc}", fg="red", bold=True)
+        sys.exit(1)
+
+    click.secho("Composite job completed.", fg="green", bold=True)
 
 
 def _run_segment_creation_job(job: object) -> None:

@@ -1,0 +1,33 @@
+job_type: composite
+client: Legend
+description: >
+  Step 12 validation: composite bot investigation job.
+  3 RSIDs × 2 days — validates that the composite runner executes a
+  report_download step followed by a transform_concat step, resolves
+  inter-step outputs, and supports step-level resume.
+
+output:
+  base_folder: C:/Users/EdwardGurton/Documents/adobe_test_output/
+
+steps:
+  - step: report_download
+    id: download_investigation
+    report_group: bot_investigation
+    rsids:
+      source: list
+      list:
+        - trillioncoverscom
+        - bettingexpertcom
+        - bettingexpertde
+    interval: day
+    date_range:
+      from: "2025-01-01"
+      to: "2025-01-03"
+
+  - step: transform_concat
+    id: transform_investigation
+    depends_on: download_investigation
+    transform:
+      type: bot_investigation
+    concat:
+      enabled: true

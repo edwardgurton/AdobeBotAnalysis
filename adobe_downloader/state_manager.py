@@ -178,24 +178,39 @@ class StateManager:
         request_key: str,
         request_body: dict[str, Any],
         output_path: Path,
+        step_id: str | None = None,
     ) -> tuple[str, str | None]:
         """Register a request before execution.
 
         Returns (request_id, canonical_request_id).
         canonical_request_id is non-None when this is a shared-report copy request.
+        When step_id is given, the request_key is prefixed with it and canonical
+        detection is scoped to the same step.
         """
+        full_key = f"{step_id}|{request_key}" if step_id else request_key
         body_hash = compute_request_body_hash(request_body)
         with self._connect() as conn:
-            # Check for an existing canonical request with the same body hash
-            canonical_row = conn.execute(
-                """
-                SELECT request_id FROM requests
-                WHERE job_id = ? AND request_body_hash = ? AND canonical_request_id IS NULL
-                AND request_key != ?
-                LIMIT 1
-                """,
-                (self._job_id, body_hash, request_key),
-            ).fetchone()
+            # Check for existing canonical request with same body hash, scoped to same step
+            if step_id:
+                canonical_row = conn.execute(
+                    """
+                    SELECT request_id FROM requests
+                    WHERE job_id = ? AND request_body_hash = ? AND canonical_request_id IS NULL
+                    AND request_key LIKE ? AND request_key != ?
+                    LIMIT 1
+                    """,
+                    (self._job_id, body_hash, f"{step_id}|%", full_key),
+                ).fetchone()
+            else:
+                canonical_row = conn.execute(
+                    """
+                    SELECT request_id FROM requests
+                    WHERE job_id = ? AND request_body_hash = ? AND canonical_request_id IS NULL
+                    AND request_key != ?
+                    LIMIT 1
+                    """,
+                    (self._job_id, body_hash, full_key),
+                ).fetchone()
             canonical_id: str | None = canonical_row["request_id"] if canonical_row else None
 
             request_id = str(uuid.uuid4())
@@ -209,7 +224,7 @@ class StateManager:
                 (
                     request_id,
                     self._job_id,
-                    request_key,
+                    full_key,
                     body_hash,
                     _now(),
                     str(output_path),
@@ -219,7 +234,7 @@ class StateManager:
             # If the key already existed (resume), retrieve the existing row
             existing = conn.execute(
                 "SELECT request_id, canonical_request_id FROM requests WHERE job_id = ? AND request_key = ?",
-                (self._job_id, request_key),
+                (self._job_id, full_key),
             ).fetchone()
         return existing["request_id"], existing["canonical_request_id"]
 
@@ -253,12 +268,13 @@ class StateManager:
                 (_now(), error, request_id),
             )
 
-    def is_complete(self, request_key: str) -> bool:
+    def is_complete(self, request_key: str, step_id: str | None = None) -> bool:
         """Return True if this request_key has status=completed for this job."""
+        full_key = f"{step_id}|{request_key}" if step_id else request_key
         with self._connect() as conn:
             row = conn.execute(
                 "SELECT status FROM requests WHERE job_id = ? AND request_key = ?",
-                (self._job_id, request_key),
+                (self._job_id, full_key),
             ).fetchone()
         return row is not None and row["status"] == STATUS_COMPLETED
 
@@ -348,3 +364,59 @@ class StateManager:
             conn.execute("DELETE FROM requests WHERE job_id = ?", (self._job_id,))
             conn.execute("DELETE FROM step_state WHERE job_id = ?", (self._job_id,))
             conn.execute("DELETE FROM jobs WHERE job_id = ?", (self._job_id,))
+
+    # ------------------------------------------------------------------
+    # Step-state methods (composite jobs)
+    # ------------------------------------------------------------------
+
+    def is_step_complete(self, step_id: str) -> bool:
+        """Return True if the named step is marked completed."""
+        with self._connect() as conn:
+            row = conn.execute(
+                "SELECT status FROM step_state WHERE job_id = ? AND step_id = ?",
+                (self._job_id, step_id),
+            ).fetchone()
+        return row is not None and row["status"] == STATUS_COMPLETED
+
+    def get_step_outputs(self, step_id: str) -> dict[str, Any] | None:
+        """Return the serialised outputs dict for a completed step, or None."""
+        with self._connect() as conn:
+            row = conn.execute(
+                "SELECT outputs FROM step_state WHERE job_id = ? AND step_id = ?",
+                (self._job_id, step_id),
+            ).fetchone()
+        if row and row["outputs"]:
+            return json.loads(row["outputs"])
+        return None
+
+    def mark_step_started(self, step_id: str) -> None:
+        with self._connect() as conn:
+            conn.execute(
+                """
+                INSERT OR REPLACE INTO step_state (step_id, job_id, status, started_at)
+                VALUES (?, ?, 'in_progress', ?)
+                """,
+                (step_id, self._job_id, _now()),
+            )
+
+    def mark_step_complete(self, step_id: str, outputs: dict[str, Any]) -> None:
+        with self._connect() as conn:
+            conn.execute(
+                """
+                UPDATE step_state
+                SET status = 'completed', outputs = ?, completed_at = ?
+                WHERE job_id = ? AND step_id = ?
+                """,
+                (json.dumps(outputs, default=str), _now(), self._job_id, step_id),
+            )
+
+    def mark_step_failed(self, step_id: str, error: str) -> None:
+        with self._connect() as conn:
+            conn.execute(
+                """
+                UPDATE step_state
+                SET status = 'failed', completed_at = ?
+                WHERE job_id = ? AND step_id = ?
+                """,
+                (_now(), self._job_id, step_id),
+            )

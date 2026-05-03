@@ -2,7 +2,9 @@
 
 import json
 import logging
-from collections.abc import Iterator
+import shutil
+from collections.abc import Callable, Iterator
+from dataclasses import dataclass, field
 from datetime import date, timedelta
 from pathlib import Path
 from typing import Any
@@ -11,6 +13,17 @@ from adobe_downloader.config.schema import DateRange, RsidSource, SegmentSource
 from adobe_downloader.core.api_client import AdobeClient
 
 _log = logging.getLogger(__name__)
+
+
+@dataclass
+class ReportDownloadResult:
+    job_id: str
+    json_folder: Path
+    downloaded: int = 0
+    skipped: int = 0
+    copied: int = 0
+    failed: int = 0
+    errors: list[str] = field(default_factory=list)
 
 
 # ---------------------------------------------------------------------------
@@ -140,3 +153,103 @@ async def download_report(
     row_count = len(data.get("rows", []))
     _log.info("Saved %d rows -> %s", row_count, output_path)
     return data
+
+
+async def run_report_download(
+    client: AdobeClient,
+    client_name: str,
+    report_defs: list[Any],
+    rsids: RsidSource,
+    date_range: DateRange,
+    interval: str,
+    output_base: str | Path,
+    sm: Any,  # StateManager — avoid circular import
+    segments: SegmentSource | None = None,
+    file_name_extra: str | None = None,
+    no_resume: bool = False,
+    step_id: str | None = None,
+    on_progress: Callable[[str, str, str], None] | None = None,
+) -> ReportDownloadResult:
+    """Execute the full RSIDs x date_intervals x segments x report_defs download loop.
+
+    Returns a ReportDownloadResult with counts and the json_folder path.
+    When step_id is supplied, request keys are namespaced to that step (composite jobs).
+    on_progress(status, rsid, report_name) is called after each request.
+    """
+    from adobe_downloader.core.request_builder import build_request
+    from adobe_downloader.state_manager import compute_request_key
+
+    date_intervals = list(iterate_dates(date_range, interval))
+    rsid_list = list(iterate_rsids(rsids))
+    json_folder = Path(output_base) / client_name / "JSON"
+
+    result = ReportDownloadResult(job_id=sm.job_id, json_folder=json_folder)
+
+    for rsid in rsid_list:
+        for date_interval in date_intervals:
+            for seg_id, seg_ids in iterate_segments(segments):
+                for rd in report_defs:
+                    req_key = compute_request_key(
+                        rsid,
+                        rd.name,
+                        date_interval.from_date,
+                        date_interval.to,
+                        seg_ids,
+                    )
+
+                    if not no_resume and sm.is_complete(req_key, step_id=step_id):
+                        _log.debug("SKIP %s / %s (already done)", rsid, rd.name)
+                        result.skipped += 1
+                        if on_progress:
+                            on_progress("SKIP", rsid, rd.name)
+                        continue
+
+                    req_body = build_request(
+                        report_def=rd,
+                        date_range=date_interval,
+                        rsid=rsid,
+                        segments=seg_ids,
+                    )
+                    out_path = make_output_path(
+                        base_folder=output_base,
+                        client=client_name,
+                        report_name=rd.name,
+                        date_range=date_interval,
+                        file_name_extra=file_name_extra,
+                        segment_id=seg_id,
+                    )
+
+                    req_id, canonical_id = sm.track_request(
+                        req_key, req_body, out_path, step_id=step_id
+                    )
+                    sm.mark_started(req_id)
+
+                    try:
+                        if canonical_id is not None:
+                            canonical_path = sm.get_canonical_output_path(canonical_id)
+                            if canonical_path and canonical_path.exists():
+                                out_path.parent.mkdir(parents=True, exist_ok=True)
+                                shutil.copy2(canonical_path, out_path)
+                                sm.mark_complete(req_id, out_path)
+                                _log.info("COPY %s / %s -> %s", rsid, rd.name, out_path.name)
+                                result.copied += 1
+                                if on_progress:
+                                    on_progress("COPY", rsid, rd.name)
+                                continue
+
+                        await download_report(client, req_body, out_path)
+                        sm.mark_complete(req_id, out_path)
+                        _log.info("OK   %s / %s -> %s", rsid, rd.name, out_path.name)
+                        result.downloaded += 1
+                        if on_progress:
+                            on_progress("OK", rsid, rd.name)
+
+                    except Exception as exc:
+                        sm.mark_failed(req_id, str(exc))
+                        _log.error("FAIL %s / %s: %s", rsid, rd.name, exc)
+                        result.failed += 1
+                        result.errors.append(f"{rsid}/{rd.name}: {exc}")
+                        if on_progress:
+                            on_progress("FAIL", rsid, rd.name)
+
+    return result
