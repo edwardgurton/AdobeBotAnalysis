@@ -1,2 +1,2 @@
-id,variablesdaterangeyear,unique_visitors,visits,fileName,fromDate,toDate
+id,variablesdaterangeyear,unique_visitors,visits,fileName,botRuleName,rsidName,fromDate,toDate
 1989283898,2025,1250000,2800000,Legend_LegendFinalBotMetricsCurrentIncludeByYear_FinalBotMetrics_trillioncoverscom_Apr25ValidatedList_2025-12-01_2026-01-01,Apr25ValidatedList,trillioncoverscom,2025-12-01,2026-01-01
