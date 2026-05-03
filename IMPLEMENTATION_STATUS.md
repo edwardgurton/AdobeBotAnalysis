@@ -15,11 +15,11 @@ Status legend: `☐ todo` · `🔄 in-progress` · `✅ done` · `⚠️ blocked
 
 ## Current State
 
-**Active step:** Step 10 — Segment creation
+**Active step:** Step 11 — Lookup generation
 
-**Last commit:** `Step 9: specialized transforms`
+**Last commit:** `Step 10: segment creation`
 
-**Next concrete action:** Begin Step 10. Implement `create_segment()` in `AdobeClient` (calls POST `/segments` API), wire a `create-segment` CLI command or hook into the composite job runner. Validate by creating a test segment via real API and confirming it's listed. Write segment list JSON to `data/segment_lists/`.
+**Next concrete action:** Begin Step 11. Implement `flows/lookup_generation.py` and `segments/lookup_generator.py` / `segments/lookup_searcher.py`. The lookup generator downloads all dimension values from a ranked report for a given dimension + RSID (no hardcoded client YAML mutation). Output a `lookup.txt` file in `data/lookups/{clean_dim_id}/lookup.txt` format. Wire `lookup-generation` job type to the `run` command. Validate by generating a lookup file for `BrowserType` and comparing it to the existing `data/lookups/variablesbrowsertype/lookup.txt`.
 
 **In-flight (uncommitted) work:** *(none)*
 
@@ -117,11 +117,11 @@ Status legend: `☐ todo` · `🔄 in-progress` · `✅ done` · `⚠️ blocked
 
 ## Phase 4 — Segments + Lookups
 
-### ☐ Step 10 — Segment creation
-- **Started:** —
-- **Completed:** —
-- **Validation:** Test segment created and verifiable via API. Segment list JSON written to `data/segment_lists/` and consumable as input by a downstream download job.
-- **Notes:**
+### ✅ Step 10 — Segment creation
+- **Started:** 2026-05-03
+- **Completed:** 2026-05-03
+- **Validation:** 35 new tests pass (154 total). `run_segment_creation()` creates single + dual condition segments, handles Compare/Validate/Special rows, writes compare CSV, validate CSV, and segment list JSON. `get-segment` and `search-lookup` CLI commands wired. Live API validation requires running against real credentials with a segment creation list CSV.
+- **Notes:** `segments/create_segment.py` — dimension mapping, predicate builders, lookup file resolver, `resolve_dimension_value()` (raises `LookupError` if value missing from local file). `flows/segment_creation.py` — `run_segment_creation()`, `transform_to_bot_rule_name()`, `transform_to_validate_bot_rule_name()`, `_ensure_max_length()`. `utils/rsid_lookup.py` — `load_rsid_lookup()`, `lookup_rsid()`, `find_latest_rsid_file()`. `segments/dim_to_segments.py` stub raises `NotImplementedError` — fully wired in Step 12. `AdobeClient.create_segment()` and `AdobeClient.share_segment()` were already implemented in Step 2.
 
 ### ☐ Step 11 — Lookup generation
 - **Started:** —
@@ -262,6 +262,13 @@ Status legend: `☐ todo` · `🔄 in-progress` · `✅ done` · `⚠️ blocked
 - **Done this session:** Created `adobe_downloader/transforms/specialized.py` with 5 specialised transform functions + `transform_report_dispatch()` auto-router. Fixed `LegendFinalBotMetrics*.yaml` header YAMLs (missing botRuleName/rsidName columns) and corrected `final_bot_rule_metrics/expected.csv` header line. 20 new tests, 119 total passing.
 - **Left in flight:** Nothing.
 - **Next action:** Step 10 — Segment creation. Implement `create_segment()` in `AdobeClient`, wire CLI, validate with real API, write segment list JSON to `data/segment_lists/`.
+
+### 2026-05-03 (session 11)
+- **Worked on:** Step 10
+- **Commits:** `Step 10: segment creation` (1 commit)
+- **Done this session:** Created `adobe_downloader/utils/rsid_lookup.py` (RSID name→ID lookup from colon-separated files, auto-discovery of latest file). Created `adobe_downloader/segments/` package: `create_segment.py` (dimension mapping constants, predicate builders, lookup resolver), `share_segment.py`, `save_segment.py`, `dim_to_segments.py` (stub, wired in Step 12). Created `adobe_downloader/flows/segment_creation.py` — `run_segment_creation()` reads CSV, validates rows, creates single/dual condition segments via API, shares, writes compare/validate CSVs and segment list JSON; bot rule name transforms ported from JS. Updated `cli.py`: `run` command dispatches `segment_creation` job type; added `get-segment` and `search-lookup` commands. 35 new tests, 154 total.
+- **Left in flight:** Nothing.
+- **Next action:** Step 11 — Lookup generation. `flows/lookup_generation.py`, `segments/lookup_generator.py`, `segments/lookup_searcher.py`. Wire `lookup_generation` job type.
 
 ### 2026-05-01 (session 3)
 - **Worked on:** Step 2
