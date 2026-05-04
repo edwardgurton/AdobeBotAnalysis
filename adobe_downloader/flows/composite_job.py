@@ -134,6 +134,8 @@ async def _dispatch_step(
         return await _run_dim_to_segments_step(step, job, step_outputs, ac)
     if step_type == "bot_rule_compare":
         return await _run_bot_rule_compare_step(step, job, step_outputs, sm, ac, no_resume)
+    if step_type == "final_bot_metrics":
+        return await _run_final_bot_metrics_step(step, job, step_outputs, sm, ac, no_resume)
     if step_type == "generate_country_matrix":
         raise NotImplementedError(
             "generate_country_matrix step type is not yet implemented"
@@ -551,6 +553,87 @@ async def _run_bot_rule_compare_step(
         "downloaded": result.downloaded,
         "skipped": result.skipped,
         "copied": result.copied,
+    }
+
+
+async def _run_final_bot_metrics_step(
+    step: CompositeStep,
+    job: CompositeJobConfig,
+    step_outputs: dict[str, dict[str, Any]],
+    sm: Any,
+    ac: Any,
+    no_resume: bool,
+) -> dict[str, Any]:
+    from adobe_downloader.flows.final_bot_metrics import run_final_bot_metrics
+    from adobe_downloader.utils.rsid_lookup import find_latest_rsid_file
+
+    extra = step.extra_fields()
+
+    date_range = _coerce_date_range(extra.get("date_range") or job.date_range)
+    if date_range is None:
+        raise ValueError(f"Step {step.id!r}: date_range is required for final_bot_metrics")
+
+    output_base = _resolve_output_base(extra, job)
+    interval: str = extra.get("interval", "full")
+    job_name: str = extra.get("job_name", step.id)
+
+    rsids_raw = extra.get("rsids")
+    if rsids_raw is None:
+        raise ValueError(f"Step {step.id!r}: rsids is required for final_bot_metrics")
+    rsids = RsidSource.model_validate(rsids_raw)
+
+    # Resolve segment list file (literal path or step_output reference)
+    seg_file_raw: str | None = extra.get("segment_list_file")
+    if seg_file_raw is None:
+        seg_src = extra.get("segment_list")
+        if seg_src and seg_src.get("source") == "step_output":
+            dep_id = seg_src["step_id"]
+            key = seg_src.get("output_key", "segment_list_file")
+            if dep_id not in step_outputs:
+                raise ValueError(
+                    f"Step {step.id!r}: segment_list references step {dep_id!r} "
+                    "which has not completed"
+                )
+            seg_file_raw = step_outputs[dep_id][key]
+        else:
+            raise ValueError(f"Step {step.id!r}: segment_list_file is required for final_bot_metrics")
+    segment_list_file = Path(seg_file_raw)
+
+    rsid_lookup_raw: str | None = extra.get("rsid_lookup_file")
+    if rsid_lookup_raw:
+        rsid_lookup_file = Path(rsid_lookup_raw)
+    else:
+        data_root = Path("data")
+        rsid_lookup_file = find_latest_rsid_file(data_root / "report_suite_lists")
+        if rsid_lookup_file is None:
+            raise FileNotFoundError("No RSID lookup file found in data/report_suite_lists")
+
+    result = await run_final_bot_metrics(
+        client=ac,
+        client_name=job.client,
+        rsids=rsids,
+        rsid_lookup_file=rsid_lookup_file,
+        segment_list_file=segment_list_file,
+        job_name=job_name,
+        date_range=date_range,
+        interval=interval,
+        output_base=output_base,
+        sm=sm,
+        no_resume=no_resume,
+        step_id=step.id,
+    )
+
+    if result.failed:
+        raise RuntimeError(
+            f"Step {step.id!r}: {result.failed} download(s) failed — "
+            + "; ".join(result.errors[:3])
+        )
+
+    return {
+        "job_id": result.job_id,
+        "json_folder": str(result.json_folder),
+        "downloaded": result.downloaded,
+        "skipped": result.skipped,
     }
 
 

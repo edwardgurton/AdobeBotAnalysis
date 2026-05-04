@@ -245,6 +245,7 @@ class CompositeStep(BaseModel):
         "generate_country_matrix",
         "lookup_generation",
         "bot_rule_compare",
+        "final_bot_metrics",
     ]
     id: str
     depends_on: str | None = None

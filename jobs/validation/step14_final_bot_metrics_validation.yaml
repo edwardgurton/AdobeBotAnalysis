@@ -1,0 +1,30 @@
+job_type: composite
+client: Legend
+description: "Step 14 validation: final bot metrics — 3 RSIDs x segment list"
+
+date_range:
+  from: "2025-01-01"
+  to: "2025-12-31"
+
+output:
+  base_folder: "/Users/edwardgurton/Documents/Work/Adobe Downloads"
+
+steps:
+  - step: final_bot_metrics
+    id: download_final
+    job_name: FinalBotRuleMetrics-Step14
+    rsids:
+      source: list
+      list:
+        - trillioncoverscom
+        - trimoneyprod
+        - trihybridsportsbookreviewcom
+    segment_list_file: data/segment_lists/Legend/Apr25ValidatedList.json
+    interval: full
+
+  - step: transform_concat
+    id: transform
+    depends_on: download_final
+    transform:
+      type: final_bot_metrics
+      concat: true
