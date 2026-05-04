@@ -132,9 +132,11 @@ async def _dispatch_step(
         return await _run_lookup_generation_step(step, job, step_outputs, ac)
     if step_type == "dim_to_segments":
         return await _run_dim_to_segments_step(step, job, step_outputs, ac)
+    if step_type == "bot_rule_compare":
+        return await _run_bot_rule_compare_step(step, job, step_outputs, sm, ac, no_resume)
     if step_type == "generate_country_matrix":
         raise NotImplementedError(
-            "generate_country_matrix step type is not yet implemented (Step 13+)"
+            "generate_country_matrix step type is not yet implemented"
         )
     raise ValueError(f"Unknown step type: {step_type!r}")
 
@@ -450,6 +452,106 @@ async def _run_dim_to_segments_step(
     )
 
     return {"segment_list_file": str(result.segment_list_file)}
+
+
+async def _run_bot_rule_compare_step(
+    step: CompositeStep,
+    job: CompositeJobConfig,
+    step_outputs: dict[str, dict[str, Any]],
+    sm: Any,
+    ac: Any,
+    no_resume: bool,
+) -> dict[str, Any]:
+    from adobe_downloader.flows.bot_rule_compare import BotRule, parse_bot_rule_csv, run_bot_rule_compare
+    from adobe_downloader.utils.rsid_lookup import find_latest_rsid_file
+
+    extra = step.extra_fields()
+
+    date_range = _coerce_date_range(extra.get("date_range") or job.date_range)
+    if date_range is None:
+        raise ValueError(f"Step {step.id!r}: date_range is required for bot_rule_compare")
+
+    output_base = _resolve_output_base(extra, job)
+    comparison_round: float = float(extra.get("comparison_round", 1.0))
+
+    # --- Resolve RSID clean names ---
+    rsids_raw = extra.get("rsids")
+    if rsids_raw is None:
+        raise ValueError(f"Step {step.id!r}: rsids is required for bot_rule_compare")
+    rsids = RsidSource.model_validate(rsids_raw)
+
+    from adobe_downloader.flows.report_download import iterate_rsids
+    rsid_clean_names = list(iterate_rsids(rsids))
+
+    # --- Resolve RSID lookup file ---
+    rsid_lookup_raw: str | None = extra.get("rsid_lookup_file")
+    if rsid_lookup_raw:
+        rsid_lookup_file = Path(rsid_lookup_raw)
+    else:
+        data_root = Path("data")
+        rsid_lookup_file = find_latest_rsid_file(data_root / "report_suite_lists")
+        if rsid_lookup_file is None:
+            raise FileNotFoundError("No RSID lookup file found in data/report_suite_lists")
+
+    # --- Resolve bot rules ---
+    bot_rules_raw = extra.get("bot_rules") or {}
+    bot_rules_source: str = bot_rules_raw.get("source", "file")
+
+    if bot_rules_source == "file":
+        rules_file = Path(bot_rules_raw["file"])
+        bot_rules = parse_bot_rule_csv(rules_file)
+    elif bot_rules_source == "step_output":
+        dep_step_id = bot_rules_raw["step_id"]
+        output_key = bot_rules_raw["output_key"]
+        if dep_step_id not in step_outputs:
+            raise ValueError(
+                f"Step {step.id!r}: bot_rules.step_output references {dep_step_id!r} "
+                "which has not yet produced outputs"
+            )
+        rules_file = Path(step_outputs[dep_step_id][output_key])
+        bot_rules = parse_bot_rule_csv(rules_file)
+    elif bot_rules_source == "inline":
+        from adobe_downloader.flows.bot_rule_compare import BotRule, DIMENSION_MAPPING
+        raw_rules: list[dict[str, Any]] = bot_rules_raw.get("rules", [])
+        bot_rules = []
+        for r in raw_rules:
+            short = r.get("report_to_skip", "")
+            full = DIMENSION_MAPPING.get(short, short if short.startswith("botInvestigation") else f"botInvestigationMetricsBy{short}")
+            bot_rules.append(BotRule(
+                segment_id=r["segment_id"],
+                segment_name=r["segment_name"],
+                report_to_skip=full,
+            ))
+    else:
+        raise ValueError(f"Step {step.id!r}: unknown bot_rules.source {bot_rules_source!r}")
+
+    result = await run_bot_rule_compare(
+        client=ac,
+        client_name=job.client,
+        rsid_clean_names=rsid_clean_names,
+        rsid_lookup_file=rsid_lookup_file,
+        bot_rules=bot_rules,
+        date_range=date_range,
+        comparison_round=comparison_round,
+        output_base=output_base,
+        sm=sm,
+        no_resume=no_resume,
+        step_id=step.id,
+    )
+
+    if result.failed:
+        raise RuntimeError(
+            f"Step {step.id!r}: {result.failed} download(s) failed — "
+            + "; ".join(result.errors[:3])
+        )
+
+    return {
+        "job_id": result.job_id,
+        "json_folder": str(result.json_folder),
+        "downloaded": result.downloaded,
+        "skipped": result.skipped,
+        "copied": result.copied,
+    }
 
 
 # ---------------------------------------------------------------------------

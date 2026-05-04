@@ -1,0 +1,32 @@
+job_type: composite
+client: Legend
+description: "Step 13 validation: bot rule comparison — 2 RSIDs × 1 rule"
+
+date_range:
+  from: "2025-01-01"
+  to: "2025-03-31"
+
+output:
+  base_folder: "C:/Users/EdwardGurton/Documents/adobe_test_output"
+
+steps:
+  - step: bot_rule_compare
+    id: compare
+    rsids:
+      source: list
+      list:
+        - Coverscom
+        - Cardschatcom
+    # rsid_lookup_file: omitted — auto-resolved from data/report_suite_lists/
+    bot_rules:
+      source: inline
+      rules:
+        - segment_id: "REPLACE_WITH_REAL_SEGMENT_ID"
+          segment_name: "Test-Rule"
+          report_to_skip: "Domain"
+    comparison_round: 1.0
+
+  - step: validate_output
+    id: validate
+    depends_on: compare
+    config_ref: compare

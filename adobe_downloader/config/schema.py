@@ -244,6 +244,7 @@ class CompositeStep(BaseModel):
         "dim_to_segments",
         "generate_country_matrix",
         "lookup_generation",
+        "bot_rule_compare",
     ]
     id: str
     depends_on: str | None = None
