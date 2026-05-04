@@ -15,11 +15,11 @@ Status legend: `☐ todo` · `🔄 in-progress` · `✅ done` · `⚠️ blocked
 
 ## Current State
 
-**Active step:** Step 13 — Bot rule comparison flow
+**Active step:** Step 14 — Final bot metrics flow
 
-**Last commit:** `Step 12: composite job runner`
+**Last commit:** `Step 13: bot rule comparison flow`
 
-**Next concrete action:** Begin Step 13. Implement `flows/bot_rule_compare.py` — the bot rule comparison workflow that downloads AllTraffic reports + per-rule reports, uses the AllTraffic shared-report canonical optimisation (one download copied N times), and produces the compare-format CSV outputs. Validate with 2 RSIDs × 1 rule end-to-end.
+**Next concrete action:** Begin Step 14. Implement `flows/final_bot_metrics.py` — the final bot metrics download orchestrator (3 RSIDs × 1 segment list). Validate with 3 RSIDs × 1 segment list end-to-end.
 
 **In-flight (uncommitted) work:** *(none)*
 
@@ -139,11 +139,11 @@ Status legend: `☐ todo` · `🔄 in-progress` · `✅ done` · `⚠️ blocked
 - **Validation:** 29 new tests pass (204 total). Validation config `jobs/validation/step12_composite_validation.yaml` defines a 3 RSIDs × 2-day bot investigation composite for live validation. Live end-to-end run requires real credentials.
 - **Notes:** `flows/composite_job.py` — `run_composite_job()` executes steps sequentially, resolves `step_output` segment references, honours `depends_on`, resumes from DB (`is_step_complete` / `get_step_outputs`). `StateManager` gained 5 step_state methods + `step_id` scoping on `track_request`/`is_complete` (canonical detection scoped per-step). Download loop extracted from `cli.py` into `flows/report_download.py` as `run_report_download()` (callable from both CLI and composite runner). `cli.py` `run` command now dispatches `composite` job type via `_run_composite_job()`. Step types implemented: `report_download`, `transform_concat`, `segment_creation`, `validate_output`, `lookup_generation`, `dim_to_segments`. `generate_country_matrix` raises `NotImplementedError` (Step 13+).
 
-### ☐ Step 13 — Bot rule comparison flow
-- **Started:** —
-- **Completed:** —
-- **Validation:** 2 RSIDs × 1 rule run completes; segment files and AllTraffic file-copy outputs verified against expected.
-- **Notes:**
+### ✅ Step 13 — Bot rule comparison flow
+- **Started:** 2026-05-03
+- **Completed:** 2026-05-03
+- **Validation:** 22 new tests pass (226 total). Schema, CSV parsing, canonical AllTraffic dedup, report_to_skip logic, resume, failure recording all verified. Live 2 RSIDs × 1 rule validation requires running `jobs/validation/step13_compare_validation.yaml` against real credentials.
+- **Notes:** `flows/bot_rule_compare.py` — `BotRule` dataclass, `parse_bot_rule_csv()` (DimSegmentId/botRuleName/reportToIgnore with DIMENSION_MAPPING), `run_bot_rule_compare()`, `_download_variant()`. `report_definitions/bot_rule_compare.yaml` — 10 dimension reports, no default segments. Key insight: request key includes output filename so AllTraffic files for different rules (same body, different investigation names) each get a DB row, enabling canonical body-hash dedup to trigger for rule 2+. `CompositeStep.step` Literal extended with `bot_rule_compare`; `_run_bot_rule_compare_step()` wired into composite runner (supports file/step_output/inline bot_rules sources; auto-discovers rsid_lookup_file from data/report_suite_lists/ if not specified).
 
 ### ☐ Step 14 — Final bot metrics flow
 - **Started:** —
@@ -283,6 +283,13 @@ Status legend: `☐ todo` · `🔄 in-progress` · `✅ done` · `⚠️ blocked
 - **Done this session:** Created `adobe_downloader/flows/composite_job.py` — `run_composite_job()` dispatches steps sequentially, resolves `step_output` segment references, honours `depends_on`, and supports step-level resume via DB. Added `is_step_complete`, `get_step_outputs`, `mark_step_started`, `mark_step_complete`, `mark_step_failed` to `StateManager`. Extended `track_request` and `is_complete` with `step_id` parameter to namespace request keys per step (canonical detection scoped to same step). Extracted the inner download loop from `cli.py` into `flows/report_download.py` as `run_report_download()` returning `ReportDownloadResult`; `cli.py run` now calls this function. Added `_run_composite_job()` dispatch helper to `cli.py`. Created `jobs/validation/step12_composite_validation.yaml` (3 RSIDs × 2 days). 29 new tests, 204 total passing.
 - **Left in flight:** Nothing.
 - **Next action:** Step 13 — Bot rule comparison flow (`flows/bot_rule_compare.py`). AllTraffic shared-report canonical optimisation, 2 RSIDs × 1 rule.
+
+### 2026-05-03 (session 14)
+- **Worked on:** Step 13
+- **Commits:** `Step 13: bot rule comparison flow` (1 commit)
+- **Done this session:** Created `report_definitions/bot_rule_compare.yaml` (10 dimensions from JS `allReportTypes`, no default segments). Created `adobe_downloader/flows/bot_rule_compare.py` — `BotRule` dataclass, `DIMENSION_MAPPING` (short dim name → full report name), `parse_bot_rule_csv()` (DimSegmentId/botRuleName/reportToIgnore columns, BOM handling, unknown-name fallback), `run_bot_rule_compare()`, `_download_variant()`. Key design decision: request key incorporates output filename so each AllTraffic file (different investigation name per rule) gets its own DB row, making the canonical body-hash dedup trigger correctly for rules 2+. Added `bot_rule_compare` to `CompositeStep.step` Literal in `schema.py`. Added `_run_bot_rule_compare_step()` to composite runner supporting file/step_output/inline bot_rules sources and auto-discovery of rsid_lookup_file. Created `jobs/validation/step13_compare_validation.yaml`. 22 new tests, 226 total passing.
+- **Left in flight:** Nothing.
+- **Next action:** Step 14 — Final bot metrics flow (`flows/final_bot_metrics.py`). 3 RSIDs × 1 segment list.
 
 ### 2026-05-01 (session 3)
 - **Worked on:** Step 2
