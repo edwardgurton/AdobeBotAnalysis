@@ -15,11 +15,11 @@ Status legend: `☐ todo` · `🔄 in-progress` · `✅ done` · `⚠️ blocked
 
 ## Current State
 
-**Active step:** Step 18 — Report suite updater
+**Active step:** Step 19 — End-to-end validation
 
-**Last commit:** `Step 17: validation flow`
+**Last commit:** `Step 18: report suite updater`
 
-**Next concrete action:** Begin Step 18. Implement `adobe-downloader update-rsids` command: fetch all report suites from the Adobe API, filter by visit threshold (investigation/validation), write RSID list files. Implement `flows/rsid_update.py` and `rsid_update` job type dispatch.
+**Next concrete action:** Begin Step 19. Run full end-to-end validation pipelines against real Adobe data: bot investigation, bot validation, cube report, and RSID-updater→investigation→validate→transform chain. Compare all outputs to JS production runs.
 
 **In-flight (uncommitted) work:** *(none)*
 
@@ -173,11 +173,11 @@ Status legend: `☐ todo` · `🔄 in-progress` · `✅ done` · `⚠️ blocked
 - **Validation:** 20 new tests pass (310 total). `enumerate_expected_paths()`, `check_output_files()`, `run_validate_output()` all verified. `_run_validate_output_step` now properly enumerates expected files from referenced step config, supports retry. `validate-output` CLI wired. Live validation (kill-and-restart) requires real credentials.
 - **Notes:** `flows/validation.py` — `enumerate_expected_paths()` (mirrors report_download iteration), `check_output_files()` (present/missing partition), `run_validate_output()` (CLI orchestrator with dry_run + retry). `StateManager` gained `reset_incomplete_for_step(step_id)` and `reset_completed_for_path(output_path)`. Note: RSID is NOT in the output filename so multiple RSIDs for the same report/date produce duplicate path entries — `check_output_files` naturally deduplicates by checking file existence.
 
-### ☐ Step 18 — Report suite updater
-- **Started:** —
-- **Completed:** —
-- **Validation:** Generated RSID lists match (or are an explainable superset/subset of) the current JS-generated RSID lists.
-- **Notes:**
+### ✅ Step 18 — Report suite updater
+- **Started:** 2026-05-05
+- **Completed:** 2026-05-05
+- **Validation:** 29 new tests pass (339 total). `clean_suite_name()`, `load_exclusion_list()`, `_archive_file()`, `_write_clean_name_list()`, `_write_suite_pairs_file()`, `run_rsid_update()` all verified. `update-rsids` and `list-rsids` CLI commands implemented. `rsid_update` composite step wired. Live validation requires running `jobs/validation/step18_rsid_update_validation.yaml` against real credentials and comparing output to current JS-generated RSID lists.
+- **Notes:** `flows/rsid_update.py` — `run_rsid_update()` fetches report suites from API, filters virtual (`vrs_` prefix), generates clean names (strip spaces/dots/`-Production`), calls `get_report()` in-memory for `toplineMetricsForRsidValidation` per RSID, reads `summaryData.totals[1]` for visits, filters by thresholds and exclusion list, archives old files to `archive/` subdir, writes `botInvestigationMinThresholdVisits.txt` and `botValidationRsidList.txt`. Also writes dated `legendReportSuites{YYYYMMDD}.txt` pairs file when `suite_pairs_dir` provided. `_run_rsid_update_step` added to composite runner. `RsidUpdateJobConfig` gained `date_range` field.
 
 ### ☐ Step 19 — End-to-end validation
 - **Started:** —
@@ -311,6 +311,13 @@ Status legend: `☐ todo` · `🔄 in-progress` · `✅ done` · `⚠️ blocked
 - **Done this session:** Created `adobe_downloader/utils/test_mode.py` — `apply_rsid_limit()`, `apply_date_limit()`, `apply_segment_limit()`, `apply_all_limits()`. Added `test_limits: TestLimits | None = None` parameter to `run_report_download`, `run_bot_rule_compare`, `run_final_bot_metrics`; each function caps its iteration lists when limits provided. Updated `flows/composite_job.py` to pass `job.test_limits if job.test_mode else None` to all three flows. Added `--test` CLI flag to `run` command; flag ORs with `job.test_mode` and displays a yellow banner with cap values. 17 new tests, 290 total passing.
 - **Left in flight:** Nothing.
 - **Next action:** Step 17 — Validation flow. Implement `validate-output` command: enumerate expected output files, detect missing/empty, optionally re-download.
+
+### 2026-05-05 (session 19)
+- **Worked on:** Step 18
+- **Commits:** `Step 18: report suite updater` (1 commit)
+- **Done this session:** Created `adobe_downloader/flows/rsid_update.py` — `clean_suite_name()` (mirrors JS: strip spaces/dots/`-Production`), `load_exclusion_list()`, `_archive_file()`, `_write_clean_name_list()`, `_write_suite_pairs_file()`, `_fetch_visits()` (calls `get_report()` in-memory for `toplineMetricsForRsidValidation`, reads `summaryData.totals[1]`), `run_rsid_update()` (main orchestrator). Added `date_range: DateRange | None` to `RsidUpdateJobConfig`. Implemented `update-rsids` CLI (with `--output-base`, `--suite-pairs-dir`, `--exclusion-file` options), `list-rsids` CLI. Added `_run_rsid_update_job()` helper and wired `RsidUpdateJobConfig` in `run` command. Added `_run_rsid_update_step()` to composite runner. Created `jobs/validation/step18_rsid_update_validation.yaml`. 29 new tests, 339 total passing.
+- **Left in flight:** Nothing.
+- **Next action:** Step 19 — End-to-end validation. Run all pipelines against real Adobe data and compare to JS production outputs.
 
 ### 2026-05-05 (session 18)
 - **Worked on:** Step 17
