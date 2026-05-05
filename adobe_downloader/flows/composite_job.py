@@ -512,10 +512,14 @@ async def _run_dim_to_segments_step(
     segment_list_path = Path(output_base) / job.client / "segments" / f"{step.id}_segments.json"
     segment_list_path.parent.mkdir(parents=True, exist_ok=True)
 
+    if job.date_range is None:
+        raise ValueError("dim_to_segments step requires a date_range on the composite job")
+
     result = await dim_to_segments(
         client=ac,
         dimension=d2s_raw["dimension"],
         rsid=d2s_raw["rsid"],
+        date_range=job.date_range,
         output_path=segment_list_path,
         additional_segments=d2s_raw.get("additional_segments"),
         num_pairs=d2s_raw.get("num_pairs", 1),
