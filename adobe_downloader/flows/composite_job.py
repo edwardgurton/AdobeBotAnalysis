@@ -201,6 +201,7 @@ async def _run_report_download_step(
         file_name_extra=file_name_extra,
         no_resume=no_resume,
         step_id=step.id,
+        test_limits=job.test_limits if job.test_mode else None,
         on_progress=_progress,
     )
 
@@ -539,6 +540,7 @@ async def _run_bot_rule_compare_step(
         sm=sm,
         no_resume=no_resume,
         step_id=step.id,
+        test_limits=job.test_limits if job.test_mode else None,
     )
 
     if result.failed:
@@ -621,6 +623,7 @@ async def _run_final_bot_metrics_step(
         sm=sm,
         no_resume=no_resume,
         step_id=step.id,
+        test_limits=job.test_limits if job.test_mode else None,
     )
 
     if result.failed:

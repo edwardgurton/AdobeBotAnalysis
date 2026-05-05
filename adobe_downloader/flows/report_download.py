@@ -9,7 +9,7 @@ from datetime import date, timedelta
 from pathlib import Path
 from typing import Any
 
-from adobe_downloader.config.schema import DateRange, RsidSource, SegmentSource
+from adobe_downloader.config.schema import DateRange, RsidSource, SegmentSource, TestLimits
 from adobe_downloader.core.api_client import AdobeClient
 
 _log = logging.getLogger(__name__)
@@ -168,12 +168,14 @@ async def run_report_download(
     file_name_extra: str | None = None,
     no_resume: bool = False,
     step_id: str | None = None,
+    test_limits: TestLimits | None = None,
     on_progress: Callable[[str, str, str], None] | None = None,
 ) -> ReportDownloadResult:
     """Execute the full RSIDs x date_intervals x segments x report_defs download loop.
 
     Returns a ReportDownloadResult with counts and the json_folder path.
     When step_id is supplied, request keys are namespaced to that step (composite jobs).
+    When test_limits is supplied, each dimension is capped before iteration begins.
     on_progress(status, rsid, report_name) is called after each request.
     """
     from adobe_downloader.core.request_builder import build_request
@@ -181,13 +183,22 @@ async def run_report_download(
 
     date_intervals = list(iterate_dates(date_range, interval))
     rsid_list = list(iterate_rsids(rsids))
+    all_segments = list(iterate_segments(segments))
+
+    if test_limits is not None:
+        from adobe_downloader.utils.test_mode import apply_all_limits
+
+        rsid_list, date_intervals, all_segments = apply_all_limits(
+            rsid_list, date_intervals, all_segments, test_limits
+        )
+
     json_folder = Path(output_base) / client_name / "JSON"
 
     result = ReportDownloadResult(job_id=sm.job_id, json_folder=json_folder)
 
     for rsid in rsid_list:
         for date_interval in date_intervals:
-            for seg_id, seg_ids in iterate_segments(segments):
+            for seg_id, seg_ids in all_segments:
                 for rd in report_defs:
                     req_key = compute_request_key(
                         rsid,

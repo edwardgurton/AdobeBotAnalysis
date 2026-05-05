@@ -16,7 +16,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from adobe_downloader.config.schema import DateRange, RsidSource
+from adobe_downloader.config.schema import DateRange, RsidSource, TestLimits
 from adobe_downloader.core.api_client import AdobeClient
 from adobe_downloader.flows.report_download import download_report, make_output_path
 
@@ -94,6 +94,7 @@ async def run_final_bot_metrics(
     sm: Any,
     no_resume: bool = False,
     step_id: str | None = None,
+    test_limits: TestLimits | None = None,
 ) -> FinalBotMetricsResult:
     """Download final bot metrics for all RSIDs.
 
@@ -114,11 +115,20 @@ async def run_final_bot_metrics(
     report_defs = load_report_group("final_bot_metrics")
     segments = load_segment_list_with_names(segment_list_file)
     date_intervals = list(iterate_dates(date_range, interval))
+    rsid_list = list(iterate_rsids(rsids))
+
+    if test_limits is not None:
+        from adobe_downloader.utils.test_mode import apply_all_limits
+
+        rsid_list, date_intervals, segments = apply_all_limits(
+            rsid_list, date_intervals, segments, test_limits
+        )
+
     json_folder = Path(output_base) / client_name / "JSON"
 
     result = FinalBotMetricsResult(job_id=sm.job_id, json_folder=json_folder)
 
-    for clean_name in iterate_rsids(rsids):
+    for clean_name in rsid_list:
         rsid = rsid_map.get(clean_name)
         if rsid is None:
             _log.warning("No RSID found for clean name %r — skipping", clean_name)

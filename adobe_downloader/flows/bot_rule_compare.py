@@ -14,7 +14,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from adobe_downloader.config.schema import DateRange
+from adobe_downloader.config.schema import DateRange, TestLimits
 from adobe_downloader.core.api_client import AdobeClient
 from adobe_downloader.flows.report_download import download_report, make_output_path
 
@@ -128,6 +128,7 @@ async def run_bot_rule_compare(
     sm: Any,
     no_resume: bool = False,
     step_id: str | None = None,
+    test_limits: TestLimits | None = None,
 ) -> BotRuleCompareResult:
     """Download Segment + AllTraffic comparison files for each RSID × bot rule.
 
@@ -144,6 +145,11 @@ async def run_bot_rule_compare(
     rsid_map = load_rsid_lookup(rsid_lookup_file)
     report_defs = load_report_group("bot_rule_compare")
     json_folder = Path(output_base) / client_name / "JSON"
+
+    if test_limits is not None:
+        from adobe_downloader.utils.test_mode import apply_rsid_limit
+
+        rsid_clean_names = apply_rsid_limit(rsid_clean_names, test_limits)
 
     result = BotRuleCompareResult(job_id=sm.job_id, json_folder=json_folder)
 

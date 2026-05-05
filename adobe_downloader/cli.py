@@ -114,7 +114,14 @@ def list_users(client: str) -> None:
     default=False,
     help="Ignore existing state and re-download everything.",
 )
-def run(config: Path, report: str | None, no_resume: bool) -> None:
+@click.option(
+    "--test",
+    "test_mode",
+    is_flag=True,
+    default=False,
+    help="Run in test mode: cap RSIDs, date intervals, and segments per test_limits config.",
+)
+def run(config: Path, report: str | None, no_resume: bool, test_mode: bool) -> None:
     """Execute a job: report_download, segment_creation, lookup_generation, or composite."""
     from adobe_downloader.config.loader import load_config
     from adobe_downloader.config.report_definitions import load_report_group, load_report_registry
@@ -148,6 +155,9 @@ def run(config: Path, report: str | None, no_resume: bool) -> None:
         return
 
     if isinstance(job, CompositeJobConfig):
+        # CLI --test flag overrides config; merge into job object
+        if test_mode and not job.test_mode:
+            job = job.model_copy(update={"test_mode": True})
         _run_composite_job(job, config, no_resume)
         return
 
@@ -158,6 +168,9 @@ def run(config: Path, report: str | None, no_resume: bool) -> None:
             fg="yellow",
         )
         sys.exit(1)
+
+    # CLI --test flag overrides config test_mode
+    effective_test_mode = test_mode or job.test_mode
 
     if job.date_range is None:
         click.secho("date_range is required for report_download jobs.", fg="red", bold=True)
@@ -226,6 +239,14 @@ def run(config: Path, report: str | None, no_resume: bool) -> None:
         f"Dates   : {job.date_range.from_date} -> {job.date_range.to} "
         f"({job.interval}, {len(date_intervals)} interval(s))"
     )
+    if effective_test_mode:
+        lim = job.test_limits
+        click.secho(
+            f"TEST MODE: capping to {lim.max_rsids} RSID(s), "
+            f"{lim.max_date_intervals} date interval(s), "
+            f"{lim.max_segments} segment(s).",
+            fg="yellow",
+        )
 
     async def _run() -> None:
         from adobe_downloader.flows.report_download import run_report_download
@@ -244,6 +265,7 @@ def run(config: Path, report: str | None, no_resume: bool) -> None:
                 segments=job.segments,
                 file_name_extra=job.file_name_extra,
                 no_resume=no_resume,
+                test_limits=job.test_limits if effective_test_mode else None,
                 on_progress=lambda status, rsid, name: click.secho(
                     f"  {status:<4} {rsid} / {name}",
                     fg={"OK": "green", "COPY": "blue", "SKIP": "cyan", "FAIL": "red"}.get(
@@ -317,6 +339,14 @@ def _run_composite_job(job: object, config: Path, no_resume: bool) -> None:
     click.echo(f"Steps      : {len(job.steps)}")
     for s in job.steps:
         click.echo(f"  {s.id} [{s.step}]")
+    if job.test_mode:
+        lim = job.test_limits
+        click.secho(
+            f"TEST MODE: capping to {lim.max_rsids} RSID(s), "
+            f"{lim.max_date_intervals} date interval(s), "
+            f"{lim.max_segments} segment(s).",
+            fg="yellow",
+        )
 
     def _progress(step_id: str, msg: str) -> None:
         click.echo(f"  [{step_id}] {msg}")
