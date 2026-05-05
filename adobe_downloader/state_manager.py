@@ -365,6 +365,41 @@ class StateManager:
             conn.execute("DELETE FROM step_state WHERE job_id = ?", (self._job_id,))
             conn.execute("DELETE FROM jobs WHERE job_id = ?", (self._job_id,))
 
+    def reset_incomplete_for_step(self, step_id: str) -> int:
+        """Reset failed/in_progress requests for a step prefix to pending.
+
+        Matches request_keys of the form '{step_id}|*'.
+        """
+        with self._connect() as conn:
+            cur = conn.execute(
+                """
+                UPDATE requests
+                SET status = 'pending', error_message = NULL,
+                    started_at = NULL, completed_at = NULL
+                WHERE job_id = ? AND status IN ('failed', 'in_progress')
+                AND request_key LIKE ?
+                """,
+                (self._job_id, f"{step_id}|%"),
+            )
+        return cur.rowcount
+
+    def reset_completed_for_path(self, output_path: Path) -> bool:
+        """Reset a completed request whose output_path matches back to pending.
+
+        Used to recover from cases where the file was deleted after the DB
+        marked it completed.  Returns True if a row was updated.
+        """
+        with self._connect() as conn:
+            cur = conn.execute(
+                """
+                UPDATE requests
+                SET status = 'pending', completed_at = NULL, output_path = NULL
+                WHERE job_id = ? AND output_path = ? AND status = 'completed'
+                """,
+                (self._job_id, str(output_path)),
+            )
+        return cur.rowcount > 0
+
     # ------------------------------------------------------------------
     # Step-state methods (composite jobs)
     # ------------------------------------------------------------------

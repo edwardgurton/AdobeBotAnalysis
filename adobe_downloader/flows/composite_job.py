@@ -127,7 +127,7 @@ async def _dispatch_step(
     if step_type == "transform_concat":
         return await _run_transform_concat_step(step, job, step_outputs)
     if step_type == "validate_output":
-        return await _run_validate_output_step(step, job, step_outputs)
+        return await _run_validate_output_step(step, job, step_outputs, sm, ac, no_resume)
     if step_type == "lookup_generation":
         return await _run_lookup_generation_step(step, job, step_outputs, ac)
     if step_type == "dim_to_segments":
@@ -359,42 +359,107 @@ async def _run_validate_output_step(
     step: CompositeStep,
     job: CompositeJobConfig,
     step_outputs: dict[str, dict[str, Any]],
+    sm: Any,
+    ac: Any,
+    no_resume: bool,
 ) -> dict[str, Any]:
-    """Check all expected output files from a prior step exist and are non-empty."""
+    """Check all expected output files from a prior report_download step.
+
+    config_ref must name a prior report_download step.  If retry=True and
+    files are missing, the step resets the stale DB rows and re-runs the
+    download.
+    """
+    from adobe_downloader.flows.report_download import run_report_download
+    from adobe_downloader.flows.validation import check_output_files, enumerate_expected_paths
+
     extra = step.extra_fields()
     config_ref: str | None = extra.get("config_ref")
+    retry: bool = extra.get("retry", False)
 
-    if config_ref is None or config_ref not in step_outputs:
+    if config_ref is None:
+        raise ValueError(f"Step {step.id!r}: config_ref is required for validate_output")
+
+    # Locate the referenced step's config in the composite job definition.
+    ref_step = next((s for s in job.steps if s.id == config_ref), None)
+    if ref_step is None:
         raise ValueError(
-            f"Step {step.id!r}: config_ref {config_ref!r} not found in step outputs"
+            f"Step {step.id!r}: config_ref {config_ref!r} does not match any step id"
         )
 
-    ref_outputs = step_outputs[config_ref]
-    json_folder_str = ref_outputs.get("json_folder")
-    if json_folder_str is None:
-        return {"missing_count": 0}
+    ref_extra = ref_step.extra_fields()
 
-    json_folder = Path(json_folder_str)
-    if not json_folder.exists():
-        _log.warning("Step %s: json_folder does not exist: %s", step.id, json_folder)
-        return {"missing_count": -1}
+    # Resolve all parameters needed to enumerate expected paths.
+    date_range = _coerce_date_range(ref_extra.get("date_range") or job.date_range)
+    if date_range is None:
+        raise ValueError(f"Step {step.id!r}: date_range required for validation enumeration")
 
-    missing = [
-        str(f) for f in json_folder.glob("*.json")
-        if f.stat().st_size == 0
-    ]
+    interval: str = ref_extra.get("interval", "full")
+    file_name_extra: str | None = ref_extra.get("file_name_extra")
+    output_base = Path(_resolve_output_base(ref_extra, job))
+
+    rsids_raw = ref_extra.get("rsids")
+    if rsids_raw is None:
+        raise ValueError(f"Step {step.id!r}: rsids required on referenced step {config_ref!r}")
+    rsids = RsidSource.model_validate(rsids_raw)
+
+    segments = _resolve_segments(ref_extra.get("segments"), step_outputs)
+    report_defs = _resolve_report_defs(ref_extra)
+
+    expected = enumerate_expected_paths(
+        client_name=job.client,
+        report_defs=report_defs,
+        rsids=rsids,
+        date_range=date_range,
+        interval=interval,
+        output_base=output_base,
+        segments=segments,
+        file_name_extra=file_name_extra,
+    )
+
+    valid, missing = check_output_files(expected)
     missing_count = len(missing)
 
-    if missing_count:
-        _log.warning("Step %s: %d empty/missing files", step.id, missing_count)
-        for m in missing[:5]:
-            _log.warning("  missing: %s", m)
+    _log.info(
+        "Step %s: %d expected, %d valid, %d missing/empty",
+        step.id, len(expected), len(valid), missing_count,
+    )
+    for p in missing[:5]:
+        _log.warning("  missing: %s", p)
 
-        retry = extra.get("retry", False)
-        if retry:
+    if missing_count and retry:
+        _log.info("Step %s: retry=True — resetting and re-downloading %d file(s)", step.id, missing_count)
+        for p in missing:
+            sm.reset_completed_for_path(p)
+        sm.reset_incomplete_for_step(config_ref)
+
+        def _progress(status: str, rsid: str, name: str) -> None:
+            _log.info("  %s %s / %s", status, rsid, name)
+
+        result = await run_report_download(
+            client=ac,
+            client_name=job.client,
+            report_defs=report_defs,
+            rsids=rsids,
+            date_range=date_range,
+            interval=interval,
+            output_base=output_base,
+            sm=sm,
+            segments=segments,
+            file_name_extra=file_name_extra,
+            no_resume=False,
+            step_id=config_ref,
+            test_limits=job.test_limits if job.test_mode else None,
+            on_progress=_progress,
+        )
+
+        if result.failed:
             raise RuntimeError(
-                f"Step {step.id!r}: {missing_count} output file(s) empty/missing"
+                f"Step {step.id!r}: {result.failed} file(s) still failed after retry — "
+                + "; ".join(result.errors[:3])
             )
+
+        valid, missing = check_output_files(expected)
+        missing_count = len(missing)
 
     return {"missing_count": missing_count}
 

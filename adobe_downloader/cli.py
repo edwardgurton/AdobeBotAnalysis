@@ -953,12 +953,78 @@ def cleanup(
 
 @main.command("validate-output")
 @click.option("--config", "-c", required=True, type=click.Path(exists=True, path_type=Path))
-@click.option("--retry/--no-retry", default=False)
-@click.option("--dry-run/--no-dry-run", default=False)
+@click.option("--retry/--no-retry", default=False, help="Re-download missing/empty files.")
+@click.option("--dry-run/--no-dry-run", default=False, help="Report missing files without re-downloading.")
 def validate_output(config: Path, retry: bool, dry_run: bool) -> None:
-    """Check all expected output files exist. (Requires Step 17.)"""
-    click.secho("Not yet implemented. Requires Step 17 (validation flow).", fg="yellow")
-    sys.exit(1)
+    """Check all expected output files exist and are non-empty."""
+    import asyncio
+
+    from adobe_downloader.config.loader import load_config
+    from adobe_downloader.config.schema import ReportDownloadConfig
+    from adobe_downloader.flows.validation import run_validate_output
+
+    try:
+        job = load_config(config)
+    except Exception as exc:
+        click.secho(f"Failed to load config: {exc}", fg="red", bold=True)
+        sys.exit(1)
+
+    if not isinstance(job, ReportDownloadConfig):
+        click.secho(
+            f"validate-output only supports report_download configs (got {job.job_type!r})",
+            fg="red",
+        )
+        sys.exit(1)
+
+    if job.date_range is None:
+        click.secho("Config has no date_range — cannot enumerate expected files.", fg="red")
+        sys.exit(1)
+
+    ac = None
+    sm = None
+
+    if retry and not dry_run:
+        from adobe_downloader.core.api_client import AdobeClient
+        from adobe_downloader.state_manager import (
+            StateManager,
+            compute_config_hash,
+            compute_job_id,
+            state_db_path,
+        )
+
+        config_hash = compute_config_hash(config)
+        job_id = compute_job_id(config, config_hash)
+        db_path = state_db_path(job.output.base_folder, job.client, job_id)
+        sm = StateManager(db_path, job_id, config, config_hash)
+        ac = AdobeClient.from_client_name(job.client)
+
+    result = asyncio.run(
+        run_validate_output(job, retry=retry, dry_run=dry_run, ac=ac, sm=sm)
+    )
+
+    total = result["total"]
+    valid = result["valid"]
+    missing_count = result["missing_count"]
+
+    click.echo(f"Expected : {total}")
+    click.secho(f"Valid    : {valid}", fg="green" if valid == total else "yellow")
+    click.secho(
+        f"Missing  : {missing_count}",
+        fg="red" if missing_count else "green",
+    )
+
+    if missing_count:
+        for p in result["missing"][:20]:
+            click.echo(f"  {p}")
+        if len(result["missing"]) > 20:
+            click.echo(f"  ... and {len(result['missing']) - 20} more")
+        if dry_run:
+            click.secho("Dry run — pass --retry to re-download.", fg="yellow")
+        elif not retry:
+            click.secho("Pass --retry to re-download missing files.", fg="yellow")
+        sys.exit(1)
+
+    click.secho("All expected output files are present.", fg="green")
 
 
 @main.command("update-rsids")
