@@ -277,6 +277,14 @@ def run(config: Path, report: str | None, no_resume: bool) -> None:
         click.secho(f"Error: {exc}", fg="red", bold=True)
         sys.exit(1)
 
+    _write_job_completion(
+        base_folder=Path(job.output.base_folder),
+        client=job.client,
+        config=config,
+        sm=sm,
+        job_id=job_id,
+    )
+
 
 def _run_composite_job(job: object, config: Path, no_resume: bool) -> None:
     """Dispatch helper for composite jobs (called from `run`)."""
@@ -334,6 +342,52 @@ def _run_composite_job(job: object, config: Path, no_resume: bool) -> None:
         sys.exit(1)
 
     click.secho("Composite job completed.", fg="green", bold=True)
+
+    _write_job_completion(
+        base_folder=Path(job.output.base_folder),
+        client=job.client,
+        config=config,
+        sm=sm,
+        job_id=job_id,
+    )
+
+
+def _write_job_completion(
+    base_folder: Path,
+    client: str,
+    config: Path,
+    sm: object,
+    job_id: str,
+) -> None:
+    """Archive config + append history record after a job finishes (success or failure)."""
+    from datetime import datetime, timezone
+
+    from adobe_downloader.utils.post_process import (
+        archive_config,
+        build_history_record,
+        log_job_history,
+    )
+
+    date_prefix = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    try:
+        archived = archive_config(base_folder, client, config, date_prefix)
+        archived_rel = str(archived.relative_to(base_folder / client))
+    except Exception:
+        archived_rel = ""
+
+    try:
+        summary = sm.get_summary()  # type: ignore[union-attr]
+        output_folder = str(base_folder / client / "CSV")
+        record = build_history_record(
+            job_id=job_id,
+            config_path=config,
+            summary=summary,
+            output_folder=output_folder,
+            archived_config_rel=archived_rel,
+        )
+        log_job_history(base_folder, client, record)
+    except Exception as exc:
+        click.secho(f"Warning: could not write job history: {exc}", fg="yellow")
 
 
 def _run_segment_creation_job(job: object) -> None:
@@ -755,20 +809,116 @@ def transform(
 
 
 @main.command()
-@click.option("--client", "-c", required=True)
-@click.option("--last", default=10, show_default=True)
-def history(client: str, last: int) -> None:
-    """Show recent job history. (Requires Step 15 - post-processing not yet implemented.)"""
-    click.secho("Not yet implemented. Requires Step 15 (post-processing).", fg="yellow")
-    sys.exit(1)
+@click.option("--client", "-c", required=True, help="Client name.")
+@click.option(
+    "--output-base",
+    "-o",
+    default=None,
+    type=click.Path(path_type=Path),
+    help="Base output folder (default: current directory).",
+)
+@click.option("--last", default=10, show_default=True, help="Maximum number of records to show.")
+@click.option("--status", default=None, help="Filter by status (completed|failed|in_progress).")
+@click.option(
+    "--since",
+    default=None,
+    help="Show records started on or after this date (ISO format, e.g. 2025-06-01).",
+)
+def history(
+    client: str,
+    output_base: Path | None,
+    last: int,
+    status: str | None,
+    since: str | None,
+) -> None:
+    """Show recent job history from the job log."""
+    from adobe_downloader.utils.post_process import read_job_history
+
+    base = output_base or Path.cwd()
+    records = read_job_history(base, client, last=last, status=status, since=since)
+    if not records:
+        click.secho("No history records found.", fg="yellow")
+        return
+    for r in records:
+        status_color = {"completed": "green", "failed": "red"}.get(r.get("status", ""), "white")
+        click.secho(
+            f"  {r.get('status', '?'):<12} {r.get('job_id', '?')}",
+            fg=status_color,
+        )
+        click.echo(f"    config   : {r.get('config_path', '-')}")
+        click.echo(f"    started  : {r.get('started_at', '-')}")
+        click.echo(f"    completed: {r.get('completed_at', '-')}")
+        dur = r.get("duration_minutes")
+        click.echo(f"    duration : {dur} min" if dur is not None else "    duration : -")
+        click.echo(
+            f"    requests : {r.get('total_requests', 0)} total, "
+            f"{r.get('completed_requests', 0)} ok, "
+            f"{r.get('failed_requests', 0)} failed"
+        )
+        click.echo(f"    output   : {r.get('output_folder', '-')}")
+        click.echo("")
 
 
 @main.command()
-@click.option("--client", "-c", required=True)
-def cleanup(client: str) -> None:
-    """Remove old processed files. (Requires Step 15.)"""
-    click.secho("Not yet implemented. Requires Step 15 (post-processing).", fg="yellow")
-    sys.exit(1)
+@click.option("--client", "-c", required=True, help="Client name.")
+@click.option(
+    "--output-base",
+    "-o",
+    default=None,
+    type=click.Path(path_type=Path),
+    help="Base output folder (default: current directory).",
+)
+@click.option(
+    "--older-than",
+    "older_than",
+    required=True,
+    help="Delete files older than this (e.g. 30d).",
+)
+@click.option(
+    "--type",
+    "file_type",
+    required=True,
+    type=click.Choice(["processed-json", "logs", "state"], case_sensitive=False),
+    help="Category of files to remove.",
+)
+@click.option("--confirm", is_flag=True, default=False, help="Required to actually delete.")
+def cleanup(
+    client: str,
+    output_base: Path | None,
+    older_than: str,
+    file_type: str,
+    confirm: bool,
+) -> None:
+    """Remove old processed files. Always requires --confirm to delete."""
+    from adobe_downloader.utils.post_process import cleanup_old_files
+
+    # Parse "30d" -> 30
+    older_than = older_than.strip()
+    if older_than.endswith("d"):
+        try:
+            days = int(older_than[:-1])
+        except ValueError:
+            click.secho(f"Invalid --older-than value: {older_than!r}. Use format like '30d'.", fg="red")
+            sys.exit(1)
+    else:
+        try:
+            days = int(older_than)
+        except ValueError:
+            click.secho(f"Invalid --older-than value: {older_than!r}. Use format like '30d'.", fg="red")
+            sys.exit(1)
+
+    base = output_base or Path.cwd()
+
+    if not confirm:
+        click.secho(
+            f"Dry run: would delete {file_type!r} files older than {days} day(s) "
+            f"for client {client!r}. Pass --confirm to actually delete.",
+            fg="yellow",
+        )
+        return
+
+    count = cleanup_old_files(base, client, days, file_type)
+    click.secho(f"Deleted {count} file(s).", fg="green" if count else "yellow")
 
 
 @main.command("validate-output")
