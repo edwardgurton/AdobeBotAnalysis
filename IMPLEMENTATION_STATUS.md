@@ -15,11 +15,11 @@ Status legend: `☐ todo` · `🔄 in-progress` · `✅ done` · `⚠️ blocked
 
 ## Current State
 
-**Active step:** Step 17 — Validation flow
+**Active step:** Step 18 — Report suite updater
 
-**Last commit:** `Step 16: test mode`
+**Last commit:** `Step 17: validation flow`
 
-**Next concrete action:** Begin Step 17. Implement `validate-output` command: given a job config, enumerate all expected output files (JSON or CSV), detect missing/empty files, and optionally re-download them. Wire into the existing `validate-output` CLI stub.
+**Next concrete action:** Begin Step 18. Implement `adobe-downloader update-rsids` command: fetch all report suites from the Adobe API, filter by visit threshold (investigation/validation), write RSID list files. Implement `flows/rsid_update.py` and `rsid_update` job type dispatch.
 
 **In-flight (uncommitted) work:** *(none)*
 
@@ -167,11 +167,11 @@ Status legend: `☐ todo` · `🔄 in-progress` · `✅ done` · `⚠️ blocked
 - **Validation:** 17 new tests pass (290 total). `apply_rsid_limit`, `apply_date_limit`, `apply_segment_limit`, `apply_all_limits` all verified. `run_report_download` correctly caps to 1 RSID / 1 date interval when `test_limits` applied; 0 RSIDs → 0 downloads. Live `--test` flag validation requires running against real credentials.
 - **Notes:** `utils/test_mode.py` — 4 helper functions. `--test` CLI flag on `run` activates test mode (OR with `test_mode: true` in config). Limits wired into `run_report_download`, `run_bot_rule_compare`, `run_final_bot_metrics`, and `composite_job.py` step dispatchers (`report_download`, `bot_rule_compare`, `final_bot_metrics` steps). `TestLimits` schema was already in place from Step 1.
 
-### ☐ Step 17 — Validation flow
-- **Started:** —
-- **Completed:** —
-- **Validation:** Job started and killed; `adobe-downloader validate-output` detects missing files and re-downloads them successfully.
-- **Notes:**
+### ✅ Step 17 — Validation flow
+- **Started:** 2026-05-05
+- **Completed:** 2026-05-05
+- **Validation:** 20 new tests pass (310 total). `enumerate_expected_paths()`, `check_output_files()`, `run_validate_output()` all verified. `_run_validate_output_step` now properly enumerates expected files from referenced step config, supports retry. `validate-output` CLI wired. Live validation (kill-and-restart) requires real credentials.
+- **Notes:** `flows/validation.py` — `enumerate_expected_paths()` (mirrors report_download iteration), `check_output_files()` (present/missing partition), `run_validate_output()` (CLI orchestrator with dry_run + retry). `StateManager` gained `reset_incomplete_for_step(step_id)` and `reset_completed_for_path(output_path)`. Note: RSID is NOT in the output filename so multiple RSIDs for the same report/date produce duplicate path entries — `check_output_files` naturally deduplicates by checking file existence.
 
 ### ☐ Step 18 — Report suite updater
 - **Started:** —
@@ -311,6 +311,13 @@ Status legend: `☐ todo` · `🔄 in-progress` · `✅ done` · `⚠️ blocked
 - **Done this session:** Created `adobe_downloader/utils/test_mode.py` — `apply_rsid_limit()`, `apply_date_limit()`, `apply_segment_limit()`, `apply_all_limits()`. Added `test_limits: TestLimits | None = None` parameter to `run_report_download`, `run_bot_rule_compare`, `run_final_bot_metrics`; each function caps its iteration lists when limits provided. Updated `flows/composite_job.py` to pass `job.test_limits if job.test_mode else None` to all three flows. Added `--test` CLI flag to `run` command; flag ORs with `job.test_mode` and displays a yellow banner with cap values. 17 new tests, 290 total passing.
 - **Left in flight:** Nothing.
 - **Next action:** Step 17 — Validation flow. Implement `validate-output` command: enumerate expected output files, detect missing/empty, optionally re-download.
+
+### 2026-05-05 (session 18)
+- **Worked on:** Step 17
+- **Commits:** `Step 17: validation flow` (1 commit)
+- **Done this session:** Created `adobe_downloader/flows/validation.py` — `enumerate_expected_paths()` (mirrors iteration loop from `run_report_download` to list all expected JSON output paths), `check_output_files()` (partitions into valid/missing-or-empty), `run_validate_output()` (CLI orchestrator: enumerates, checks, optionally resets DB and re-downloads). Added `reset_incomplete_for_step(step_id)` and `reset_completed_for_path(output_path)` to `StateManager`. Updated `_run_validate_output_step` in `composite_job.py` to properly enumerate expected files by looking up the referenced step config, check them, and retry if `retry: true`. Replaced the CLI `validate-output` stub with a full implementation. 20 new tests, 310 total passing.
+- **Left in flight:** Nothing.
+- **Next action:** Step 18 — Report suite updater. `flows/rsid_update.py`, `adobe-downloader update-rsids` CLI command.
 
 ### 2026-05-01 (session 3)
 - **Worked on:** Step 2
