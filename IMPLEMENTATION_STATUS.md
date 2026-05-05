@@ -15,11 +15,11 @@ Status legend: `☐ todo` · `🔄 in-progress` · `✅ done` · `⚠️ blocked
 
 ## Current State
 
-**Active step:** Step 15 — Post-processing + job history
+**Active step:** Step 16 — Test mode
 
-**Last commit:** `Step 14: final bot metrics flow`
+**Last commit:** `Step 15: post-processing + job history`
 
-**Next concrete action:** Begin Step 15. Implement `utils/post_process.py` — JSON move to `_processed/`, CSV zipping, job history logging to `.history/job_history.jsonl`, config archival to `.history/configs/`. Wire `adobe-downloader history` and `adobe-downloader cleanup` CLI commands.
+**Next concrete action:** Begin Step 16. Implement `--test` / `test_limits` block in the job config schema. Wire a `--test` flag on the `run` CLI command that caps downloads per the `test_limits` settings (e.g. max RSIDs, max dates, max segments).
 
 **In-flight (uncommitted) work:** *(none)*
 
@@ -155,11 +155,11 @@ Status legend: `☐ todo` · `🔄 in-progress` · `✅ done` · `⚠️ blocked
 
 ## Phase 6 — Post-processing + Polish
 
-### ☐ Step 15 — Post-processing + job history
-- **Started:** —
-- **Completed:** —
-- **Validation:** After a job completes, JSONs are moved to `_processed/`, individual CSVs are zipped, `.history/job_history.jsonl` has a new line, and `.history/configs/` contains the archived config. `adobe-downloader history` and `adobe-downloader cleanup` work.
-- **Notes:**
+### ✅ Step 15 — Post-processing + job history
+- **Started:** 2026-05-05
+- **Completed:** 2026-05-05
+- **Validation:** 24 new tests pass (273 total). `move_json_to_processed()`, `zip_csv_folder()`, `log_job_history()`, `read_job_history()`, `archive_config()`, `cleanup_old_files()`, `build_history_record()` all verified. `adobe-downloader history` and `adobe-downloader cleanup` CLI commands implemented and wired. Post-processing is called automatically on `run` and composite job completion. Live validation requires running a real job and checking `<base>/<client>/.history/`.
+- **Notes:** `utils/post_process.py` — JSON move to `_processed/` sub-dir, CSV zipping to `zip/`, JSONL history log at `.history/job_history.jsonl`, config archival to `.history/configs/<date>_<name>.yaml`. `_write_job_completion()` helper added to `cli.py`; called after both `run` and `_run_composite_job`. `history` CLI: `--client`, `--output-base`, `--last`, `--status`, `--since`. `cleanup` CLI: `--client`, `--output-base`, `--older-than Nd`, `--type processed-json|logs|state`, `--confirm`.
 
 ### ☐ Step 16 — Test mode
 - **Started:** —
@@ -290,6 +290,13 @@ Status legend: `☐ todo` · `🔄 in-progress` · `✅ done` · `⚠️ blocked
 - **Done this session:** Created `report_definitions/bot_rule_compare.yaml` (10 dimensions from JS `allReportTypes`, no default segments). Created `adobe_downloader/flows/bot_rule_compare.py` — `BotRule` dataclass, `DIMENSION_MAPPING` (short dim name → full report name), `parse_bot_rule_csv()` (DimSegmentId/botRuleName/reportToIgnore columns, BOM handling, unknown-name fallback), `run_bot_rule_compare()`, `_download_variant()`. Key design decision: request key incorporates output filename so each AllTraffic file (different investigation name per rule) gets its own DB row, making the canonical body-hash dedup trigger correctly for rules 2+. Added `bot_rule_compare` to `CompositeStep.step` Literal in `schema.py`. Added `_run_bot_rule_compare_step()` to composite runner supporting file/step_output/inline bot_rules sources and auto-discovery of rsid_lookup_file. Created `jobs/validation/step13_compare_validation.yaml`. 22 new tests, 226 total passing.
 - **Left in flight:** Nothing.
 - **Next action:** Step 14 — Final bot metrics flow (`flows/final_bot_metrics.py`). 3 RSIDs × 1 segment list.
+
+### 2026-05-05 (session 16)
+- **Worked on:** Step 15
+- **Commits:** `Step 15: post-processing + job history` (1 commit)
+- **Done this session:** Created `adobe_downloader/utils/post_process.py` — `move_json_to_processed()` (moves JSON to `_processed/` sub-dir), `zip_csv_folder()` (zips CSVs to ZIP archive), `log_job_history()` (appends JSONL record), `read_job_history()` (reads with optional status/since/last filters), `archive_config()` (copies config to `.history/configs/<date>_<name>`), `cleanup_old_files()` (deletes files older than N days by type), `build_history_record()` (constructs JSONL record from StateManager summary). Added `_write_job_completion()` helper to `cli.py` (archives config + logs history); wired into both `run` and `_run_composite_job` after job finishes. Implemented `history` CLI (`--client`, `--output-base`, `--last`, `--status`, `--since`) and `cleanup` CLI (`--client`, `--output-base`, `--older-than Nd`, `--type`, `--confirm`). 24 new tests, 273 total passing.
+- **Left in flight:** Nothing.
+- **Next action:** Step 16 — Test mode. Add `test_limits` block to job config schema + `--test` flag on `run` CLI that caps RSIDs/dates/segments.
 
 ### 2026-05-04 (session 15)
 - **Worked on:** Step 14
