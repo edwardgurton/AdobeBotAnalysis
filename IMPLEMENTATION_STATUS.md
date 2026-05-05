@@ -15,11 +15,11 @@ Status legend: `☐ todo` · `🔄 in-progress` · `✅ done` · `⚠️ blocked
 
 ## Current State
 
-**Active step:** Step 16 — Test mode
+**Active step:** Step 17 — Validation flow
 
-**Last commit:** `Step 15: post-processing + job history`
+**Last commit:** `Step 16: test mode`
 
-**Next concrete action:** Begin Step 16. Implement `--test` / `test_limits` block in the job config schema. Wire a `--test` flag on the `run` CLI command that caps downloads per the `test_limits` settings (e.g. max RSIDs, max dates, max segments).
+**Next concrete action:** Begin Step 17. Implement `validate-output` command: given a job config, enumerate all expected output files (JSON or CSV), detect missing/empty files, and optionally re-download them. Wire into the existing `validate-output` CLI stub.
 
 **In-flight (uncommitted) work:** *(none)*
 
@@ -161,11 +161,11 @@ Status legend: `☐ todo` · `🔄 in-progress` · `✅ done` · `⚠️ blocked
 - **Validation:** 24 new tests pass (273 total). `move_json_to_processed()`, `zip_csv_folder()`, `log_job_history()`, `read_job_history()`, `archive_config()`, `cleanup_old_files()`, `build_history_record()` all verified. `adobe-downloader history` and `adobe-downloader cleanup` CLI commands implemented and wired. Post-processing is called automatically on `run` and composite job completion. Live validation requires running a real job and checking `<base>/<client>/.history/`.
 - **Notes:** `utils/post_process.py` — JSON move to `_processed/` sub-dir, CSV zipping to `zip/`, JSONL history log at `.history/job_history.jsonl`, config archival to `.history/configs/<date>_<name>.yaml`. `_write_job_completion()` helper added to `cli.py`; called after both `run` and `_run_composite_job`. `history` CLI: `--client`, `--output-base`, `--last`, `--status`, `--since`. `cleanup` CLI: `--client`, `--output-base`, `--older-than Nd`, `--type processed-json|logs|state`, `--confirm`.
 
-### ☐ Step 16 — Test mode
-- **Started:** —
-- **Completed:** —
-- **Validation:** `--test` flag applied to a real job config limits the downloads as defined in `test_limits` block.
-- **Notes:**
+### ✅ Step 16 — Test mode
+- **Started:** 2026-05-05
+- **Completed:** 2026-05-05
+- **Validation:** 17 new tests pass (290 total). `apply_rsid_limit`, `apply_date_limit`, `apply_segment_limit`, `apply_all_limits` all verified. `run_report_download` correctly caps to 1 RSID / 1 date interval when `test_limits` applied; 0 RSIDs → 0 downloads. Live `--test` flag validation requires running against real credentials.
+- **Notes:** `utils/test_mode.py` — 4 helper functions. `--test` CLI flag on `run` activates test mode (OR with `test_mode: true` in config). Limits wired into `run_report_download`, `run_bot_rule_compare`, `run_final_bot_metrics`, and `composite_job.py` step dispatchers (`report_download`, `bot_rule_compare`, `final_bot_metrics` steps). `TestLimits` schema was already in place from Step 1.
 
 ### ☐ Step 17 — Validation flow
 - **Started:** —
@@ -304,6 +304,13 @@ Status legend: `☐ todo` · `🔄 in-progress` · `✅ done` · `⚠️ blocked
 - **Done this session:** Created `adobe_downloader/flows/final_bot_metrics.py` — `SegmentEntry` dataclass, `load_segment_list_with_names()` (parses `PrefixKey=SuffixValue` segment name format, strips whitespace, replaces spaces with hyphens), `run_final_bot_metrics()` orchestrator, `_download_one()` helper. Key insight: Unfiltered report (`_PER_SEGMENT_REPORTS`) iterates RSIDs × segments with segment applied to request body and encoded in `file_name_extra = {job_name}_{clean_name}_{seg_suffix}` for transform compatibility (rsidName=parts[3], botRuleName=parts[4]). Current/Development Include reports download once per RSID (no per-segment iteration); `file_name_extra = {job_name}` only. Added `final_bot_metrics` to `CompositeStep.step` Literal in `schema.py`. Added `_run_final_bot_metrics_step()` to composite_job.py (auto-discovers rsid_lookup_file, supports step_output segment list reference). Created `jobs/validation/step14_final_bot_metrics_validation.yaml`. 23 new tests, 249 total passing.
 - **Left in flight:** Nothing.
 - **Next action:** Step 15 — Post-processing + job history. `utils/post_process.py`, `adobe-downloader history`, `adobe-downloader cleanup`.
+
+### 2026-05-05 (session 17)
+- **Worked on:** Step 16
+- **Commits:** `Step 16: test mode` (1 commit)
+- **Done this session:** Created `adobe_downloader/utils/test_mode.py` — `apply_rsid_limit()`, `apply_date_limit()`, `apply_segment_limit()`, `apply_all_limits()`. Added `test_limits: TestLimits | None = None` parameter to `run_report_download`, `run_bot_rule_compare`, `run_final_bot_metrics`; each function caps its iteration lists when limits provided. Updated `flows/composite_job.py` to pass `job.test_limits if job.test_mode else None` to all three flows. Added `--test` CLI flag to `run` command; flag ORs with `job.test_mode` and displays a yellow banner with cap values. 17 new tests, 290 total passing.
+- **Left in flight:** Nothing.
+- **Next action:** Step 17 — Validation flow. Implement `validate-output` command: enumerate expected output files, detect missing/empty, optionally re-download.
 
 ### 2026-05-01 (session 3)
 - **Worked on:** Step 2
