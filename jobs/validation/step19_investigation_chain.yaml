@@ -27,9 +27,8 @@ steps:
     id: download_investigation
     report_group: bot_investigation
     rsids:
-      source: file
-      file: data/rsid_lists/legend_investigation.txt
-      batch_size: 12
+      source: single
+      single: trillioncoverscom
     segments:
       source: inline
       ids:

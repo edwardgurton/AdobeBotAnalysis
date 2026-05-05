@@ -36,7 +36,9 @@ steps:
       metrics:
         - cm3938_67877f0e25c74e65d1f3f449
         - cm3938_68655d7318c56ac719c11a44
-      csv_headers: [id, region, raw_clickouts_linear_7d, raw_clickouts_participation_7d, fileName, fromDate, toDate]
+        - cm3938_68655dd05c74c471e8de44d0
+        - cm3938_68655e0b18c56ac719c11a47
+      csv_headers: [id, variablesgeoregion, unique_visitors, visits, raw_clickouts_linear_7d, raw_clickouts_participation_7d, unique_visit_clickouts_linear_7d, unique_visit_clickouts_participation_7d, fileName, fromDate, toDate]
     rsids:
       source: single
       single: trillioncoverscom
