@@ -15,15 +15,18 @@ Status legend: `☐ todo` · `🔄 in-progress` · `✅ done` · `⚠️ blocked
 
 ## Current State
 
-**Active step:** Step 19 — End-to-end validation
+**Active step:** Step 19 — End-to-end validation (live runs pending)
 
-**Last commit:** `Step 18: report suite updater`
+**Last commit:** `Step 19: dim_to_segments implementation; end-to-end validation configs; 16 new tests; 355 total passing`
 
-**Next concrete action:** Begin Step 19. Run full end-to-end validation pipelines against real Adobe data: bot investigation, bot validation, cube report, and RSID-updater→investigation→validate→transform chain. Compare all outputs to JS production runs.
+**Next concrete action:** Run validation configs against real Adobe credentials:
+1. `adobe-downloader run -c jobs/validation/step19_cube_validation.yaml` — cube report pipeline (dim_to_segments -> download -> transform)
+2. `adobe-downloader run -c jobs/validation/step19_investigation_chain.yaml` — RSID update -> investigation -> validate -> transform
+3. Compare CSV outputs to JS production runs (check row counts, column names, spot-check values).
 
 **In-flight (uncommitted) work:** *(none)*
 
-**Blockers:** *(none)*
+**Blockers:** Requires real Adobe credentials for live validation.
 
 ---
 
@@ -179,11 +182,11 @@ Status legend: `☐ todo` · `🔄 in-progress` · `✅ done` · `⚠️ blocked
 - **Validation:** 29 new tests pass (339 total). `clean_suite_name()`, `load_exclusion_list()`, `_archive_file()`, `_write_clean_name_list()`, `_write_suite_pairs_file()`, `run_rsid_update()` all verified. `update-rsids` and `list-rsids` CLI commands implemented. `rsid_update` composite step wired. Live validation requires running `jobs/validation/step18_rsid_update_validation.yaml` against real credentials and comparing output to current JS-generated RSID lists.
 - **Notes:** `flows/rsid_update.py` — `run_rsid_update()` fetches report suites from API, filters virtual (`vrs_` prefix), generates clean names (strip spaces/dots/`-Production`), calls `get_report()` in-memory for `toplineMetricsForRsidValidation` per RSID, reads `summaryData.totals[1]` for visits, filters by thresholds and exclusion list, archives old files to `archive/` subdir, writes `botInvestigationMinThresholdVisits.txt` and `botValidationRsidList.txt`. Also writes dated `legendReportSuites{YYYYMMDD}.txt` pairs file when `suite_pairs_dir` provided. `_run_rsid_update_step` added to composite runner. `RsidUpdateJobConfig` gained `date_range` field.
 
-### ☐ Step 19 — End-to-end validation
-- **Started:** —
+### 🔄 Step 19 — End-to-end validation
+- **Started:** 2026-05-05
 - **Completed:** —
 - **Validation:** Full bot investigation, full bot validation, cube report, and RSID-updater→investigation→validate→transform pipelines all run against real Adobe data and produce outputs that match (or are an explainable improvement on) the JS production runs.
-- **Notes:**
+- **Notes:** `dim_to_segments()` fully implemented in `segments/dim_to_segments.py` (was NotImplementedError stub): fetches dimension values via `get_report`, creates one numeric-equality segment per row, formats names mirroring JS (`name.replace(':', '-').replace(' ', '')`), saves segment list JSON. `_run_dim_to_segments_step` in `composite_job.py` updated to pass `job.date_range` (raises ValueError if missing). Two validation configs created: `jobs/validation/step19_cube_validation.yaml` (cube report pipeline) and `jobs/validation/step19_investigation_chain.yaml` (RSID update chain). Live runs against real credentials are pending.
 
 ---
 
@@ -311,6 +314,13 @@ Status legend: `☐ todo` · `🔄 in-progress` · `✅ done` · `⚠️ blocked
 - **Done this session:** Created `adobe_downloader/utils/test_mode.py` — `apply_rsid_limit()`, `apply_date_limit()`, `apply_segment_limit()`, `apply_all_limits()`. Added `test_limits: TestLimits | None = None` parameter to `run_report_download`, `run_bot_rule_compare`, `run_final_bot_metrics`; each function caps its iteration lists when limits provided. Updated `flows/composite_job.py` to pass `job.test_limits if job.test_mode else None` to all three flows. Added `--test` CLI flag to `run` command; flag ORs with `job.test_mode` and displays a yellow banner with cap values. 17 new tests, 290 total passing.
 - **Left in flight:** Nothing.
 - **Next action:** Step 17 — Validation flow. Implement `validate-output` command: enumerate expected output files, detect missing/empty, optionally re-download.
+
+### 2026-05-05 (session 20)
+- **Worked on:** Step 19
+- **Commits:** `Step 19: dim_to_segments implementation; end-to-end validation configs; 16 new tests; 355 total passing` (1 commit)
+- **Done this session:** Implemented `dim_to_segments()` in `segments/dim_to_segments.py` (was NotImplementedError stub). Logic: build a ranked-report request for the target dimension, call `get_report()` to fetch dimension values, extract (value, itemId) pairs from `rows`, create one numeric-equality segment per pair (hits context, `dimension eq itemId`), format names mirroring JS (`replace(':', '-').replace(' ', '')`), save `[{id, name}]` JSON. Updated `_run_dim_to_segments_step` in `composite_job.py` to pass `job.date_range` (raises ValueError if missing). Created `jobs/validation/step19_cube_validation.yaml` (cube report pipeline with test_mode) and `jobs/validation/step19_investigation_chain.yaml` (RSID update chain with test_mode). 16 new tests, 355 total passing.
+- **Left in flight:** Nothing.
+- **Next action:** Run live validation: `adobe-downloader run -c jobs/validation/step19_cube_validation.yaml` and `jobs/validation/step19_investigation_chain.yaml` against real credentials. Compare CSV outputs to JS production runs to complete Step 19.
 
 ### 2026-05-05 (session 19)
 - **Worked on:** Step 18
