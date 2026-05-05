@@ -129,6 +129,7 @@ def run(config: Path, report: str | None, no_resume: bool, test_mode: bool) -> N
         CompositeJobConfig,
         LookupGenerationJobConfig,
         ReportDownloadConfig,
+        RsidUpdateJobConfig,
         SegmentCreationJobConfig,
     )
     from adobe_downloader.core.api_client import AdobeClient
@@ -152,6 +153,10 @@ def run(config: Path, report: str | None, no_resume: bool, test_mode: bool) -> N
 
     if isinstance(job, LookupGenerationJobConfig):
         _run_lookup_generation_job(job)
+        return
+
+    if isinstance(job, RsidUpdateJobConfig):
+        _run_rsid_update_job(job)
         return
 
     if isinstance(job, CompositeJobConfig):
@@ -418,6 +423,64 @@ def _write_job_completion(
         log_job_history(base_folder, client, record)
     except Exception as exc:
         click.secho(f"Warning: could not write job history: {exc}", fg="yellow")
+
+
+def _run_rsid_update_job(job: object) -> None:
+    """Dispatch helper for rsid_update jobs (called from `run`)."""
+    import asyncio
+
+    from adobe_downloader.config.schema import RsidUpdateJobConfig
+    from adobe_downloader.core.api_client import AdobeClient
+    from adobe_downloader.flows.rsid_update import run_rsid_update
+
+    assert isinstance(job, RsidUpdateJobConfig)
+
+    if job.date_range is None:
+        click.secho("date_range is required for rsid_update jobs.", fg="red", bold=True)
+        sys.exit(1)
+
+    data_root = Path("data")
+    exclusion_file = data_root / "rsid_lists" / "excludedRsidCleanNames.txt"
+    suite_pairs_dir = data_root / "report_suite_lists"
+
+    click.echo(f"Investigation threshold : {job.rsid_update.investigation_threshold}")
+    click.echo(f"Validation threshold    : {job.rsid_update.validation_threshold}")
+    click.echo(f"Include virtual         : {job.rsid_update.include_virtual}")
+    click.echo(f"Date range              : {job.date_range.from_date} -> {job.date_range.to}")
+    click.echo(f"Output base             : {job.output.base_folder}")
+
+    def _on_progress(rsid: str, status: str) -> None:
+        fg = {"OK": "green", "FAIL": "red"}.get(status, "white")
+        click.secho(f"  {status:<4} {rsid}", fg=fg)
+
+    async def _run() -> None:
+        ac = AdobeClient(job.client)
+        try:
+            result = await run_rsid_update(
+                client=ac,
+                rsid_update_cfg=job.rsid_update,
+                date_range=job.date_range,  # type: ignore[arg-type]
+                output_base=job.output.base_folder,
+                exclusion_file=exclusion_file if exclusion_file.exists() else None,
+                suite_pairs_dir=suite_pairs_dir,
+                on_progress=_on_progress,
+            )
+        finally:
+            await ac.close()
+
+        click.secho(
+            f"\nDone. {result.total_suites} suites, "
+            f"{result.investigation_count} investigation, "
+            f"{result.validation_count} validation, "
+            f"{result.failed} failed.",
+            fg="green" if result.failed == 0 else "yellow",
+        )
+
+    try:
+        asyncio.run(_run())
+    except Exception as exc:
+        click.secho(f"Error: {exc}", fg="red", bold=True)
+        sys.exit(1)
 
 
 def _run_segment_creation_job(job: object) -> None:
@@ -1028,12 +1091,49 @@ def validate_output(config: Path, retry: bool, dry_run: bool) -> None:
 
 
 @main.command("update-rsids")
-@click.option("--client", "-c", required=True)
-@click.option("--from", "from_date", required=True)
-@click.option("--to", "to_date", required=True)
-@click.option("--investigation-threshold", default=1000, show_default=True)
-@click.option("--validation-threshold", default=1000, show_default=True)
-@click.option("--include-virtual/--no-include-virtual", default=False)
+@click.option("--client", "-c", required=True, help="Client name (matches credentials file).")
+@click.option("--from", "from_date", required=True, help="Start date YYYY-MM-DD.")
+@click.option("--to", "to_date", required=True, help="End date YYYY-MM-DD.")
+@click.option(
+    "--investigation-threshold",
+    default=1000,
+    show_default=True,
+    help="Minimum visits for investigation list.",
+)
+@click.option(
+    "--validation-threshold",
+    default=1000,
+    show_default=True,
+    help="Minimum visits for validation list.",
+)
+@click.option(
+    "--include-virtual/--no-include-virtual",
+    default=False,
+    show_default=True,
+    help="Include virtual report suites (rsid prefix: vrs_).",
+)
+@click.option(
+    "--output-base",
+    "-o",
+    default="data/rsid_lists",
+    show_default=True,
+    type=click.Path(path_type=Path),
+    help="Directory to write botInvestigation/botValidation list files.",
+)
+@click.option(
+    "--suite-pairs-dir",
+    default="data/report_suite_lists",
+    show_default=True,
+    type=click.Path(path_type=Path),
+    help="Directory to write dated rsid:cleanName pairs file (used by downstream lookups).",
+)
+@click.option(
+    "--exclusion-file",
+    default="data/rsid_lists/excludedRsidCleanNames.txt",
+    show_default=True,
+    type=click.Path(path_type=Path),
+    help="Plain-text list of clean names to exclude (one per line).",
+)
 def update_rsids(
     client: str,
     from_date: str,
@@ -1041,7 +1141,115 @@ def update_rsids(
     investigation_threshold: int,
     validation_threshold: int,
     include_virtual: bool,
+    output_base: Path,
+    suite_pairs_dir: Path,
+    exclusion_file: Path,
 ) -> None:
-    """Fetch report suites and generate RSID list files. (Requires Step 18.)"""
-    click.secho("Not yet implemented. Requires Step 18 (RSID updater).", fg="yellow")
-    sys.exit(1)
+    """Fetch report suites, download topline metrics, and generate filtered RSID list files."""
+    import asyncio
+
+    from adobe_downloader.config.schema import DateRange, RsidUpdateConfig
+    from adobe_downloader.core.api_client import AdobeClient
+    from adobe_downloader.flows.rsid_update import run_rsid_update
+
+    try:
+        date_range = DateRange(from_date=from_date, to=to_date)
+    except Exception as exc:
+        click.secho(f"Invalid date range: {exc}", fg="red", bold=True)
+        sys.exit(1)
+
+    rsid_update_cfg = RsidUpdateConfig(
+        investigation_threshold=investigation_threshold,
+        validation_threshold=validation_threshold,
+        include_virtual=include_virtual,
+    )
+
+    click.echo(f"Client               : {client}")
+    click.echo(f"Date range           : {from_date} -> {to_date}")
+    click.echo(f"Investigation thresh : {investigation_threshold} visits")
+    click.echo(f"Validation thresh    : {validation_threshold} visits")
+    click.echo(f"Include virtual      : {include_virtual}")
+    click.echo(f"Output base          : {output_base}")
+
+    def _on_progress(rsid: str, status: str) -> None:
+        fg = {"OK": "green", "FAIL": "red"}.get(status, "white")
+        click.secho(f"  {status:<4} {rsid}", fg=fg)
+
+    async def _run() -> None:
+        ac = AdobeClient(client)
+        try:
+            result = await run_rsid_update(
+                client=ac,
+                rsid_update_cfg=rsid_update_cfg,
+                date_range=date_range,
+                output_base=output_base,
+                exclusion_file=exclusion_file if exclusion_file.exists() else None,
+                suite_pairs_dir=suite_pairs_dir,
+                on_progress=_on_progress,
+            )
+        finally:
+            await ac.close()
+
+        click.secho(
+            f"\nDone. {result.total_suites} suites fetched, "
+            f"{result.failed} failed.",
+            fg="green" if result.failed == 0 else "yellow",
+        )
+        click.echo(f"  Investigation ({investigation_threshold}+ visits): {result.investigation_count}")
+        click.echo(f"  Validation    ({validation_threshold}+ visits): {result.validation_count}")
+        click.secho(f"  -> {result.investigation_list}", fg="cyan")
+        click.secho(f"  -> {result.validation_list}", fg="cyan")
+        if result.suite_pairs_file:
+            click.secho(f"  -> {result.suite_pairs_file}", fg="cyan")
+
+    try:
+        asyncio.run(_run())
+    except FileNotFoundError as exc:
+        click.secho(str(exc), fg="red", bold=True)
+        sys.exit(1)
+    except Exception as exc:
+        click.secho(f"Error: {exc}", fg="red", bold=True)
+        sys.exit(1)
+
+
+@main.command("list-rsids")
+@click.option("--client", "-c", required=True, help="Client name (matches credentials file).")
+@click.option(
+    "--include-virtual/--no-include-virtual",
+    default=False,
+    show_default=True,
+    help="Include virtual report suites (rsid prefix: vrs_).",
+)
+def list_rsids(client: str, include_virtual: bool) -> None:
+    """Fetch and display all report suites for a client."""
+    import asyncio
+
+    from adobe_downloader.core.api_client import AdobeClient
+    from adobe_downloader.flows.rsid_update import clean_suite_name
+
+    async def _run() -> list[dict]:  # type: ignore[type-arg]
+        ac = AdobeClient(client)
+        try:
+            raw = await ac.get_report_suites()
+        finally:
+            await ac.close()
+        return raw.get("content", [])
+
+    try:
+        suites = asyncio.run(_run())
+    except FileNotFoundError as exc:
+        click.secho(str(exc), fg="red", bold=True)
+        sys.exit(1)
+    except Exception as exc:
+        click.secho(f"Error: {exc}", fg="red", bold=True)
+        sys.exit(1)
+
+    if not include_virtual:
+        suites = [s for s in suites if not s["rsid"].startswith("vrs_")]
+
+    click.echo(f"Found {len(suites)} report suite(s):")
+    for s in suites:
+        name = s.get("name", "")
+        rsid = s.get("rsid", "")
+        clean = clean_suite_name(name)
+        click.echo(f"  {rsid:<40} {name}  ({clean})")

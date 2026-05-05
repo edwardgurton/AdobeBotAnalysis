@@ -228,6 +228,7 @@ class RsidUpdateJobConfig(BaseModel):
     description: str = ""
     rsid_update: RsidUpdateConfig = Field(default_factory=RsidUpdateConfig)
     output: OutputConfig
+    date_range: DateRange | None = None
 
 
 class CompositeStep(BaseModel):

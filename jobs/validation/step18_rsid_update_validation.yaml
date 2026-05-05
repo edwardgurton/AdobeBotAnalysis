@@ -1,0 +1,15 @@
+job_type: rsid_update
+client: Legend
+description: "Step 18 validation: fetch report suites and generate RSID lists"
+
+rsid_update:
+  investigation_threshold: 1000
+  validation_threshold: 1000
+  include_virtual: false
+
+date_range:
+  from_date: "2024-10-01"
+  to: "2024-12-31"
+
+output:
+  base_folder: data/rsid_lists/

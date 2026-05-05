@@ -136,6 +136,8 @@ async def _dispatch_step(
         return await _run_bot_rule_compare_step(step, job, step_outputs, sm, ac, no_resume)
     if step_type == "final_bot_metrics":
         return await _run_final_bot_metrics_step(step, job, step_outputs, sm, ac, no_resume)
+    if step_type == "rsid_update":
+        return await _run_rsid_update_step(step, job, step_outputs, ac)
     if step_type == "generate_country_matrix":
         raise NotImplementedError(
             "generate_country_matrix step type is not yet implemented"
@@ -755,6 +757,43 @@ def _resolve_report_defs(extra: dict[str, Any]) -> list[Any]:
     if "report" in extra:
         return [ReportDefinitionInline.model_validate(extra["report"])]
     raise ValueError("Step requires one of report_group, report_ref, or report")
+
+
+async def _run_rsid_update_step(
+    step: CompositeStep,
+    job: CompositeJobConfig,
+    step_outputs: dict[str, dict[str, Any]],
+    ac: Any,
+) -> dict[str, Any]:
+    from adobe_downloader.config.schema import RsidUpdateConfig
+    from adobe_downloader.flows.rsid_update import run_rsid_update
+
+    extra = step.extra_fields()
+    ru_raw = extra.get("rsid_update") or {}
+
+    date_range = _coerce_date_range(extra.get("date_range") or job.date_range)
+    if date_range is None:
+        raise ValueError(f"Step {step.id!r}: date_range is required for rsid_update")
+
+    rsid_update_cfg = RsidUpdateConfig.model_validate(ru_raw) if ru_raw else RsidUpdateConfig()
+    output_base = extra.get("output", {}).get("base_folder", "data/rsid_lists")
+    suite_pairs_dir = extra.get("suite_pairs_dir", "data/report_suite_lists")
+    exclusion_file_raw = extra.get("exclusion_file", "data/rsid_lists/excludedRsidCleanNames.txt")
+    exclusion_file = Path(exclusion_file_raw) if exclusion_file_raw else None
+
+    result = await run_rsid_update(
+        client=ac,
+        rsid_update_cfg=rsid_update_cfg,
+        date_range=date_range,
+        output_base=output_base,
+        exclusion_file=exclusion_file if exclusion_file and exclusion_file.exists() else None,
+        suite_pairs_dir=suite_pairs_dir,
+    )
+
+    return {
+        "investigation_list": str(result.investigation_list),
+        "validation_list": str(result.validation_list),
+    }
 
 
 def _resolve_output_base(extra: dict[str, Any], job: CompositeJobConfig) -> str:
