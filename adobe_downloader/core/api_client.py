@@ -130,6 +130,42 @@ class AdobeClient:
                 },
             )
 
+    async def get_dimensions(self, rsid: str) -> list[dict[str, Any]]:
+        """Fetch all dimensions for an RSID, including classification dimensions."""
+        resp = await self._get(
+            f"{_API_BASE}/{self._company_id}/dimensions",
+            params={"rsid": rsid, "expansion": "support"},
+        )
+        return resp.json()  # type: ignore[return-value]
+
+    async def get_metrics(self, rsid: str) -> list[dict[str, Any]]:
+        """Fetch all metrics (standard + events) for an RSID."""
+        resp = await self._get(
+            f"{_API_BASE}/{self._company_id}/metrics",
+            params={"rsid": rsid},
+        )
+        return resp.json()  # type: ignore[return-value]
+
+    async def get_calculated_metrics(self) -> list[dict[str, Any]]:
+        """Fetch all calculated metrics for the company (not RSID-scoped)."""
+        items: list[dict[str, Any]] = []
+        limit = 1000
+        page = 0
+        while True:
+            resp = await self._get(
+                f"{_API_BASE}/{self._company_id}/calculatedmetrics",
+                params={"limit": limit, "page": page},
+            )
+            data = resp.json()
+            if isinstance(data, list):
+                items.extend(data)
+                break
+            items.extend(data.get("content", []))
+            if data.get("lastPage", True):
+                break
+            page += 1
+        return items
+
     async def close(self) -> None:
         """Close the underlying HTTP client."""
         await self._http.aclose()

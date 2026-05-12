@@ -1,0 +1,1530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>adobe-downloader — User Manual</title>
+<style>
+  /* ------------------------------------------------------------------ */
+  /* Reset / Base                                                         */
+  /* ------------------------------------------------------------------ */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --accent:    #1a5fa8;
+    --accent-lt: #e8f1fb;
+    --nav-bg:    #1e2330;
+    --nav-text:  #c8d0e0;
+    --nav-hover: #2e3650;
+    --nav-active:#1a5fa8;
+    --header-bg: #1a5fa8;
+    --header-ht: 48px;
+    --nav-w:     230px;
+    --border:    #d0d7e2;
+    --row-alt:   #f5f7fa;
+    --code-bg:   #f3f5f8;
+    --code-border:#d8dde6;
+    --text:      #1a1f2e;
+    --text-muted:#5a6580;
+    --success:   #0f7a3a;
+    --warn:      #8a5c00;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 15px;
+    line-height: 1.65;
+    color: var(--text);
+    background: #fff;
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Sticky top header                                                    */
+  /* ------------------------------------------------------------------ */
+  #top-header {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: var(--header-ht);
+    background: var(--header-bg);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    padding: 0 1.5rem;
+    z-index: 200;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+  }
+  #top-header .tool-name {
+    font-size: 1.05rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+  #top-header .subtitle {
+    margin-left: 1rem;
+    font-size: 0.85rem;
+    opacity: 0.75;
+    border-left: 1px solid rgba(255,255,255,0.35);
+    padding-left: 1rem;
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Layout                                                               */
+  /* ------------------------------------------------------------------ */
+  #layout {
+    display: flex;
+    margin-top: var(--header-ht);
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Sidebar nav                                                          */
+  /* ------------------------------------------------------------------ */
+  #sidebar {
+    position: fixed;
+    top: var(--header-ht);
+    left: 0;
+    bottom: 0;
+    width: var(--nav-w);
+    background: var(--nav-bg);
+    overflow-y: auto;
+    z-index: 100;
+    padding: 1rem 0 2rem;
+  }
+  #sidebar ul { list-style: none; }
+  #sidebar li a {
+    display: block;
+    padding: 0.4rem 1.25rem;
+    color: var(--nav-text);
+    text-decoration: none;
+    font-size: 0.84rem;
+    line-height: 1.5;
+    transition: background 0.15s, color 0.15s;
+  }
+  #sidebar li a:hover {
+    background: var(--nav-hover);
+    color: #fff;
+  }
+  /* CSS :target highlighting for active section */
+  #sidebar li a.active,
+  :target ~ * #sidebar li a { /* fallback */ }
+
+  #sidebar .nav-group-label {
+    display: block;
+    padding: 0.75rem 1.25rem 0.3rem;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #6a7590;
+    cursor: default;
+  }
+  #sidebar li a.indent { padding-left: 2rem; }
+
+  /* ------------------------------------------------------------------ */
+  /* Main content                                                         */
+  /* ------------------------------------------------------------------ */
+  #main {
+    margin-left: var(--nav-w);
+    padding: 2.5rem 3rem 4rem;
+    max-width: calc(var(--nav-w) + 820px);
+    width: 100%;
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Section anchors                                                      */
+  /* ------------------------------------------------------------------ */
+  section {
+    margin-bottom: 3rem;
+    padding-top: 1rem;
+  }
+
+  /* Highlight the targeted section briefly */
+  section:target {
+    scroll-margin-top: calc(var(--header-ht) + 1rem);
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Typography                                                           */
+  /* ------------------------------------------------------------------ */
+  h1 { font-size: 2rem;   color: var(--accent); margin-bottom: 0.75rem; }
+  h2 { font-size: 1.5rem; color: var(--accent); margin: 2rem 0 0.75rem; border-bottom: 2px solid var(--accent-lt); padding-bottom: 0.3rem; }
+  h3 { font-size: 1.1rem; color: #2a3555; margin: 1.5rem 0 0.5rem; }
+  h4 { font-size: 0.95rem; color: #2a3555; margin: 1.25rem 0 0.4rem; }
+  p  { margin-bottom: 0.9rem; }
+  ul, ol { margin: 0.5rem 0 0.9rem 1.5rem; }
+  li { margin-bottom: 0.3rem; }
+  strong { color: #1a1f2e; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  /* ------------------------------------------------------------------ */
+  /* Code                                                                 */
+  /* ------------------------------------------------------------------ */
+  code {
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    font-size: 0.875em;
+    background: var(--code-bg);
+    border: 1px solid var(--code-border);
+    border-radius: 3px;
+    padding: 0.1em 0.35em;
+  }
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--code-border);
+    border-radius: 5px;
+    padding: 1rem 1.25rem;
+    overflow-x: auto;
+    margin: 0.75rem 0 1.25rem;
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    font-size: 0.855rem;
+    line-height: 1.55;
+  }
+  pre code {
+    background: none;
+    border: none;
+    padding: 0;
+    font-size: inherit;
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Tables                                                               */
+  /* ------------------------------------------------------------------ */
+  .table-wrap { overflow-x: auto; margin: 0.75rem 0 1.5rem; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+    min-width: 500px;
+  }
+  thead th {
+    background: var(--accent);
+    color: #fff;
+    padding: 0.55rem 0.85rem;
+    text-align: left;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  tbody tr:nth-child(even) { background: var(--row-alt); }
+  tbody td {
+    padding: 0.5rem 0.85rem;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  tbody tr:hover { background: #eef3fb; }
+
+  /* ------------------------------------------------------------------ */
+  /* Callout boxes                                                        */
+  /* ------------------------------------------------------------------ */
+  .callout {
+    border-left: 4px solid var(--accent);
+    background: var(--accent-lt);
+    padding: 0.75rem 1rem;
+    margin: 1rem 0 1.25rem;
+    border-radius: 0 4px 4px 0;
+    font-size: 0.9rem;
+  }
+  .callout.warn {
+    border-color: #c08000;
+    background: #fdf6e3;
+  }
+  .callout.success {
+    border-color: #0f7a3a;
+    background: #edfaf2;
+  }
+  .callout p:last-child { margin-bottom: 0; }
+
+  /* ------------------------------------------------------------------ */
+  /* Misc helpers                                                         */
+  /* ------------------------------------------------------------------ */
+  .muted { color: var(--text-muted); font-size: 0.88em; }
+  .pill {
+    display: inline-block;
+    background: var(--accent-lt);
+    color: var(--accent);
+    border: 1px solid #b8d0ee;
+    border-radius: 3px;
+    padding: 0.1em 0.45em;
+    font-size: 0.8em;
+    font-weight: 600;
+    font-family: "SFMono-Regular", Consolas, monospace;
+    white-space: nowrap;
+  }
+  .pill.req { background: #fde8e8; color: #b52020; border-color: #e8b0b0; }
+  hr { border: none; border-top: 1px solid var(--border); margin: 2rem 0; }
+
+  /* Responsive */
+  @media (max-width: 800px) {
+    #sidebar { display: none; }
+    #main { margin-left: 0; padding: 1.5rem 1.25rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ================================================================== -->
+<!-- STICKY HEADER                                                        -->
+<!-- ================================================================== -->
+<header id="top-header">
+  <span class="tool-name">adobe-downloader</span>
+  <span class="subtitle">Station10 User Manual</span>
+</header>
+
+<!-- ================================================================== -->
+<!-- LAYOUT                                                               -->
+<!-- ================================================================== -->
+<div id="layout">
+
+  <!-- ---------------------------------------------------------------- -->
+  <!-- SIDEBAR NAVIGATION                                                -->
+  <!-- ---------------------------------------------------------------- -->
+  <nav id="sidebar" aria-label="Page navigation">
+    <ul>
+      <li><span class="nav-group-label">Getting Started</span></li>
+      <li><a href="#overview">Overview</a></li>
+      <li><a href="#setup">Setup</a></li>
+      <li><a href="#concepts">Key Concepts</a></li>
+
+      <li><span class="nav-group-label">Running Jobs</span></li>
+      <li><a href="#running-jobs">Commands</a></li>
+
+      <li><span class="nav-group-label">Flow Types</span></li>
+      <li><a href="#flow-report-download">Report Download</a></li>
+      <li><a href="#flow-transform">Transform / Concat</a></li>
+      <li><a href="#flow-segment-creation">Segment Creation</a></li>
+      <li><a href="#flow-lookup">Lookup Generation</a></li>
+      <li><a href="#flow-rsid-update">RSID Update</a></li>
+      <li><a href="#flow-composite">Composite Jobs</a></li>
+
+      <li><span class="nav-group-label">Reference</span></li>
+      <li><a href="#yaml-reference">YAML Field Reference</a></li>
+      <li><a href="#report-definitions">Report Definitions</a></li>
+      <li><a href="#segments">Segments</a></li>
+      <li><a href="#test-mode">Test Mode</a></li>
+      <li><a href="#troubleshooting">Troubleshooting</a></li>
+      <li><a href="#cli-reference">Full CLI Reference</a></li>
+    </ul>
+  </nav>
+
+  <!-- ---------------------------------------------------------------- -->
+  <!-- MAIN CONTENT                                                      -->
+  <!-- ---------------------------------------------------------------- -->
+  <main id="main">
+
+    <h1>adobe-downloader</h1>
+    <p class="muted">Station10 internal tool &mdash; User Manual &mdash; May 2026</p>
+
+    <hr>
+
+    <!-- ============================================================== -->
+    <section id="overview">
+      <h2>Overview</h2>
+
+      <p><code>adobe-downloader</code> is a Python command-line tool that downloads, transforms, and manages Adobe Analytics report data for Station10 clients. It replaces the earlier JavaScript codebase (<code>downloadAdobeTableLocal</code>) and handles everything from pulling ranked reports from the Adobe Analytics API through to producing analysis-ready CSV files.</p>
+
+      <h3>Core abstraction</h3>
+      <p>Everything the tool does is driven by a <strong>YAML config file</strong>. Each config file describes one <em>job</em>: what data to pull, which RSIDs to query, what date range to cover, and how to transform the output. Once the config is written and validated, running the job is a single command:</p>
+
+      <pre><code>adobe-downloader run --config jobs/examples/legend_bot_investigation_jan25.yaml</code></pre>
+
+      <p>The tool is safe to interrupt and re-run. Every API request is tracked in a SQLite state database; completed requests are skipped automatically on resume so you never download the same file twice.</p>
+
+      <h3>What it does end-to-end</h3>
+      <ol>
+        <li>Loads and validates your YAML config against a strict Pydantic schema.</li>
+        <li>Expands the job into individual API requests (one per RSID &times; date interval &times; report &times; segment).</li>
+        <li>Downloads each request as a JSON file into <code>&lt;base_folder&gt;/&lt;client&gt;/JSON/</code>.</li>
+        <li>Transforms each JSON file to a CSV using the configured transform type.</li>
+        <li>Optionally concatenates all CSVs into a single output file and/or zips them.</li>
+      </ol>
+
+      <h3>Job types at a glance</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>job_type</th><th>What it does</th></tr></thead>
+          <tbody>
+            <tr><td><code>report_download</code></td><td>Download ranked reports from the Adobe Analytics API for one or more RSIDs over a date range.</td></tr>
+            <tr><td><code>transform_concat</code></td><td>Transform existing JSON files to CSV and concatenate them, without hitting the API.</td></tr>
+            <tr><td><code>segment_creation</code></td><td>Create Adobe Analytics segments from a CSV list of bot rules and share them with users.</td></tr>
+            <tr><td><code>lookup_generation</code></td><td>Build a dimension value &rarr; numeric item-ID lookup file used when constructing segment conditions.</td></tr>
+            <tr><td><code>rsid_update</code></td><td>Fetch all report suites, download topline visit counts, and write filtered RSID list files.</td></tr>
+            <tr><td><code>composite</code></td><td>Chain multiple steps (any combination of the above) into a single resumable pipeline.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ============================================================== -->
+    <section id="setup">
+      <h2>Setup</h2>
+
+      <h3>Prerequisites</h3>
+      <ul>
+        <li>Python 3.12 or later</li>
+        <li>Access to the <code>AdobeBotAnalysis</code> GitHub repository</li>
+        <li>Adobe Analytics API credentials for the client you are working with</li>
+      </ul>
+
+      <h3>Install the package</h3>
+      <p>From the repository root, install in editable mode:</p>
+      <pre><code>pip install -e .</code></pre>
+      <p>This installs the <code>adobe-downloader</code> command into your Python environment. Verify it works:</p>
+      <pre><code>adobe-downloader --version</code></pre>
+
+      <h3>Credentials file</h3>
+      <p>Each client needs a credentials file at:</p>
+      <pre><code>credentials/client&lt;ClientName&gt;.yaml</code></pre>
+      <p>For example, the Legend client uses <code>credentials/clientLegend.yaml</code>. The file contains Adobe API credentials in the following format:</p>
+      <pre><code>adobe:
+  clientID: &lt;your-client-id&gt;
+  clientSecret: &lt;your-client-secret&gt;
+  adobeOrgID: &lt;your-org-id&gt;@AdobeOrg
+  globalCompanyID: &lt;company-id&gt;
+  rsid: &lt;a-default-rsid&gt;</code></pre>
+
+      <div class="callout warn">
+        <p><strong>Security:</strong> The <code>credentials/</code> directory is excluded from git commits. Never commit credential files. If you are setting up a new environment, copy the credentials file from the team's secure storage.</p>
+      </div>
+
+      <h3>Verify credentials</h3>
+      <p>To confirm your credentials are valid, list all report suites for a client:</p>
+      <pre><code>adobe-downloader list-rsids --client Legend</code></pre>
+
+      <p>To list all Adobe Analytics users available to the client:</p>
+      <pre><code>adobe-downloader list-users --client Legend</code></pre>
+
+      <h3>Where to run commands from</h3>
+      <p>Always run <code>adobe-downloader</code> from the repository root. The tool resolves <code>data/</code> paths relative to the current working directory, so running from a different location will cause file-not-found errors.</p>
+    </section>
+
+    <!-- ============================================================== -->
+    <section id="concepts">
+      <h2>Key Concepts</h2>
+
+      <h3>Jobs and YAML configs</h3>
+      <p>A <em>job</em> is a single unit of work described by a YAML file. The <code>job_type</code> field at the top of the file determines what the job does and which fields are valid. Config files live in <code>jobs/</code> — use <code>jobs/templates/</code> as starting points and <code>jobs/examples/</code> to see real worked examples for the Legend client.</p>
+
+      <h3>RSIDs</h3>
+      <p>An RSID (Report Suite ID) is Adobe's identifier for a report suite. The tool accepts RSIDs in three ways, controlled by the <code>rsids.source</code> field:</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>source</th><th>How RSIDs are supplied</th></tr></thead>
+          <tbody>
+            <tr><td><code>single</code></td><td>One RSID written directly in the config (<code>rsids.single</code>).</td></tr>
+            <tr><td><code>list</code></td><td>A YAML list of RSIDs written in the config (<code>rsids.list</code>).</td></tr>
+            <tr><td><code>file</code></td><td>A plain-text file with one RSID per line (<code>rsids.file</code>). See below for file format.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>RSID list files</h3>
+      <p>RSID list files in <code>data/rsid_lists/</code> contain one entry per line. Lines beginning with <code>#</code> are comments. Each non-comment line is a plain RSID clean name (the human-readable name used internally, not the raw Adobe rsid string):</p>
+      <pre><code># Minimum threshold = 1000
+# Date range = 2025-01-01 to 2025-01-31
+OnlineBettingcom
+MarcadoresOnlinecom
+Casinoorg</code></pre>
+      <p>These files are generated automatically by the <code>rsid_update</code> flow (see <a href="#flow-rsid-update">RSID Update</a>) and should not normally be edited by hand.</p>
+
+      <h3>Report definitions</h3>
+      <p>A <em>report definition</em> specifies what to request from the Adobe API: a dimension, a list of metrics, optional segments, and a row limit. Definitions live in <code>report_definitions/</code> as YAML files and are organised into <em>groups</em>. You reference them in a config using either:</p>
+      <ul>
+        <li><code>report_ref: &lt;name&gt;</code> &mdash; one named report from the registry</li>
+        <li><code>report_group: &lt;group&gt;</code> &mdash; all reports in a group (downloads them all)</li>
+        <li><code>report:</code> &mdash; an inline definition written directly in the config (for one-off reports)</li>
+      </ul>
+      <p>See <a href="#report-definitions">Report Definitions</a> for the full list of available groups and reports.</p>
+
+      <h3>Date intervals</h3>
+      <p>The <code>interval</code> field controls how the date range is split into individual API requests:</p>
+      <ul>
+        <li><code>full</code> &mdash; one request covering the entire date range</li>
+        <li><code>month</code> &mdash; one request per calendar month within the range</li>
+        <li><code>day</code> &mdash; one request per day (produces many files; use with care)</li>
+      </ul>
+      <p>Most bot investigation work uses <code>month</code> to get monthly breakdowns.</p>
+
+      <h3>State database and resume</h3>
+      <p>When a <code>report_download</code> job starts, a SQLite database is created at:</p>
+      <pre><code>&lt;output.base_folder&gt;/&lt;client&gt;/state/&lt;job_id&gt;.db</code></pre>
+      <p>Every request is recorded as <code>pending</code> before it runs and updated to <code>completed</code> or <code>failed</code> afterward. If the job is interrupted, re-running the same command resumes from where it left off. Completed requests are skipped. Use <code>--no-resume</code> to force a fresh start.</p>
+
+      <h3>Transform types</h3>
+      <p>After downloading, JSON files are converted to CSV using a <em>transform type</em> that knows the structure of the downloaded data:</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>type</th><th>Used for</th></tr></thead>
+          <tbody>
+            <tr><td><code>standard</code></td><td>Generic ranked-report output. Suitable for most one-off reports.</td></tr>
+            <tr><td><code>bot_investigation</code></td><td>Bot investigation reports (adds botRuleName, rsid columns).</td></tr>
+            <tr><td><code>bot_validation</code></td><td>Bot validation reports with per-rule segment iteration.</td></tr>
+            <tr><td><code>bot_rule_compare</code></td><td>Side-by-side comparison of bot rule variants.</td></tr>
+            <tr><td><code>final_bot_metrics</code></td><td>Annual final bot metrics summary.</td></tr>
+            <tr><td><code>summary_total</code></td><td>Topline totals (visitors, visits) with no dimension breakdown.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Output folder layout</h3>
+      <p>All output is written under <code>output.base_folder/&lt;client&gt;/</code>:</p>
+      <pre><code>&lt;base_folder&gt;/
+  &lt;client&gt;/
+    JSON/          raw downloaded JSON files
+    CSV/           transformed CSV files
+    state/         SQLite state databases
+    config_archive/  copies of the config file saved after each run
+    job_history.jsonl  append-only run history log</code></pre>
+    </section>
+
+    <!-- ============================================================== -->
+    <section id="running-jobs">
+      <h2>Running Jobs</h2>
+
+      <h3>The run command</h3>
+      <p>The primary command for executing any job:</p>
+      <pre><code>adobe-downloader run --config &lt;path-to-config.yaml&gt;</code></pre>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Flag</th><th>Default</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>--config / -c</code></td><td><span class="pill req">required</span></td><td>Path to the job YAML config file.</td></tr>
+            <tr><td><code>--report / -r</code></td><td><code>None</code></td><td>Download only this one named report (overrides <code>report_group</code> expansion).</td></tr>
+            <tr><td><code>--no-resume</code></td><td><code>False</code></td><td>Ignore existing state and re-download everything from scratch.</td></tr>
+            <tr><td><code>--test</code></td><td><code>False</code></td><td>Enable test mode: caps RSIDs, date intervals, and segments per <code>test_limits</code> config. See <a href="#test-mode">Test Mode</a>.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>validate</h3>
+      <p>Parse and schema-check a config file without running any downloads. Always run this first when writing a new config.</p>
+      <pre><code>adobe-downloader validate --config jobs/examples/legend_bot_investigation_jan25.yaml</code></pre>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Flag</th><th>Default</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>--config / -c</code></td><td><span class="pill req">required</span></td><td>Path to the config file to validate.</td></tr>
+            <tr><td><code>--check-credentials / --no-check-credentials</code></td><td><code>True</code></td><td>Warn if the credentials file for the config's client is missing.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Exit codes: <code>0</code> = valid, <code>1</code> = schema error, <code>2</code> = valid schema but referenced files missing.</p>
+
+      <h3>status</h3>
+      <p>Print the current state of a <code>report_download</code> job (completed / pending / failed counts).</p>
+      <pre><code>adobe-downloader status --config jobs/examples/legend_bot_investigation_jan25.yaml</code></pre>
+
+      <h3>retry</h3>
+      <p>Re-queue failed (or all non-completed) requests so they will be attempted on the next <code>run</code>.</p>
+      <pre><code>adobe-downloader retry --config &lt;config.yaml&gt; [--failed-only]</code></pre>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Flag</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>--failed-only</code></td><td>Re-queue only requests with status <code>failed</code>. Omitting this flag re-queues all non-completed requests.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>reset</h3>
+      <p>Delete all state for a job so it starts completely fresh. Requires <code>--confirm</code>.</p>
+      <pre><code>adobe-downloader reset --config &lt;config.yaml&gt; --confirm</code></pre>
+
+      <h3>validate-output</h3>
+      <p>Check that all expected output files exist and are non-empty after a download job.</p>
+      <pre><code>adobe-downloader validate-output --config &lt;config.yaml&gt; [--dry-run] [--retry]</code></pre>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Flag</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>--dry-run</code></td><td>Report missing files without re-downloading.</td></tr>
+            <tr><td><code>--retry</code></td><td>Re-download any missing or empty files immediately.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>history</h3>
+      <p>Show recent job runs from the append-only job history log.</p>
+      <pre><code>adobe-downloader history --client Legend [--last 10] [--status completed] [--since 2025-06-01]</code></pre>
+
+      <h3>transform</h3>
+      <p>Transform JSON files to CSV and optionally concatenate them, without touching the API. Useful if a transform step failed after a successful download.</p>
+      <pre><code>adobe-downloader transform \
+  --json-dir "/path/to/output/Legend/JSON" \
+  --pattern "Legend_botInvestigation*.json" \
+  --concat \
+  --concat-output "/path/to/output.csv"</code></pre>
+
+      <h3>cleanup</h3>
+      <p>Remove old processed files. Always requires <code>--confirm</code> to actually delete.</p>
+      <pre><code>adobe-downloader cleanup \
+  --client Legend \
+  --older-than 30d \
+  --type processed-json \
+  --confirm</code></pre>
+      <p>Valid <code>--type</code> values: <code>processed-json</code>, <code>logs</code>, <code>state</code>.</p>
+    </section>
+
+    <!-- ============================================================== -->
+    <section id="flow-report-download">
+      <h2>Flow: Report Download</h2>
+
+      <p>The <code>report_download</code> job type is the workhorse of the tool. It iterates over RSIDs, date intervals, and optionally segments, sending one ranked-report API request per combination and saving the result as a JSON file.</p>
+
+      <h3>Minimal example</h3>
+      <pre><code>job_type: report_download
+client: Legend
+description: "Download bot investigation reports for Jan 2025"
+
+report_group: bot_investigation
+
+rsids:
+  source: file
+  file: data/rsid_lists/legend_investigation.txt
+  batch_size: 12
+
+interval: month
+
+date_range:
+  from: "2025-01-01"
+  to: "2025-01-31"
+
+transform:
+  enabled: true
+  type: bot_investigation
+  concat: true
+
+resume: true
+
+output:
+  base_folder: "/Users/edwardgurton/Documents/Work/Adobe Downloads"</code></pre>
+
+      <h3>RSID sources</h3>
+      <p>Choose one of the three <code>rsids.source</code> values:</p>
+      <pre><code># From a file (most common for multi-RSID jobs)
+rsids:
+  source: file
+  file: data/rsid_lists/legend_investigation.txt
+  batch_size: 12  # how many RSIDs to process in parallel
+
+# Explicit list
+rsids:
+  source: list
+  list:
+    - trillioncoverscom
+    - casinoorg
+
+# Single RSID
+rsids:
+  source: single
+  single: trillioncoverscom</code></pre>
+
+      <h3>Date intervals</h3>
+      <pre><code>date_range:
+  from: "2025-01-01"
+  to: "2025-03-31"
+
+interval: month   # full | month | day</code></pre>
+      <p>Using <code>month</code> with the above range produces three intervals: January, February, and March 2025. The <code>full</code> interval makes one request covering the entire range.</p>
+
+      <h3>Report specification</h3>
+      <p>Exactly one of <code>report_ref</code>, <code>report_group</code>, or <code>report</code> must be set:</p>
+      <pre><code># Named report from the registry
+report_ref: botInvestigationMetricsByBrowser
+
+# All reports in a group
+report_group: bot_investigation
+
+# Inline definition (for one-off or experimental reports)
+report:
+  name: myCustomReport
+  dimension: variables/daterangeday
+  row_limit: 500
+  segments:
+    - s3938_61bb0165a88ab931afa78e4c
+  metrics:
+    - metrics/visitors
+    - metrics/visits
+    - metrics/event3
+  csv_headers: [id, day, unique_visitors, visits, raw_clickouts, fileName, fromDate, toDate]</code></pre>
+
+      <h3>Segment iteration</h3>
+      <p>When <code>segments</code> is set, the tool downloads a separate copy of each report for each segment ID. This is how bot validation works &mdash; one download per bot rule segment. See <a href="#segments">Segments</a> for all source options.</p>
+      <pre><code>segments:
+  source: segment_list_file
+  file: data/segment_lists/Legend/Apr25-RoundFive.json</code></pre>
+
+      <h3>Transform options</h3>
+      <pre><code>transform:
+  enabled: true
+  type: bot_investigation   # see table in Concepts
+  concat: true              # concatenate all CSVs into one file after transform
+
+post_processing:
+  delete_json_after_transform: false   # set true to save disk space
+  zip_csvs_after_concat: true          # zip the concat output</code></pre>
+
+      <h3>File naming</h3>
+      <p>Output JSON files follow this naming convention:</p>
+      <pre><code>&lt;client&gt;_&lt;reportName&gt;[_&lt;extra&gt;][_DIMSEG&lt;segmentId&gt;_]_&lt;fromDate&gt;_&lt;toDate&gt;.json</code></pre>
+      <p>Use <code>file_name_extra</code> to add a label to the filename (useful for distinguishing parallel runs):</p>
+      <pre><code>file_name_extra: "Coverscom-FullRun"</code></pre>
+    </section>
+
+    <!-- ============================================================== -->
+    <section id="flow-transform">
+      <h2>Flow: Transform and Concatenate</h2>
+
+      <p>The <code>transform_concat</code> job type transforms existing JSON files to CSV and concatenates them. No API calls are made. Use this when:</p>
+      <ul>
+        <li>A transform step failed after a successful download and you want to re-run it.</li>
+        <li>You want to apply a different transform type to already-downloaded data.</li>
+        <li>You need to concatenate a subset of files matching a specific pattern.</li>
+      </ul>
+
+      <h3>Example</h3>
+      <pre><code>job_type: transform_concat
+client: Legend
+description: "Re-transform existing JSON files for bot investigation Q1 2025"
+
+transform:
+  enabled: true
+  type: bot_investigation
+  source_pattern: ".*botInvestigationMetricsByBrowser.*2025-01.*\.json$"
+  source_folder: null    # null = default JSON folder for this client
+  output_subfolder: null
+  concat: true
+
+concat:
+  enabled: true
+  file_pattern: ".*\.csv$"
+  custom_headers: null   # override column headers by index if needed
+
+output:
+  base_folder: "/Users/edwardgurton/Documents/Work/Adobe Downloads"</code></pre>
+
+      <h3>When to use inline transform vs. transform_concat</h3>
+      <p>If you are doing a full download, use the <code>transform</code> block inside a <code>report_download</code> config. The <code>transform_concat</code> job type is for standalone re-processing after the download is already complete.</p>
+
+      <h3>Concat options</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>concat.enabled</code></td><td>bool</td><td>Whether to run concatenation after transform.</td></tr>
+            <tr><td><code>concat.file_pattern</code></td><td>string (regex)</td><td>Regular expression selecting which CSV files to include. Default: <code>.*\.csv$</code>.</td></tr>
+            <tr><td><code>concat.custom_headers</code></td><td>map</td><td>Override column headers by 1-based column index. Example: <code>1: "MyColumn"</code>.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Transform via CLI (no config file)</h3>
+      <p>For a quick ad-hoc transform, use the <code>transform</code> command directly:</p>
+      <pre><code>adobe-downloader transform \
+  --json-dir "/path/to/Legend/JSON" \
+  --pattern "Legend_botInvestigationMetricsByBrowser*.json" \
+  --concat \
+  --concat-output "/path/to/output.csv"</code></pre>
+    </section>
+
+    <!-- ============================================================== -->
+    <section id="flow-segment-creation">
+      <h2>Flow: Segment Creation</h2>
+
+      <p>The <code>segment_creation</code> job type reads a CSV list of bot rules, creates the corresponding segments in Adobe Analytics via the API, and writes three output files used by downstream validation jobs.</p>
+
+      <h3>Example config</h3>
+      <pre><code>job_type: segment_creation
+client: Legend
+description: "Create Apr25 bot rule segments and share with Legend user"
+
+segment_creation:
+  input_csv: data/segment_creation_lists/Apr25-RoundFive.csv
+  share_with_users:
+    - "200419062"     # Adobe user ID (numeric string)
+  test_mode_row: null # set to a row number (1-based) to test just one row
+
+output:
+  base_folder: "/Users/edwardgurton/Documents/Work/Adobe Downloads"</code></pre>
+
+      <h3>Input CSV format</h3>
+      <p>The input CSV must have the following columns (header row required):</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Column</th><th>Values</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>Compare / Validate</code></td><td><code>Compare</code>, <code>Validate</code>, <code>Compare - Special</code>, <code>Validate - Special</code></td><td>Determines which output list the segment appears in.</td></tr>
+            <tr><td><code>Segment Name</code></td><td>string</td><td>Human-readable segment name (also used as description).</td></tr>
+            <tr><td><code>RSID Clean Name</code></td><td>string</td><td>Clean name of the report suite the segment is scoped to.</td></tr>
+            <tr><td><code>Dimension 1</code></td><td>friendly name</td><td>First dimension for the segment condition (e.g. <code>BrowserType</code>).</td></tr>
+            <tr><td><code>Dimension 1 Item</code></td><td>string</td><td>Value to match for dimension 1.</td></tr>
+            <tr><td><code>Dimension 2</code></td><td>friendly name or blank</td><td>Optional second dimension condition.</td></tr>
+            <tr><td><code>Dimension 2 Item</code></td><td>string or blank</td><td>Value to match for dimension 2.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Dimensions that require a numeric lookup (such as <code>BrowserType</code>, <code>OperatingSystem</code>, <code>MobileManufacturer</code>, <code>MonitorResolution</code>) are automatically resolved using the lookup files in <code>data/lookups/</code>.</p>
+
+      <h3>Output files produced</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>File</th><th>Content</th><th>Used by</th></tr></thead>
+          <tbody>
+            <tr><td>segment_list_path (JSON)</td><td>Array of segment IDs created this run. Used for segment iteration in subsequent report downloads.</td><td><code>report_download</code> with <code>segments.source: segment_list_file</code></td></tr>
+            <tr><td>compare_list_path (JSON)</td><td>Bot rules marked <code>Compare</code>.</td><td>Bot rule comparison flows</td></tr>
+            <tr><td>validate_list_path (JSON)</td><td>Bot rules marked <code>Validate</code>.</td><td>Bot validation flows</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Output paths are configured on the <code>segment_creation</code> block, not on the top-level <code>output</code>:</p>
+      <pre><code>segment_creation:
+  input_csv: data/segment_creation_lists/Apr25-RoundFive.csv
+  compare_list_path: data/bot_compare_lists/
+  validate_list_path: data/bot_rule_lists/
+  segment_list_path: data/segment_lists/Legend/</code></pre>
+
+      <h3>share_with_users</h3>
+      <p>A list of Adobe user IDs (numeric strings) who will have the created segments shared with them. Find valid IDs with:</p>
+      <pre><code>adobe-downloader list-users --client Legend</code></pre>
+    </section>
+
+    <!-- ============================================================== -->
+    <section id="flow-lookup">
+      <h2>Flow: Lookup Generation</h2>
+
+      <p>A <em>lookup file</em> maps human-readable dimension values (e.g. <code>"Chrome 120"</code>) to the numeric item IDs used internally by Adobe Analytics. These IDs are required when creating segment conditions for dimensions like Browser, BrowserType, OperatingSystem, MobileManufacturer, and MonitorResolution. Lookup files are stored in <code>data/lookups/&lt;dimensionName&gt;/lookup.txt</code>.</p>
+
+      <h3>When do you need to regenerate a lookup?</h3>
+      <p>If <code>segment_creation</code> reports that a value cannot be found in the lookup, the lookup file is probably stale (new dimension values have appeared since it was last generated). Regenerate it using a recent date range.</p>
+
+      <h3>Example config</h3>
+      <pre><code>job_type: lookup_generation
+client: Legend
+description: "Generate browser dimension lookup for trillioncoverscom (Jan 2025)"
+
+lookup_generation:
+  dimension: variables/browser     # Adobe dimension variable string
+  rsid: trillioncoverscom
+  segments:
+    - s3938_61bb0165a88ab931afa78e4c  # Optional: filter the lookup request
+  output_file: null                   # null = auto-named in data/lookups/
+
+date_range:
+  from: "2025-01-01"
+  to: "2025-01-31"
+
+output:
+  base_folder: "/Users/edwardgurton/Documents/Work/Adobe Downloads"</code></pre>
+
+      <h3>Searching a lookup file</h3>
+      <p>To check what ID a specific value maps to (useful for debugging segment conditions):</p>
+      <pre><code>adobe-downloader search-lookup --dimension BrowserType --value "Chrome Mobile"</code></pre>
+      <p>If the value is not found exactly, the command shows similar entries.</p>
+    </section>
+
+    <!-- ============================================================== -->
+    <section id="flow-rsid-update">
+      <h2>Flow: RSID Update</h2>
+
+      <p>The <code>rsid_update</code> flow refreshes the two RSID list files used by investigation and validation jobs. It fetches all report suites for the client, downloads a topline visit count for each, and writes filtered lists based on configurable thresholds.</p>
+
+      <p>Run this before starting a new investigation cycle to ensure the RSID lists reflect the current set of active report suites.</p>
+
+      <h3>Example config</h3>
+      <pre><code>job_type: rsid_update
+client: Legend
+description: "Refresh Legend RSID lists — run before each new investigation"
+
+rsid_update:
+  investigation_threshold: 1000  # minimum visits to include in investigation list
+  validation_threshold: 1000     # minimum visits to include in validation list
+  include_virtual: false         # exclude virtual report suites (rsid prefix: vrs_)
+
+date_range:
+  from: "2025-01-01"
+  to: "2025-01-31"
+
+output:
+  base_folder: data/rsid_lists/</code></pre>
+
+      <h3>Output files</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>File</th><th>Content</th></tr></thead>
+          <tbody>
+            <tr><td><code>data/rsid_lists/botInvestigationMinThresholdVisits.txt</code></td><td>RSIDs with visits &ge; investigation_threshold.</td></tr>
+            <tr><td><code>data/rsid_lists/botValidationRsidList.txt</code></td><td>RSIDs with visits &ge; validation_threshold.</td></tr>
+            <tr><td><code>data/report_suite_lists/&lt;dated&gt;.txt</code></td><td>Full rsid:cleanName pairs file for use by downstream lookups.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Threshold fields</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Field</th><th>Default</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>investigation_threshold</code></td><td>1000</td><td>Minimum visit count to include a report suite in the investigation list.</td></tr>
+            <tr><td><code>validation_threshold</code></td><td>1000</td><td>Minimum visit count to include a report suite in the validation list.</td></tr>
+            <tr><td><code>include_virtual</code></td><td>false</td><td>When true, report suites with the <code>vrs_</code> prefix are included.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Exclusion list</h3>
+      <p>Report suites whose clean names appear in <code>data/rsid_lists/excludedRsidCleanNames.txt</code> are removed from both output lists regardless of visit count. Edit this file to permanently exclude specific suites.</p>
+
+      <h3>Quick RSID update via CLI (no config file)</h3>
+      <p>You can also trigger an RSID update directly with flags:</p>
+      <pre><code>adobe-downloader update-rsids \
+  --client Legend \
+  --from 2025-01-01 \
+  --to 2025-01-31 \
+  --investigation-threshold 1000 \
+  --validation-threshold 1000</code></pre>
+    </section>
+
+    <!-- ============================================================== -->
+    <section id="flow-composite">
+      <h2>Flow: Composite Jobs</h2>
+
+      <p>A <code>composite</code> job chains multiple steps into a single resumable pipeline. Each step can reference the outputs of previous steps, making it possible to run segment creation, download, validate, and transform in sequence with a single command.</p>
+
+      <h3>Example: full bot investigation pipeline</h3>
+      <pre><code>job_type: composite
+client: Legend
+description: "Full Legend bot investigation: segment creation + download + validate + transform"
+
+date_range:
+  from: "2025-01-01"
+  to: "2025-03-31"
+
+output:
+  base_folder: "/Users/edwardgurton/Documents/Work/Adobe Downloads"
+
+steps:
+  - step: segment_creation
+    id: create_segments
+    segment_creation:
+      input_csv: data/segment_creation_lists/Apr25-RoundFive.csv
+      share_with_users:
+        - "200419062"
+
+  - step: report_download
+    id: download_investigation
+    report_group: bot_investigation
+    rsids:
+      source: file
+      file: data/rsid_lists/legend_investigation.txt
+      batch_size: 12
+    segments:
+      source: step_output
+      step_id: create_segments
+      output_key: segment_list_file
+    interval: month
+
+  - step: validate_output
+    id: validate
+    depends_on: download_investigation
+    config_ref: download_investigation
+    retry: true
+
+  - step: transform_concat
+    id: transform
+    depends_on: validate
+    transform:
+      type: bot_investigation
+      concat: true</code></pre>
+
+      <h3>Step types</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>step</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>report_download</code></td><td>Download reports from the Adobe API.</td></tr>
+            <tr><td><code>transform_concat</code></td><td>Transform JSON files to CSV and concatenate.</td></tr>
+            <tr><td><code>segment_creation</code></td><td>Create segments from a CSV list.</td></tr>
+            <tr><td><code>validate_output</code></td><td>Check all expected output files exist; optionally re-download missing ones.</td></tr>
+            <tr><td><code>rsid_update</code></td><td>Refresh RSID list files.</td></tr>
+            <tr><td><code>dim_to_segments</code></td><td>Generate segments from dimension values automatically.</td></tr>
+            <tr><td><code>lookup_generation</code></td><td>Build a dimension lookup file.</td></tr>
+            <tr><td><code>bot_rule_compare</code></td><td>Run a bot rule comparison analysis.</td></tr>
+            <tr><td><code>final_bot_metrics</code></td><td>Produce final annual bot metrics.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>depends_on</h3>
+      <p>Use <code>depends_on: &lt;step_id&gt;</code> to ensure a step only runs after its dependency has completed successfully. If the dependency has not completed, the pipeline halts with an error.</p>
+
+      <h3>Inter-step output references</h3>
+      <p>Use <code>source: step_output</code> to wire one step's output into another step's input:</p>
+      <pre><code>segments:
+  source: step_output
+  step_id: create_segments        # id of the earlier step
+  output_key: segment_list_file   # key in that step's output dict</code></pre>
+
+      <p>Common output keys for <code>segment_creation</code> steps:</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>output_key</th><th>Content</th></tr></thead>
+          <tbody>
+            <tr><td><code>segment_list_file</code></td><td>Path to the JSON file listing all created segment IDs.</td></tr>
+            <tr><td><code>compare_list_file</code></td><td>Path to the Compare bot rules list.</td></tr>
+            <tr><td><code>validate_list_file</code></td><td>Path to the Validate bot rules list.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Common output keys for <code>rsid_update</code> steps:</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>output_key</th><th>Content</th></tr></thead>
+          <tbody>
+            <tr><td><code>investigation_list</code></td><td>Path to the investigation RSID list file.</td></tr>
+            <tr><td><code>validation_list</code></td><td>Path to the validation RSID list file.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Resume across steps</h3>
+      <p>Composite jobs are fully resumable. If the pipeline is interrupted mid-way, re-running the same command skips all already-completed steps and resumes from the first incomplete one. The state for each step is stored in the same SQLite database as the overall composite job.</p>
+
+      <h3>test_mode in composite jobs</h3>
+      <p>Set <code>test_mode: true</code> at the top level of a composite config, or pass <code>--test</code> on the CLI. The test limits apply to all <code>report_download</code> steps in the composite.</p>
+    </section>
+
+    <!-- ============================================================== -->
+    <section id="yaml-reference">
+      <h2>YAML Field Reference</h2>
+
+      <p>All fields validated by Pydantic at config load time. Fields marked <span class="pill req">required</span> have no default and must be set.</p>
+
+      <h3>Top-level fields (all job types)</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Field</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>job_type</code></td><td>string</td><td><span class="pill req">required</span></td><td>Discriminator. One of: <code>report_download</code>, <code>transform_concat</code>, <code>segment_creation</code>, <code>lookup_generation</code>, <code>rsid_update</code>, <code>composite</code>.</td></tr>
+            <tr><td><code>client</code></td><td>string</td><td><span class="pill req">required</span></td><td>Client name, must match a file <code>credentials/client&lt;Name&gt;.yaml</code>.</td></tr>
+            <tr><td><code>description</code></td><td>string</td><td><code>""</code></td><td>Free-text description shown in validate output and history.</td></tr>
+            <tr><td><code>output.base_folder</code></td><td>string</td><td><span class="pill req">required</span></td><td>Root directory for all output. Client sub-folder is appended automatically.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>date_range</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>date_range.from</code></td><td>string</td><td>Start date in <code>YYYY-MM-DD</code> format, or <code>"today"</code>.</td></tr>
+            <tr><td><code>date_range.to</code></td><td>string</td><td>End date in <code>YYYY-MM-DD</code> format, or <code>"today"</code>.</td></tr>
+            <tr><td><code>date_range.lookback_days</code></td><td>int</td><td>Optional. If set, the from date is computed as <code>to - lookback_days</code>.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>rsids (report_download)</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Field</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>rsids.source</code></td><td>string</td><td><span class="pill req">required</span></td><td><code>file</code>, <code>list</code>, or <code>single</code>.</td></tr>
+            <tr><td><code>rsids.file</code></td><td>string</td><td></td><td>Path to RSID list file. Required when <code>source=file</code>.</td></tr>
+            <tr><td><code>rsids.list</code></td><td>list[string]</td><td></td><td>Explicit RSID list. Required when <code>source=list</code>.</td></tr>
+            <tr><td><code>rsids.single</code></td><td>string</td><td></td><td>Single RSID. Required when <code>source=single</code>.</td></tr>
+            <tr><td><code>rsids.batch_size</code></td><td>int</td><td>12</td><td>Number of RSIDs to process in parallel. Lower if hitting API rate limits.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>segments (report_download)</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>segments.source</code></td><td>string</td><td><code>inline</code>, <code>segment_list_file</code>, <code>step_output</code>, or <code>latest_segment_list</code>.</td></tr>
+            <tr><td><code>segments.ids</code></td><td>list[string]</td><td>Inline segment IDs. Required when <code>source=inline</code>.</td></tr>
+            <tr><td><code>segments.file</code></td><td>string</td><td>Path to segment list JSON. Required when <code>source=segment_list_file</code>.</td></tr>
+            <tr><td><code>segments.step_id</code></td><td>string</td><td>ID of a previous composite step. Required when <code>source=step_output</code>.</td></tr>
+            <tr><td><code>segments.output_key</code></td><td>string</td><td>Key in the referenced step's output dict. Required when <code>source=step_output</code>.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>transform (report_download / transform_concat)</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Field</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>transform.enabled</code></td><td>bool</td><td>true</td><td>Whether to run the transform step after download.</td></tr>
+            <tr><td><code>transform.type</code></td><td>string</td><td><span class="pill req">required</span></td><td>Transform type. See Concepts &rarr; Transform types.</td></tr>
+            <tr><td><code>transform.concat</code></td><td>bool</td><td>true</td><td>Concatenate all output CSVs into a single file.</td></tr>
+            <tr><td><code>transform.source_pattern</code></td><td>string (regex)</td><td>null</td><td>Regex to select which JSON files to transform. Null = all files.</td></tr>
+            <tr><td><code>transform.source_folder</code></td><td>string</td><td>null</td><td>Folder containing source JSON files. Null = default JSON folder.</td></tr>
+            <tr><td><code>transform.output_subfolder</code></td><td>string</td><td>null</td><td>Subfolder within the CSV output directory.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>post_processing (report_download)</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Field</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>post_processing.delete_json_after_transform</code></td><td>bool</td><td>false</td><td>Delete raw JSON files after successful transform to save disk space.</td></tr>
+            <tr><td><code>post_processing.zip_csvs_after_concat</code></td><td>bool</td><td>true</td><td>Zip the concatenated CSV output.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>test_limits (report_download / composite)</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Field</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>test_limits.max_rsids</code></td><td>int</td><td>3</td><td>Maximum RSIDs processed when test_mode is active.</td></tr>
+            <tr><td><code>test_limits.max_date_intervals</code></td><td>int</td><td>2</td><td>Maximum date intervals processed when test_mode is active.</td></tr>
+            <tr><td><code>test_limits.max_segments</code></td><td>int</td><td>5</td><td>Maximum segments iterated when test_mode is active.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>segment_creation block</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Field</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>segment_creation.input_csv</code></td><td>string</td><td><span class="pill req">required</span></td><td>Path to the input CSV file listing bot rules to create as segments.</td></tr>
+            <tr><td><code>segment_creation.share_with_users</code></td><td>list[string]</td><td>[]</td><td>Adobe user IDs to share created segments with.</td></tr>
+            <tr><td><code>segment_creation.test_mode_row</code></td><td>int or null</td><td>null</td><td>If set, only process this 1-based row number (for testing).</td></tr>
+            <tr><td><code>segment_creation.compare_list_path</code></td><td>string</td><td>null</td><td>Directory to write the Compare bot rules JSON list.</td></tr>
+            <tr><td><code>segment_creation.validate_list_path</code></td><td>string</td><td>null</td><td>Directory to write the Validate bot rules JSON list.</td></tr>
+            <tr><td><code>segment_creation.segment_list_path</code></td><td>string</td><td>null</td><td>Directory to write the created segment IDs JSON list.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>lookup_generation block</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Field</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>lookup_generation.dimension</code></td><td>string</td><td><span class="pill req">required</span></td><td>Adobe dimension variable string (e.g. <code>variables/browser</code>).</td></tr>
+            <tr><td><code>lookup_generation.rsid</code></td><td>string</td><td><span class="pill req">required</span></td><td>RSID to use for the lookup request.</td></tr>
+            <tr><td><code>lookup_generation.segments</code></td><td>list[string]</td><td>[]</td><td>Optional segment IDs to apply to the lookup request.</td></tr>
+            <tr><td><code>lookup_generation.output_file</code></td><td>string or null</td><td>null</td><td>Output path. Null = auto-named under <code>data/lookups/</code>.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>rsid_update block</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Field</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>rsid_update.investigation_threshold</code></td><td>int</td><td>1000</td><td>Minimum visits for the investigation RSID list.</td></tr>
+            <tr><td><code>rsid_update.validation_threshold</code></td><td>int</td><td>1000</td><td>Minimum visits for the validation RSID list.</td></tr>
+            <tr><td><code>rsid_update.include_virtual</code></td><td>bool</td><td>false</td><td>Include virtual report suites (prefix <code>vrs_</code>).</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>report (inline definition)</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Field</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>report.name</code></td><td>string</td><td><span class="pill req">required</span></td><td>Identifier used in output filenames.</td></tr>
+            <tr><td><code>report.dimension</code></td><td>string or null</td><td>null</td><td>Adobe dimension variable (e.g. <code>variables/browser</code>). Null for totals-only.</td></tr>
+            <tr><td><code>report.row_limit</code></td><td>int</td><td>500</td><td>Maximum rows returned per API request.</td></tr>
+            <tr><td><code>report.segments</code></td><td>list[string]</td><td>[]</td><td>Static segment IDs applied to every request for this report.</td></tr>
+            <tr><td><code>report.metrics</code></td><td>list[string]</td><td><span class="pill req">required</span></td><td>Adobe metric IDs to include.</td></tr>
+            <tr><td><code>report.csv_headers</code></td><td>list[string]</td><td><span class="pill req">required</span></td><td>Column header names for the output CSV.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ============================================================== -->
+    <section id="report-definitions">
+      <h2>Report Definitions</h2>
+
+      <p>Named report definitions live in <code>report_definitions/</code> as YAML files. Each file defines a <em>group</em> containing one or more named reports. Use the group name with <code>report_group:</code> or an individual report name with <code>report_ref:</code>.</p>
+
+      <h3>Available groups and reports</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>File</th><th>group name</th><th>Reports included</th><th>transform_type</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><code>bot_investigation.yaml</code></td>
+              <td><code>bot_investigation</code></td>
+              <td>
+                <code>botInvestigationMetricsByDay</code>,
+                <code>botInvestigationMetricsByMarketingChannel</code>,
+                <code>botInvestigationMetricsByDevice</code>,
+                <code>botInvestigationMetricsByDomain</code>,
+                <code>botInvestigationMetricsByMonitorResolution</code>,
+                <code>botInvestigationMetricsByHourOfDay</code>,
+                <code>botInvestigationMetricsByOperatingSystem</code>,
+                <code>botInvestigationMetricsByPageURL</code>,
+                <code>botInvestigationMetricsByRegion</code>,
+                <code>botInvestigationMetricsByUserAgent</code>,
+                <code>botInvestigationMetricsByBrowser</code>,
+                <code>botInvestigationMetricsByBrowserType</code>,
+                <code>botInvestigationMetricsByMobileManufacturer</code>
+              </td>
+              <td><code>bot_investigation</code></td>
+            </tr>
+            <tr>
+              <td><code>bot_investigation_unfiltered.yaml</code></td>
+              <td><code>bot_investigation_unfiltered</code></td>
+              <td>Same dimensions as above but without the Master Bot Filter segment applied.</td>
+              <td><code>bot_investigation</code></td>
+            </tr>
+            <tr>
+              <td><code>bot_validation.yaml</code></td>
+              <td><code>bot_validation</code></td>
+              <td>
+                <code>botFilterExcludeMetricsByMonth</code>,
+                <code>botFilterExcludexBotRuleMetricsByMonth</code>,
+                <code>botFilterIncludeMetricsByMonth</code>,
+                <code>botFilterIncludexBotRuleMetricsByMonth</code>,
+                <code>botFilterExcludexBotRuleXSuspiciousMarketingChannelsMetricsByMonth</code>,
+                <code>botFilterExcludexBotRuleXDesktopMetricsByMonth</code>,
+                <code>botFilterExcludexBotRuleMetricsByPageUrl</code>,
+                <code>JustSegmentMetricsByMonth</code>
+              </td>
+              <td><code>bot_validation</code></td>
+            </tr>
+            <tr>
+              <td><code>final_bot_metrics.yaml</code></td>
+              <td><code>final_bot_metrics</code></td>
+              <td>
+                <code>LegendFinalBotMetricsUnfilteredVisitsByYear</code>,
+                <code>LegendFinalBotMetricsCurrentIncludeByYear</code>,
+                <code>LegendFinalBotMetricsDevelopmentIncludeByYear</code>
+              </td>
+              <td><code>final_bot_metrics</code></td>
+            </tr>
+            <tr>
+              <td><code>topline.yaml</code></td>
+              <td><code>topline</code></td>
+              <td><code>toplineMetricsForRsidValidation</code></td>
+              <td><code>summary_total</code></td>
+            </tr>
+            <tr>
+              <td><code>lookup.yaml</code></td>
+              <td><code>lookup</code></td>
+              <td>
+                <code>Lookupvariablesbrowsertype</code>,
+                <code>Lookupvariablesoperatingsystem</code>,
+                <code>Lookupvariablesmobilemanufacturer</code>,
+                <code>Lookupvariablesmonitorresolution</code>,
+                <code>Lookupvariablesmarketingchannel</code>,
+                <code>Lookupvariablesgeoregion</code>
+              </td>
+              <td><code>lookup</code></td>
+            </tr>
+            <tr>
+              <td><code>segment_builder.yaml</code></td>
+              <td><code>segment_builder</code></td>
+              <td>
+                <code>SegmentsBuildervariablesgeocountry</code>,
+                <code>SegmentsBuilderCountry50</code>,
+                <code>SegmentsBuildervariablesgeoregion</code>,
+                <code>SegmentsBuildervariablesmarketingchannel...</code>
+              </td>
+              <td><code>segment_builder</code></td>
+            </tr>
+            <tr>
+              <td><code>clickouts.yaml</code></td>
+              <td><code>clickouts</code></td>
+              <td>
+                <code>LegendClickoutsByGeoregionNAOnly</code>,
+                <code>LegendClickoutsAdCloudMetrics</code>
+              </td>
+              <td><code>clickouts</code></td>
+            </tr>
+            <tr>
+              <td><code>bot_rule_compare.yaml</code></td>
+              <td><code>bot_rule_compare</code></td>
+              <td>Bot rule comparison reports.</td>
+              <td><code>bot_rule_compare</code></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Report definition file structure</h3>
+      <p>Each file follows this structure:</p>
+      <pre><code>group: bot_investigation
+description: "Human-readable description"
+transform_type: bot_investigation
+
+defaults:
+  segments:
+    - s3938_66fe79408ff02713f66ed76b   # applied to all reports in group
+  metrics:
+    - metrics/event3
+  row_limit: 500
+
+reports:
+  botInvestigationMetricsByDay:
+    dimension: variables/daterangeday
+    csv_headers:
+      - id
+      - day
+      - unique_visitors
+      - ...</code></pre>
+
+      <p>Individual reports can override <code>segments</code>, <code>metrics</code>, and <code>row_limit</code> from the defaults. The <code>csv_headers</code> list defines the column names in the output CSV (position-mapped to the API response).</p>
+    </section>
+
+    <!-- ============================================================== -->
+    <section id="segments">
+      <h2>Segments</h2>
+
+      <h3>Segment list JSON format</h3>
+      <p>A segment list file is a JSON array of Adobe segment ID strings:</p>
+      <pre><code>[
+  "s3938_61234abc...",
+  "s3938_65432def...",
+  "s3938_7abc1234..."
+]</code></pre>
+      <p>These files are written to <code>data/segment_lists/&lt;client&gt;/</code> by the <code>segment_creation</code> flow.</p>
+
+      <h3>All segment source options</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>source</th><th>When to use</th><th>Extra fields needed</th></tr></thead>
+          <tbody>
+            <tr><td><code>inline</code></td><td>You know the segment IDs and want to hard-code them.</td><td><code>ids: [...]</code></td></tr>
+            <tr><td><code>segment_list_file</code></td><td>Use an existing JSON segment list file on disk.</td><td><code>file: &lt;path&gt;</code></td></tr>
+            <tr><td><code>step_output</code></td><td>Use the output of a previous composite step (e.g. <code>segment_creation</code>). Most common in composite jobs.</td><td><code>step_id: &lt;id&gt;</code>, <code>output_key: segment_list_file</code></td></tr>
+            <tr><td><code>latest_segment_list</code></td><td>Automatically discover and use the most recently written segment list file for the client.</td><td>(none)</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Saving a segment definition</h3>
+      <p>To fetch and save a segment definition from the API (useful for inspection or debugging):</p>
+      <pre><code>adobe-downloader get-segment \
+  --client Legend \
+  --segment-id s3938_61bb0165a88ab931afa78e4c \
+  --output data/saved_segments/master_bot_filter.json</code></pre>
+
+      <h3>dim_to_segments</h3>
+      <p>The <code>dim_to_segments</code> composite step automatically generates segments from the top values of a dimension. It is used in the country investigation pipeline to create per-country segments without manual CSV input:</p>
+      <pre><code>- step: dim_to_segments
+  id: generate_country_segments
+  dimension: variables/geocountry
+  rsid: trillioncoverscom
+  additional_segments:
+    - s3938_66fe79408ff02713f66ed76b
+  num_pairs: 1</code></pre>
+    </section>
+
+    <!-- ============================================================== -->
+    <section id="test-mode">
+      <h2>Test Mode</h2>
+
+      <p>Test mode limits the number of RSIDs, date intervals, and segments processed so you can verify a config works end-to-end without triggering hundreds of API requests. Always use test mode the first time you run a new config.</p>
+
+      <h3>Enabling test mode</h3>
+      <p>Either set it in the config file:</p>
+      <pre><code>test_mode: true
+test_limits:
+  max_rsids: 2
+  max_date_intervals: 1
+  max_segments: 2</code></pre>
+      <p>Or pass <code>--test</code> on the CLI (overrides the config setting):</p>
+      <pre><code>adobe-downloader run --config jobs/examples/legend_bot_investigation_jan25.yaml --test</code></pre>
+
+      <h3>Recommended test config settings</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Setting</th><th>Recommended test value</th><th>Reason</th></tr></thead>
+          <tbody>
+            <tr><td><code>test_limits.max_rsids</code></td><td>2</td><td>Enough to verify iteration logic without a large API bill.</td></tr>
+            <tr><td><code>test_limits.max_date_intervals</code></td><td>1</td><td>One month is sufficient to check the full data pipeline.</td></tr>
+            <tr><td><code>test_limits.max_segments</code></td><td>2</td><td>Enough to verify segment iteration.</td></tr>
+            <tr><td><code>resume</code></td><td><code>false</code></td><td>Start fresh on each test run so you see a clean result.</td></tr>
+            <tr><td><code>transform.concat</code></td><td><code>false</code></td><td>Too few files to make concatenation useful.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>What test mode does not limit</h3>
+      <p>Test mode only caps the iteration counts. It does not change the API endpoint, authentication, or report definitions. The requests that are sent are real Adobe Analytics API calls.</p>
+
+      <div class="callout warn">
+        <p><strong>Important:</strong> Test mode limits are applied in the order RSIDs/intervals/segments are iterated. The first N items are used; there is no random sampling. Check that the first few items in your RSID file and segment list are representative before running in test mode.</p>
+      </div>
+    </section>
+
+    <!-- ============================================================== -->
+    <section id="troubleshooting">
+      <h2>Troubleshooting</h2>
+
+      <h3>Schema validation failed</h3>
+      <p><strong>Symptom:</strong> <code>adobe-downloader run</code> or <code>validate</code> prints <code>Schema validation failed</code> with field names and error messages.</p>
+      <p><strong>Cause:</strong> A required field is missing, a value has the wrong type, or a mutually exclusive combination is set (e.g. both <code>report_ref</code> and <code>report_group</code>).</p>
+      <p><strong>Fix:</strong> Read the error message carefully. The field path (e.g. <code>rsids -&gt; source</code>) tells you exactly what is wrong. Run <code>validate</code> after every edit until it passes.</p>
+
+      <h3>No credentials file found</h3>
+      <p><strong>Symptom:</strong> Warning: <code>no credentials file found for client 'X'</code>, or <code>FileNotFoundError</code> at run time.</p>
+      <p><strong>Fix:</strong> Ensure <code>credentials/client&lt;Name&gt;.yaml</code> exists (case-sensitive). The client name in the config must match the suffix of the credentials filename exactly.</p>
+
+      <h3>RSID file not found</h3>
+      <p><strong>Symptom:</strong> <code>RSID file not found: data/rsid_lists/legend_investigation.txt</code>.</p>
+      <p><strong>Fix:</strong> Run <code>adobe-downloader update-rsids</code> (or a composite job with an <code>rsid_update</code> step) to generate the RSID list files. Also verify you are running from the repository root.</p>
+
+      <h3>Segment list file not found</h3>
+      <p><strong>Symptom:</strong> <code>Segment list file not found: data/segment_lists/Legend/...</code>.</p>
+      <p><strong>Fix:</strong> Run the <code>segment_creation</code> job first to generate the file, or update the <code>segments.file</code> path to point to an existing file.</p>
+
+      <h3>Config has changed since the last run</h3>
+      <p><strong>Symptom:</strong> Warning on <code>run</code>: <code>config has changed since the last run</code>.</p>
+      <p><strong>Cause:</strong> The YAML file was modified after the job's state database was created. The state is keyed to the config hash.</p>
+      <p><strong>Fix:</strong> If the change was intentional and you want to continue the previous download with the new config, proceed normally. If you want to start completely fresh, run with <code>--no-resume</code> or use the <code>reset</code> command.</p>
+
+      <h3>Many failed requests</h3>
+      <p><strong>Symptom:</strong> <code>status</code> shows a large number of <code>failed</code> requests.</p>
+      <p><strong>Cause:</strong> Adobe API rate limits, temporary network issues, or invalid segment/metric IDs.</p>
+      <p><strong>Fix:</strong>
+      </p>
+      <ol>
+        <li>Check the last errors shown by <code>adobe-downloader status --config &lt;config&gt;</code>.</li>
+        <li>If rate-limited, lower <code>rsids.batch_size</code> (e.g. to 6) and re-run.</li>
+        <li>Run <code>adobe-downloader retry --config &lt;config&gt; --failed-only</code> to re-queue failed requests.</li>
+        <li>Run <code>adobe-downloader run --config &lt;config&gt;</code> again to process the re-queued requests.</li>
+      </ol>
+
+      <h3>Lookup value not found during segment creation</h3>
+      <p><strong>Symptom:</strong> Segment creation errors with <code>Value 'X' not found in lookup</code>.</p>
+      <p><strong>Fix:</strong>
+      </p>
+      <ol>
+        <li>Use <code>adobe-downloader search-lookup --dimension &lt;dim&gt; --value &lt;value&gt;</code> to search the lookup for similar entries.</li>
+        <li>If the value genuinely does not exist in the lookup, regenerate the lookup file using a recent date range (see <a href="#flow-lookup">Lookup Generation</a>).</li>
+        <li>Check spelling and case. MonitorResolution values are normalised (e.g. <code>1920x1080</code> becomes <code>1920 x 1080</code>).</li>
+      </ol>
+
+      <h3>No RSID lookup file found in data/report_suite_lists</h3>
+      <p><strong>Symptom:</strong> <code>segment_creation</code> aborts with <code>No RSID lookup file found in data/report_suite_lists</code>.</p>
+      <p><strong>Fix:</strong> Run <code>rsid_update</code> to generate a dated pairs file in <code>data/report_suite_lists/</code>.</p>
+
+      <h3>validate-output finds missing files after a completed run</h3>
+      <p><strong>Symptom:</strong> <code>validate-output</code> reports missing JSON files even though the job showed as completed.</p>
+      <p><strong>Fix:</strong> Run <code>adobe-downloader validate-output --config &lt;config&gt; --retry</code> to re-download missing files automatically.</p>
+    </section>
+
+    <!-- ============================================================== -->
+    <section id="cli-reference">
+      <h2>Full CLI Reference</h2>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Command</th>
+              <th>Key flags</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>adobe-downloader run</code></td>
+              <td><code>-c</code> config, <code>-r</code> report, <code>--no-resume</code>, <code>--test</code></td>
+              <td>Execute a job (any type). Primary command.</td>
+            </tr>
+            <tr>
+              <td><code>adobe-downloader validate</code></td>
+              <td><code>-c</code> config, <code>--[no-]check-credentials</code></td>
+              <td>Validate a config file against the schema. Exits 0 on success, 1 on schema error, 2 on file-reference warnings.</td>
+            </tr>
+            <tr>
+              <td><code>adobe-downloader status</code></td>
+              <td><code>-c</code> config</td>
+              <td>Print request counts (completed / pending / failed) from the state DB for a report_download job.</td>
+            </tr>
+            <tr>
+              <td><code>adobe-downloader retry</code></td>
+              <td><code>-c</code> config, <code>--failed-only</code></td>
+              <td>Re-queue failed (or all non-completed) requests. Run <code>run</code> afterward to execute them.</td>
+            </tr>
+            <tr>
+              <td><code>adobe-downloader reset</code></td>
+              <td><code>-c</code> config, <code>--confirm</code></td>
+              <td>Delete all state for a job, allowing a clean restart. Requires --confirm.</td>
+            </tr>
+            <tr>
+              <td><code>adobe-downloader validate-output</code></td>
+              <td><code>-c</code> config, <code>--dry-run</code>, <code>--retry</code></td>
+              <td>Check all expected output files are present and non-empty for a report_download job.</td>
+            </tr>
+            <tr>
+              <td><code>adobe-downloader transform</code></td>
+              <td><code>-j</code> json-dir, <code>-p</code> pattern, <code>--[no-]concat</code>, <code>--concat-output</code></td>
+              <td>Transform JSON files to CSV and optionally concatenate. No config file needed.</td>
+            </tr>
+            <tr>
+              <td><code>adobe-downloader history</code></td>
+              <td><code>-c</code> client, <code>-o</code> output-base, <code>--last</code>, <code>--status</code>, <code>--since</code></td>
+              <td>Show recent job runs from the history log.</td>
+            </tr>
+            <tr>
+              <td><code>adobe-downloader cleanup</code></td>
+              <td><code>-c</code> client, <code>--older-than</code>, <code>--type</code>, <code>--confirm</code></td>
+              <td>Remove old files. Types: processed-json, logs, state. Requires --confirm to delete.</td>
+            </tr>
+            <tr>
+              <td><code>adobe-downloader list-rsids</code></td>
+              <td><code>-c</code> client, <code>--[no-]include-virtual</code></td>
+              <td>Fetch and display all report suites for a client from the Adobe API.</td>
+            </tr>
+            <tr>
+              <td><code>adobe-downloader list-users</code></td>
+              <td><code>-c</code> client</td>
+              <td>List Adobe Analytics users for a client (useful for finding share_with_users IDs).</td>
+            </tr>
+            <tr>
+              <td><code>adobe-downloader update-rsids</code></td>
+              <td><code>-c</code> client, <code>--from</code>, <code>--to</code>, <code>--investigation-threshold</code>, <code>--validation-threshold</code>, <code>--[no-]include-virtual</code>, <code>-o</code> output-base</td>
+              <td>Fetch report suites, download topline metrics, and write filtered RSID list files. CLI shortcut for rsid_update without a config file.</td>
+            </tr>
+            <tr>
+              <td><code>adobe-downloader get-segment</code></td>
+              <td><code>-c</code> client, <code>-s</code> segment-id, <code>-o</code> output</td>
+              <td>Fetch a segment definition from the Adobe API and save it locally as JSON.</td>
+            </tr>
+            <tr>
+              <td><code>adobe-downloader search-lookup</code></td>
+              <td><code>-d</code> dimension, <code>-v</code> value</td>
+              <td>Search a local lookup file for a dimension value's numeric item ID.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Global flags</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Flag</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>--version</code></td><td>Print the installed version of adobe-downloader.</td></tr>
+            <tr><td><code>--help</code></td><td>Show help for any command. Also available as <code>adobe-downloader &lt;command&gt; --help</code>.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <hr>
+    <p class="muted" style="text-align:center; padding-bottom: 1rem;">adobe-downloader &mdash; Station10 internal tool &mdash; Generated 2026-05-06</p>
+
+  </main>
+</div>
+
+</body>
+</html>

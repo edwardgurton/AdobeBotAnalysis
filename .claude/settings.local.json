@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(git add *)",
-      "Bash(git commit *)"
+      "Bash(git commit *)",
+      "PowerShell(Get-ChildItem \"c:\\\\Users\\\\EdwardGurton\\\\OneDrive - Station10\\\\Documents\\\\GitHub\\\\AdobeBotAnalysis\\\\user-docs\" -Force -File | ForEach-Object { @{Name = $_.Name; Size = $_.Length; Modified = $_.LastWriteTime} })"
     ]
   }
 }

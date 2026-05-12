@@ -15,11 +15,11 @@ Status legend: `☐ todo` · `🔄 in-progress` · `✅ done` · `⚠️ blocked
 
 ## Current State
 
-**Active step:** All steps complete — build finished
+**Active step:** Step 20 — Extend AdobeClient with schema endpoints (Phase 7)
 
 **Last commit:** `Step 19: fix validation configs (cube report metrics, investigation chain RSID source)`
 
-**Next concrete action:** Full production run comparison against JS outputs (optional). The tool is feature-complete and end-to-end validated.
+**Next concrete action:** Implement `get_dimensions()`, `get_metrics()`, `get_calculated_metrics()` in `adobe_downloader/core/api_client.py`. Write `tests/test_schema_client.py`. Then Step 21: `adobe_downloader/utils/schema_cache.py`.
 
 **In-flight (uncommitted) work:** *(none)*
 
@@ -184,6 +184,70 @@ Status legend: `☐ todo` · `🔄 in-progress` · `✅ done` · `⚠️ blocked
 - **Completed:** 2026-05-05
 - **Validation:** Cube report pipeline (dim_to_segments → download → transform) produced 50-row CSVs with correct 11-column structure. Investigation chain (rsid_update → download(13 reports) → validate → transform) produced 13 bot investigation CSVs with correct headers and plausible data (e.g. 500 browser rows, 30 daily rows for Jan 2025). Both ran against real Adobe credentials.
 - **Notes:** `dim_to_segments()` implemented in `segments/dim_to_segments.py`: fetches dimension values via `get_report`, creates one numeric-equality segment per row, formats names mirroring JS (`name.replace(':', '-').replace(' ', '')`), saves segment list JSON. `_run_dim_to_segments_step` updated to pass `job.date_range`. Cube validation config needed all 4 custom metrics (plan example had them; validation config initially only had 2). Investigation chain config uses `source: single` (known-good RSID `trillioncoverscom`) rather than a file reference. Minor expected warning: `triadobeusage` (Adobe's internal analytics suite) has no visit data and is skipped by rsid_update.
+
+---
+
+## Phase 7 — Schema Discovery
+
+### ☐ Step 20 — Extend AdobeClient with schema endpoints
+- **Target file:** `adobe_downloader/core/api_client.py`
+- **Adds:** `get_dimensions(rsid)`, `get_metrics(rsid)`, `get_calculated_metrics()` — all via `_get()` wrapper.
+- **Notes:** Dimensions endpoint uses `?expansion=support` to include classification metadata. Calculated metrics are company-scoped (no rsid param). All return `list[dict[str, Any]]`.
+- **Tests:** `tests/test_schema_client.py` — mock responses, verify classification items are not filtered.
+- **Validation:** `pytest tests/test_schema_client.py` passes.
+
+### ☐ Step 21 — SchemaCache utility
+- **New file:** `adobe_downloader/utils/schema_cache.py`
+- **Stores:** `data/schema_cache/dimensions/{rsid}.json`, `data/schema_cache/metrics/{rsid}.json`, `data/schema_cache/calculated_metrics.json`, `data/schema_cache/index/dimensions_index.md`, `data/schema_cache/index/metrics_index.md`, `data/schema_cache/index/last_updated.json`.
+- **Notes:** `rebuild_index()` generates grep-friendly markdown: `## {id} | {name}\nRSIDs: ...\nType: ... | Classification: Yes/No\nDescription: ...`. TTL checked via `last_updated.json`.
+- **Tests:** `tests/test_schema_cache.py` — write/read round-trip, TTL logic, index format.
+- **Validation:** `pytest tests/test_schema_cache.py` passes.
+
+### ☐ Step 22 — Schema discovery flow
+- **New file:** `adobe_downloader/flows/schema_discovery.py`
+- **New Pydantic model:** `SchemaDiscoveryJobConfig` in `adobe_downloader/config/schema.py` (`job_type: schema_discovery`, `mode: dimensions|metrics|both`, `rsid_source`, `cache_ttl_days`, `force_refresh`).
+- **Notes:** Iterates RSIDs, checks TTL, fetches only stale entries, fetches calculated metrics once, calls `SchemaCache.rebuild_index()` at end.
+- **Tests:** `tests/test_schema_discovery.py` — mock AdobeClient, verify cache writes + index rebuild.
+- **Validation:** `pytest tests/test_schema_discovery.py` passes.
+
+### ☐ Step 23 — `schema` CLI command group
+- **Target file:** `adobe_downloader/cli.py`
+- **Adds:** `schema` Click group with `fetch` (config-driven), `search --query STR [--type dimension|metric]`, `status` (cache freshness per RSID).
+- **New template:** `jobs/templates/schema_discovery.yaml`.
+- **Tests:** `tests/test_cli_schema.py` — Click test runner for all sub-commands.
+- **Validation:** `adobe-downloader schema --help` works; tests pass.
+
+### ☐ Step 24 — Wire semantic layer into search output
+- **Target file:** `adobe_downloader/cli.py` (schema search command)
+- **Notes:** When `data/semantic_layer/dimensions.yaml` (or metrics) exists, append `display_name`, `use_when`, `contexts`, `notes` fields to each search result. No API call — read-only join on local YAML.
+- **Tests:** Add cases to `tests/test_cli_schema.py` covering presence and absence of semantic layer.
+- **Validation:** `adobe-downloader schema search --query "browser"` shows semantic fields when YAML present.
+
+---
+
+## Phase 8 — Semantic Layer
+
+### ☐ Step 25 — Semantic layer YAML schema + seed data
+- **New files:** `data/semantic_layer/dimensions.yaml`, `data/semantic_layer/metrics.yaml`, `data/semantic_layer/README.md`.
+- **Schema per entry:** `display_name`, `description`, `use_when`, `preferred_over: []`, `contexts: []`, `notes`.
+- **Seed from:** `docs/reference/common_dimensions.md`, `docs/reference/common_metrics.md`, all dimension/metric IDs in `report_definitions/*.yaml`.
+- **Validation:** Files parse as valid YAML; `schema search` returns semantic annotations.
+
+### ☐ Step 26 — CLAUDE.md semantic layer protocol
+- **Target file:** `CLAUDE.md`
+- **Adds:** "Semantic layer" section instructing Claude Code to update `data/semantic_layer/` when users provide dimension/metric context; commit format `Semantic: add context for {id}`; never delete entries without confirmation.
+- **Also add:** References to the two mini manuals created in Step 27.
+- **Validation:** CLAUDE.md is clean and unambiguous.
+
+### ☐ Step 27 — Mini manuals
+- **New files:** `user-docs/schema-discovery-manual.md`, `user-docs/semantic-layer-manual.md`.
+- **schema-discovery-manual.md:** Purpose, `schema fetch` usage + example YAML, `schema search` usage, `schema status`, cache TTL notes.
+- **semantic-layer-manual.md:** Purpose, YAML format + worked example, how to edit manually, how to ask Claude Code to update it, how `schema search` surfaces annotations.
+- **Validation:** Files are well-formed markdown.
+
+### ☐ Step 28 — Update IMPLEMENTATION_STATUS.md
+- Mark Steps 20–27 as ✅ done, update Current State to "All steps complete".
+- Add session log entry for the sessions that covered Phase 7 and Phase 8.
 
 ---
 
