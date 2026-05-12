@@ -231,6 +231,16 @@ class RsidUpdateJobConfig(BaseModel):
     date_range: DateRange | None = None
 
 
+class SchemaDiscoveryJobConfig(BaseModel):
+    job_type: Literal["schema_discovery"]
+    client: str
+    description: str = ""
+    rsids: RsidSource
+    mode: Literal["dimensions", "metrics", "both"] = "both"
+    cache_ttl_days: int = 30
+    force_refresh: bool = False
+
+
 class CompositeStep(BaseModel):
     """One step in a composite job. Extra fields are allowed for step-specific config."""
 
@@ -277,6 +287,7 @@ JobConfig = Annotated[
     | SegmentCreationJobConfig
     | LookupGenerationJobConfig
     | RsidUpdateJobConfig
+    | SchemaDiscoveryJobConfig
     | CompositeJobConfig,
     Field(discriminator="job_type"),
 ]
