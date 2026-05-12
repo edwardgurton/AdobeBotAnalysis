@@ -15,11 +15,11 @@ Status legend: `☐ todo` · `🔄 in-progress` · `✅ done` · `⚠️ blocked
 
 ## Current State
 
-**Active step:** Step 20 — Extend AdobeClient with schema endpoints (Phase 7)
+**Active step:** Step 23 — `schema` CLI command group
 
-**Last commit:** `Step 19: fix validation configs (cube report metrics, investigation chain RSID source)`
+**Last commit:** `Step 22: schema discovery flow` (4416165) — SchemaDiscoveryJobConfig, run_schema_discovery(), 14 tests; 400 total passing
 
-**Next concrete action:** Implement `get_dimensions()`, `get_metrics()`, `get_calculated_metrics()` in `adobe_downloader/core/api_client.py`. Write `tests/test_schema_client.py`. Then Step 21: `adobe_downloader/utils/schema_cache.py`.
+**Next concrete action:** Add `schema` Click group to `cli.py` with `fetch` (config-driven), `search --query STR [--type dimension|metric]`, `status` sub-commands. Create `jobs/templates/schema_discovery.yaml`.
 
 **In-flight (uncommitted) work:** *(none)*
 
@@ -189,21 +189,23 @@ Status legend: `☐ todo` · `🔄 in-progress` · `✅ done` · `⚠️ blocked
 
 ## Phase 7 — Schema Discovery
 
-### ☐ Step 20 — Extend AdobeClient with schema endpoints
+### ✅ Step 20 — Extend AdobeClient with schema endpoints
+- **Completed:** 2026-05-12
 - **Target file:** `adobe_downloader/core/api_client.py`
 - **Adds:** `get_dimensions(rsid)`, `get_metrics(rsid)`, `get_calculated_metrics()` — all via `_get()` wrapper.
 - **Notes:** Dimensions endpoint uses `?expansion=support` to include classification metadata. Calculated metrics are company-scoped (no rsid param). All return `list[dict[str, Any]]`.
-- **Tests:** `tests/test_schema_client.py` — mock responses, verify classification items are not filtered.
-- **Validation:** `pytest tests/test_schema_client.py` passes.
+- **Tests:** `tests/test_schema_client.py` — 9 tests pass. Classification items verified not filtered.
+- **Validation:** `pytest tests/test_schema_client.py` — 9/9 passed.
 
-### ☐ Step 21 — SchemaCache utility
+### ✅ Step 21 — SchemaCache utility
+- **Completed:** 2026-05-12
 - **New file:** `adobe_downloader/utils/schema_cache.py`
 - **Stores:** `data/schema_cache/dimensions/{rsid}.json`, `data/schema_cache/metrics/{rsid}.json`, `data/schema_cache/calculated_metrics.json`, `data/schema_cache/index/dimensions_index.md`, `data/schema_cache/index/metrics_index.md`, `data/schema_cache/index/last_updated.json`.
-- **Notes:** `rebuild_index()` generates grep-friendly markdown: `## {id} | {name}\nRSIDs: ...\nType: ... | Classification: Yes/No\nDescription: ...`. TTL checked via `last_updated.json`.
+- **Notes:** `rebuild_index()` generates grep-friendly markdown: `## {id} | {name}\nRSIDs: ...\nType: ... | Classification: Yes/No\nDescription: ...`. TTL checked via `last_updated.json`. Committed in c05f253 alongside Step 20; IMPLEMENTATION_STATUS.md was not updated at the time.
 - **Tests:** `tests/test_schema_cache.py` — write/read round-trip, TTL logic, index format.
 - **Validation:** `pytest tests/test_schema_cache.py` passes.
 
-### ☐ Step 22 — Schema discovery flow
+### ✅ Step 22 — Schema discovery flow
 - **New file:** `adobe_downloader/flows/schema_discovery.py`
 - **New Pydantic model:** `SchemaDiscoveryJobConfig` in `adobe_downloader/config/schema.py` (`job_type: schema_discovery`, `mode: dimensions|metrics|both`, `rsid_source`, `cache_ttl_days`, `force_refresh`).
 - **Notes:** Iterates RSIDs, checks TTL, fetches only stale entries, fetches calculated metrics once, calls `SchemaCache.rebuild_index()` at end.
@@ -403,6 +405,20 @@ Status legend: `☐ todo` · `🔄 in-progress` · `✅ done` · `⚠️ blocked
 - **Done this session:** Created `adobe_downloader/flows/validation.py` — `enumerate_expected_paths()` (mirrors iteration loop from `run_report_download` to list all expected JSON output paths), `check_output_files()` (partitions into valid/missing-or-empty), `run_validate_output()` (CLI orchestrator: enumerates, checks, optionally resets DB and re-downloads). Added `reset_incomplete_for_step(step_id)` and `reset_completed_for_path(output_path)` to `StateManager`. Updated `_run_validate_output_step` in `composite_job.py` to properly enumerate expected files by looking up the referenced step config, check them, and retry if `retry: true`. Replaced the CLI `validate-output` stub with a full implementation. 20 new tests, 310 total passing.
 - **Left in flight:** Nothing.
 - **Next action:** Step 18 — Report suite updater. `flows/rsid_update.py`, `adobe-downloader update-rsids` CLI command.
+
+### 2026-05-12
+- **Worked on:** Steps 20 and 21
+- **Commits:** `Added user manuals` (c05f253 — 1 commit, non-standard message)
+- **Done this session:** Added `get_dimensions(rsid)`, `get_metrics(rsid)`, `get_calculated_metrics()` to `AdobeClient` in `core/api_client.py` (all via `_get()` wrapper; dimensions uses `?expansion=support`). Created `adobe_downloader/utils/schema_cache.py` — local file cache for dimension/metric metadata under `data/schema_cache/`, TTL via `last_updated.json`, `rebuild_index()` for grep-friendly markdown. Created `tests/test_schema_client.py` (9 tests) and `tests/test_schema_cache.py`. Also added user documentation: `user-docs/user-manual.html`, `user-docs/claude-reference.md`, `user-docs/technical-reference.md`. Updated RSID list files.
+- **Left in flight:** IMPLEMENTATION_STATUS.md was not updated to mark Step 21 done; corrected in subsequent session.
+- **Next action:** Step 22 — Schema discovery flow (`flows/schema_discovery.py`, `SchemaDiscoveryJobConfig`).
+
+### 2026-05-12 (step 22)
+- **Worked on:** Step 22
+- **Commits:** `Step 22: schema discovery flow` (4416165 — 1 commit)
+- **Done this session:** Added `SchemaDiscoveryJobConfig` to `config/schema.py` (fields: `job_type`, `client`, `rsids: RsidSource`, `mode: dimensions|metrics|both`, `cache_ttl_days: int = 30`, `force_refresh: bool = False`) and extended the `JobConfig` discriminated union. Created `flows/schema_discovery.py` — `run_schema_discovery(client, job)` iterates RSIDs, checks TTL per entry, fetches only stale dimension/metric slices, fetches calculated metrics once, calls `rebuild_index()` at end. 14 new tests (400 total passing).
+- **Left in flight:** Nothing.
+- **Next action:** Step 23 — `schema` CLI command group.
 
 ### 2026-05-01 (session 3)
 - **Worked on:** Step 2
