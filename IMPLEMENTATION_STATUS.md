@@ -15,11 +15,11 @@ Status legend: `☐ todo` · `🔄 in-progress` · `✅ done` · `⚠️ blocked
 
 ## Current State
 
-**Active step:** Step 26 — CLAUDE.md semantic layer protocol
+**Active step:** Step 27 — Mini manuals
 
-**Last commit:** `Step 25: semantic layer YAML seed data` — dimensions.yaml (21 entries), metrics.yaml (15 entries), README.md; 420 tests passing
+**Last commit:** `Step 26: CLAUDE.md semantic layer protocol` — Semantic layer section added; 420 tests passing
 
-**Next concrete action:** Add a "Semantic layer" section to CLAUDE.md instructing Claude Code to update `data/semantic_layer/` when users provide dimension/metric context; specify commit format `Semantic: add context for {id}`; add references to mini manuals (Step 27).
+**Next concrete action:** Create `user-docs/schema-discovery-manual.md` (purpose, `schema fetch`/`search`/`status` usage, cache TTL notes) and `user-docs/semantic-layer-manual.md` (purpose, YAML format, how to edit manually, how to ask Claude Code to update it, how `schema search` surfaces annotations).
 
 **In-flight (uncommitted) work:** *(none)*
 
@@ -239,11 +239,12 @@ Status legend: `☐ todo` · `🔄 in-progress` · `✅ done` · `⚠️ blocked
 - **Notes:** 21 dimension entries across 5 groups (browser/device, custom eVars, geographic, traffic source, time); 15 metric entries across 4 groups (standard, custom events, AdCloud, calculated). `load_semantic_annotations()` confirms all 36 entries load cleanly. 420 tests still passing.
 - **Validation:** Files parse as valid YAML; `load_semantic_annotations()` returns all 36 entries; `schema search` returns semantic annotations when cache is populated.
 
-### ☐ Step 26 — CLAUDE.md semantic layer protocol
+### ✅ Step 26 — CLAUDE.md semantic layer protocol
+- **Completed:** 2026-05-13
 - **Target file:** `CLAUDE.md`
-- **Adds:** "Semantic layer" section instructing Claude Code to update `data/semantic_layer/` when users provide dimension/metric context; commit format `Semantic: add context for {id}`; never delete entries without confirmation.
-- **Also add:** References to the two mini manuals created in Step 27.
-- **Validation:** CLAUDE.md is clean and unambiguous.
+- **Adds:** "Semantic layer" section instructing Claude Code to update `data/semantic_layer/` when users provide dimension/metric context; commit format `Semantic: add context for {id}`; never delete entries without confirmation; references to both mini manuals (planned paths).
+- **Also updated:** `Where things live` bullet list to include `data/semantic_layer/`.
+- **Validation:** CLAUDE.md is clean and unambiguous; 420 tests still passing.
 
 ### ☐ Step 27 — Mini manuals
 - **New files:** `user-docs/schema-discovery-manual.md`, `user-docs/semantic-layer-manual.md`.
@@ -437,6 +438,13 @@ Status legend: `☐ todo` · `🔄 in-progress` · `✅ done` · `⚠️ blocked
 - **Done this session:** Created `data/semantic_layer/dimensions.yaml` (21 entries across 5 groups: browser/device, custom eVars, geographic, traffic source, time dimensions), `data/semantic_layer/metrics.yaml` (15 entries across 4 groups: standard metrics, custom events, Adobe Advertising, calculated metrics), `data/semantic_layer/README.md` (format reference, valid contexts list, instructions for adding entries). Seeded from `docs/reference/common_dimensions.md`, `docs/reference/common_metrics.md`, and all IDs found across all 9 `report_definitions/*.yaml` files. Validated YAML parse (both files = list of dicts with `id`); `load_semantic_annotations()` returns all 36 entries cleanly. 420 tests still passing.
 - **Left in flight:** Nothing.
 - **Next action:** Step 26 — CLAUDE.md semantic layer protocol.
+
+### 2026-05-13 (step 26)
+- **Worked on:** Step 26
+- **Commits:** `Step 26: CLAUDE.md semantic layer protocol` (1 commit)
+- **Done this session:** Added "Semantic layer" section to CLAUDE.md — instructs Claude Code to update `data/semantic_layer/dimensions.yaml` or `metrics.yaml` whenever users provide dimension/metric context, specifies commit format `Semantic: add context for {id}`, prohibits deleting entries without explicit user confirmation, and links to both mini manuals at their planned paths. Also added `data/semantic_layer/` bullet to "Where things live". 420 tests still passing.
+- **Left in flight:** Nothing.
+- **Next action:** Step 27 — Create `user-docs/schema-discovery-manual.md` and `user-docs/semantic-layer-manual.md`.
 
 ### 2026-05-12 (step 22)
 - **Worked on:** Step 22
