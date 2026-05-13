@@ -1,0 +1,239 @@
+# Semantic layer — dimensions
+#
+# Each entry annotates a dimension ID used in this project.
+# Fields: id, display_name, description (documentation only), use_when,
+#         preferred_over, contexts, notes.
+#
+# To add a new entry: append a block following the same structure and commit
+# with message "Semantic: add context for <id>".
+# Never delete an entry without confirmation.
+
+# ---------------------------------------------------------------------------
+# Browser / device
+# ---------------------------------------------------------------------------
+
+- id: variables/browser
+  display_name: Browser
+  description: Full browser name including vendor and version (e.g. "Chrome 124").
+  use_when: Investigating bot traffic at the browser-version level; use for drill-down after grouping by browsertype.
+  preferred_over: []
+  contexts:
+    - bot_investigation
+    - bot_rule_compare
+  notes: More granular than variables/browsertype — use browsertype for high-level segmenting.
+
+- id: variables/browsertype
+  display_name: Browser Type
+  description: Browser vendor without version string (e.g. "Chrome", "Firefox").
+  use_when: Segment or group traffic by browser vendor; preferred for high-level analysis and lookup table generation.
+  preferred_over:
+    - variables/browser
+  contexts:
+    - bot_investigation
+    - bot_rule_compare
+    - lookup
+  notes: Used in lookup generation to build the browsertype lookup table.
+
+- id: variables/mobiledevicetype
+  display_name: Mobile Device Type
+  description: Category of mobile device (e.g. "Mobile Phone", "Tablet").
+  use_when: Identifying bot traffic concentrated in specific device categories.
+  preferred_over: []
+  contexts:
+    - bot_investigation
+    - bot_rule_compare
+  notes: ""
+
+- id: variables/mobilemanufacturer
+  display_name: Mobile Manufacturer
+  description: Device hardware manufacturer (e.g. "Samsung", "Apple").
+  use_when: Investigating suspicious traffic from specific mobile manufacturers; also used to build manufacturer lookup tables.
+  preferred_over: []
+  contexts:
+    - bot_investigation
+    - bot_rule_compare
+    - lookup
+  notes: ""
+
+- id: variables/monitorresolution
+  display_name: Monitor Resolution
+  description: Screen resolution reported by the visitor's browser (e.g. "1920x1080").
+  use_when: Bot investigation — non-standard or very small resolutions are a strong signal for headless browsers.
+  preferred_over: []
+  contexts:
+    - bot_investigation
+    - bot_rule_compare
+    - lookup
+  notes: Headless browsers frequently report unusual screen resolutions (e.g. 800x600 or 0x0).
+
+- id: variables/operatingsystem
+  display_name: Operating System
+  description: Visitor operating system (e.g. "Windows 11", "macOS 14").
+  use_when: Detecting anomalous OS distributions; rare or server-like OS values can indicate bot traffic.
+  preferred_over: []
+  contexts:
+    - bot_investigation
+    - bot_rule_compare
+    - lookup
+  notes: ""
+
+# ---------------------------------------------------------------------------
+# Custom eVars
+# ---------------------------------------------------------------------------
+
+- id: variables/evar2
+  display_name: Page URL
+  description: Custom eVar2 capturing the page URL where a clickout or event occurred.
+  use_when: Investigating which pages bots are hitting; identifying suspicious URL patterns in clickout analysis.
+  preferred_over: []
+  contexts:
+    - bot_investigation
+    - bot_rule_compare
+    - bot_validation
+  notes: eVar2 in the Legend implementation; captures the page URL for clickout event tracking.
+
+- id: variables/evar23
+  display_name: User Agent
+  description: Custom eVar23 capturing the raw HTTP user agent string.
+  use_when: Primary dimension for bot identification — bot rule segments are typically built from user agent values.
+  preferred_over: []
+  contexts:
+    - bot_investigation
+    - bot_rule_compare
+  notes: eVar23 in the Legend implementation. User agent strings are the primary source for bot rule condition building.
+
+# ---------------------------------------------------------------------------
+# Geographic
+# ---------------------------------------------------------------------------
+
+- id: variables/geocountry
+  display_name: Country
+  description: Visitor country based on IP geolocation.
+  use_when: Building country-level segments for bot rule creation via the segment_builder flow.
+  preferred_over: []
+  contexts:
+    - segment_builder
+  notes: Segment builder uses a 50,000-row limit to enumerate all country values for segment condition building.
+
+- id: variables/georegion
+  display_name: Region
+  description: Visitor region, state, or province based on IP geolocation.
+  use_when: Sub-country geographic analysis; also used in clickout geographic breakdowns and lookup generation.
+  preferred_over: []
+  contexts:
+    - bot_investigation
+    - segment_builder
+    - lookup
+    - clickouts
+  notes: ""
+
+- id: variables/geocity
+  display_name: City
+  description: Visitor city based on IP geolocation.
+  use_when: Geographic drill-down when country/region data is insufficient.
+  preferred_over: []
+  contexts: []
+  notes: Not used in any current report definitions; available for ad hoc analysis.
+
+- id: variables/geodma
+  display_name: DMA (Designated Market Area)
+  description: US Designated Market Area based on IP geolocation.
+  use_when: US market geographic analysis.
+  preferred_over: []
+  contexts: []
+  notes: US-only dimension; not used in current report definitions.
+
+# ---------------------------------------------------------------------------
+# Traffic source
+# ---------------------------------------------------------------------------
+
+- id: variables/filtereddomain
+  display_name: Filtered Domain
+  description: Referring domain stripped of www prefix and sub-domains.
+  use_when: Grouping traffic by source domain; identifying bot referral patterns without sub-domain noise.
+  preferred_over:
+    - variables/referringdomain
+  contexts:
+    - bot_investigation
+    - bot_rule_compare
+  notes: Cleaner than referringdomain for domain-level grouping; sub-domains are collapsed.
+
+- id: variables/referringdomain
+  display_name: Referring Domain
+  description: Full referring domain including all sub-domains.
+  use_when: When full domain fidelity is needed; otherwise prefer variables/filtereddomain.
+  preferred_over: []
+  contexts: []
+  notes: Use variables/filtereddomain for most analysis — it groups sub-domains together.
+
+- id: variables/marketingchannel
+  display_name: Marketing Channel
+  description: Traffic source category assigned by Marketing Channel processing rules (e.g. "Natural Search", "Paid Search", "Direct").
+  use_when: Identifying bot traffic by acquisition channel; flagging suspicious channel distributions in investigation reports.
+  preferred_over: []
+  contexts:
+    - bot_investigation
+    - bot_rule_compare
+    - lookup
+  notes: ""
+
+- id: variables/marketingchannel.marketing-channel-attribution
+  display_name: Marketing Channel (Attribution)
+  description: Marketing channel dimension with multi-touch attribution applied.
+  use_when: Building marketing channel attribution segments via the dim_to_segments / segment_builder flow.
+  preferred_over: []
+  contexts:
+    - segment_builder
+  notes: Used specifically in the dim_to_segments flow to generate one segment per channel attribution value.
+
+# ---------------------------------------------------------------------------
+# Time
+# ---------------------------------------------------------------------------
+
+- id: variables/daterangeday
+  display_name: Day
+  description: Date dimension broken down by day.
+  use_when: Analyse daily traffic trends; standard time breakdown for bot investigation daily reports.
+  preferred_over: []
+  contexts:
+    - bot_investigation
+    - bot_rule_compare
+    - bot_validation
+  notes: Use with date_range interval "day" in the job config.
+
+- id: variables/daterangemonth
+  display_name: Month
+  description: Date dimension broken down by calendar month.
+  use_when: Monthly aggregation for bot validation comparisons and longer-term trend analysis.
+  preferred_over: []
+  contexts:
+    - bot_investigation
+    - bot_validation
+  notes: ""
+
+- id: variables/daterangeweek
+  display_name: Week
+  description: Date dimension broken down by ISO week.
+  use_when: Weekly traffic trend analysis.
+  preferred_over: []
+  contexts: []
+  notes: Not used in any current report definitions; available for ad hoc analysis.
+
+- id: variables/daterangeyear
+  display_name: Year
+  description: Date dimension broken down by calendar year.
+  use_when: Annual aggregation for final bot metrics reports.
+  preferred_over: []
+  contexts:
+    - final_bot_metrics
+  notes: ""
+
+- id: variables/timeparthourofday
+  display_name: Hour of Day
+  description: Hour of the visit (0–23) in the report suite's local time zone.
+  use_when: Detecting bot traffic time-of-day patterns — bots often cluster at specific hours or show overnight spikes.
+  preferred_over: []
+  contexts:
+    - bot_investigation
+    - bot_rule_compare
+  notes: Values are 24-hour integers (0 = midnight, 23 = 11 pm).

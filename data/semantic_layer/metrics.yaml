@@ -1,0 +1,174 @@
+# Semantic layer — metrics
+#
+# Each entry annotates a metric ID used in this project.
+# Fields: id, display_name, description (documentation only), use_when,
+#         preferred_over, contexts, notes.
+#
+# To add a new entry: append a block following the same structure and commit
+# with message "Semantic: add context for <id>".
+# Never delete an entry without confirmation.
+
+# ---------------------------------------------------------------------------
+# Standard metrics
+# ---------------------------------------------------------------------------
+
+- id: metrics/visitors
+  display_name: Unique Visitors
+  description: Count of unique visitor cookies within the date range.
+  use_when: Primary deduplication metric; baseline for all volume comparisons.
+  preferred_over: []
+  contexts:
+    - bot_investigation
+    - bot_validation
+    - bot_rule_compare
+    - final_bot_metrics
+  notes: Automatically prepended as column 0 (sorted descending) in all ranked reports by the request builder.
+
+- id: metrics/visits
+  display_name: Visits
+  description: Count of visit sessions within the date range.
+  use_when: Primary volume metric; default sort column for all ranked reports.
+  preferred_over: []
+  contexts:
+    - bot_investigation
+    - bot_validation
+    - bot_rule_compare
+    - final_bot_metrics
+  notes: Automatically prepended as column 1 (sorted descending) in all ranked reports by the request builder.
+
+- id: metrics/pageviews
+  display_name: Page Views
+  description: Total number of page view events.
+  use_when: Volume comparison alongside visits; a high pageviews-to-visits ratio can indicate bot behaviour.
+  preferred_over: []
+  contexts:
+    - bot_investigation
+    - bot_validation
+  notes: ""
+
+- id: metrics/itemtimespent
+  display_name: Time Spent Per Visit
+  description: Total time spent on site per visit, in seconds.
+  use_when: Identifying zero or very-low time-spent patterns which are a strong bot signal.
+  preferred_over: []
+  contexts: []
+  notes: Not currently used in any report definitions; available for ad hoc bot investigation.
+
+# ---------------------------------------------------------------------------
+# Custom events
+# ---------------------------------------------------------------------------
+
+- id: metrics/event3
+  display_name: Clickouts
+  description: Custom event 3 — tracks outbound link click (clickout) events.
+  use_when: Measuring raw clickout activity; compare to visits to detect suspicious clickout ratios.
+  preferred_over: []
+  contexts:
+    - bot_investigation
+    - bot_validation
+    - bot_rule_compare
+  notes: Legend-specific implementation; event3 maps to the clickout link tracking event. Prefer cm3938_602b915cb99757640284234e (Raw Clickouts) for calculated-metric consistency.
+
+# ---------------------------------------------------------------------------
+# Adobe Advertising (AdCloud) metrics
+# ---------------------------------------------------------------------------
+
+- id: metrics/amo_clicks
+  display_name: Adobe Advertising Clicks
+  description: Clicks attributed to Adobe Advertising (AdCloud) campaigns.
+  use_when: Correlating bot traffic with paid advertising clicks in AdCloud attribution reports.
+  preferred_over: []
+  contexts:
+    - clickouts
+  notes: Only available in report suites with Adobe Advertising integration enabled.
+
+- id: metrics/amo_cost
+  display_name: Adobe Advertising Cost
+  description: Advertising spend attributed to Adobe Advertising (AdCloud) campaigns.
+  use_when: Assessing the financial impact of bot traffic on paid media spend.
+  preferred_over: []
+  contexts:
+    - clickouts
+  notes: Only available in report suites with Adobe Advertising integration enabled.
+
+- id: metrics/amo_impressions
+  display_name: Adobe Advertising Impressions
+  description: Ad impressions attributed to Adobe Advertising (AdCloud) campaigns.
+  use_when: Understanding ad impression volume alongside clickout and cost data in AdCloud attribution analysis.
+  preferred_over: []
+  contexts:
+    - clickouts
+  notes: Only available in report suites with Adobe Advertising integration enabled.
+
+# ---------------------------------------------------------------------------
+# Calculated metrics (company-wide, Legend account cm3938_*)
+# ---------------------------------------------------------------------------
+
+- id: cm3938_66d0bfba05c95b4eca739eb4
+  display_name: Engaged Visits
+  description: Calculated metric — visits meeting an engagement threshold (e.g. multiple page views or sufficient time on site).
+  use_when: Distinguishing genuine traffic from bots; bots typically produce zero or negligible engaged visits.
+  preferred_over: []
+  contexts:
+    - bot_investigation
+    - bot_validation
+    - bot_rule_compare
+  notes: Key signal for bot filtering decisions. Company-wide calculated metric in the Legend account.
+
+- id: cm3938_5fcf3ee998b6d77a9d7167ad
+  display_name: Engagement Rate
+  description: Calculated metric — ratio of engaged visits to total visits, expressed as a percentage.
+  use_when: Bot validation — compare engagement rate between filtered and unfiltered segments to quantify the impact of a bot rule.
+  preferred_over: []
+  contexts:
+    - bot_validation
+  notes: Company-wide calculated metric in the Legend account.
+
+- id: cm3938_602b915cb99757640284234e
+  display_name: Raw Clickouts
+  description: Calculated metric — raw count of clickout events without attribution weighting.
+  use_when: Baseline clickout volume in bot investigation and validation; preferred over metrics/event3 for consistency.
+  preferred_over:
+    - metrics/event3
+  contexts:
+    - bot_investigation
+    - bot_validation
+    - bot_rule_compare
+  notes: Company-wide calculated metric in the Legend account.
+
+- id: cm3938_67877f0e25c74e65d1f3f449
+  display_name: Raw Clickouts (Linear 7-Day)
+  description: Calculated metric — raw clickouts with 7-day linear attribution model applied.
+  use_when: Clickout attribution analysis using an equal-credit linear 7-day lookback window.
+  preferred_over: []
+  contexts:
+    - clickouts
+  notes: One of four clickout attribution variants (linear/participation × raw/unique-visit).
+
+- id: cm3938_68655d7318c56ac719c11a44
+  display_name: Raw Clickouts (Participation 7-Day)
+  description: Calculated metric — raw clickouts with 7-day participation attribution model applied.
+  use_when: Clickout attribution giving full credit to every channel touched in the 7-day path.
+  preferred_over: []
+  contexts:
+    - clickouts
+  notes: One of four clickout attribution variants (linear/participation × raw/unique-visit).
+
+- id: cm3938_68655dd05c74c471e8de44d0
+  display_name: Unique Visit Clickouts (Linear 7-Day)
+  description: Calculated metric — visit-deduplicated clickouts with 7-day linear attribution.
+  use_when: De-duplicated clickout counting with linear attribution; avoids inflating counts from repeat visits.
+  preferred_over:
+    - cm3938_67877f0e25c74e65d1f3f449
+  contexts:
+    - clickouts
+  notes: One of four clickout attribution variants; deduplicated at visit level.
+
+- id: cm3938_68655e0b18c56ac719c11a47
+  display_name: Unique Visit Clickouts (Participation 7-Day)
+  description: Calculated metric — visit-deduplicated clickouts with 7-day participation attribution.
+  use_when: Most comprehensive clickout view — de-duplicated by visit and credits all channels in the path.
+  preferred_over: []
+  contexts:
+    - clickouts
+  notes: One of four clickout attribution variants; deduplicated at visit level.
