@@ -29,9 +29,7 @@ def _ensure_dirs() -> None:
 
 def write_dimensions(rsid: str, dimensions: list[dict[str, Any]]) -> None:
     _ensure_dirs()
-    (_DIM_DIR / f"{rsid}.json").write_text(
-        json.dumps(dimensions, indent=2), encoding="utf-8"
-    )
+    (_DIM_DIR / f"{rsid}.json").write_text(json.dumps(dimensions, indent=2), encoding="utf-8")
     _record_updated(f"dimensions/{rsid}")
 
 
@@ -44,9 +42,7 @@ def read_dimensions(rsid: str) -> list[dict[str, Any]] | None:
 
 def write_metrics(rsid: str, metrics: list[dict[str, Any]]) -> None:
     _ensure_dirs()
-    (_MET_DIR / f"{rsid}.json").write_text(
-        json.dumps(metrics, indent=2), encoding="utf-8"
-    )
+    (_MET_DIR / f"{rsid}.json").write_text(json.dumps(metrics, indent=2), encoding="utf-8")
     _record_updated(f"metrics/{rsid}")
 
 
@@ -235,3 +231,123 @@ def _rebuild_metrics_index() -> None:
         lines.append("")
 
     _MET_INDEX_FILE.write_text("\n".join(lines), encoding="utf-8")
+
+
+# ---------------------------------------------------------------------------
+# Search
+# ---------------------------------------------------------------------------
+
+
+def search_schema(
+    query: str,
+    type_filter: str | None = None,
+) -> list[dict[str, Any]]:
+    """Search cached dimensions and/or metrics for query substring.
+
+    Args:
+        query: Case-insensitive substring matched against id, name, description.
+        type_filter: "dimension", "metric", or None (search both).
+
+    Returns:
+        List of result dicts sorted by id, each containing:
+        id, name, type, description, rsids (list), kind (dimension/standard/calculated).
+    """
+    q = query.lower()
+    results: dict[str, dict[str, Any]] = {}
+
+    def _matches(item: dict[str, Any]) -> bool:
+        return (
+            q in item.get("id", "").lower()
+            or q in item.get("name", "").lower()
+            or q in item.get("description", "").lower()
+        )
+
+    if type_filter in (None, "dimension") and _DIM_DIR.exists():
+        by_id: dict[str, dict[str, Any]] = {}
+        for json_file in sorted(_DIM_DIR.glob("*.json")):
+            rsid = json_file.stem
+            try:
+                dims: list[dict[str, Any]] = json.loads(json_file.read_text(encoding="utf-8"))
+            except (json.JSONDecodeError, OSError):
+                continue
+            for dim in dims:
+                dim_id: str = dim.get("id", "")
+                if not dim_id:
+                    continue
+                if dim_id not in by_id:
+                    by_id[dim_id] = {**dim, "rsids": [], "kind": "dimension"}
+                by_id[dim_id]["rsids"].append(rsid)
+        for item in by_id.values():
+            if _matches(item):
+                results[item["id"]] = item
+
+    if type_filter in (None, "metric"):
+        by_id_met: dict[str, dict[str, Any]] = {}
+        if _MET_DIR.exists():
+            for json_file in sorted(_MET_DIR.glob("*.json")):
+                rsid = json_file.stem
+                try:
+                    mets: list[dict[str, Any]] = json.loads(json_file.read_text(encoding="utf-8"))
+                except (json.JSONDecodeError, OSError):
+                    continue
+                for met in mets:
+                    met_id: str = met.get("id", "")
+                    if not met_id:
+                        continue
+                    if met_id not in by_id_met:
+                        by_id_met[met_id] = {**met, "rsids": [], "kind": "standard"}
+                    by_id_met[met_id]["rsids"].append(rsid)
+        for item in by_id_met.values():
+            if _matches(item):
+                results[item["id"]] = item
+
+        if _CALC_FILE.exists():
+            try:
+                calc: list[dict[str, Any]] = json.loads(_CALC_FILE.read_text(encoding="utf-8"))
+            except (json.JSONDecodeError, OSError):
+                calc = []
+            for met in calc:
+                met_id = met.get("id", "")
+                if not met_id or met_id in results:
+                    continue
+                item = {**met, "rsids": [], "kind": "calculated"}
+                if _matches(item):
+                    results[met_id] = item
+
+    return sorted(results.values(), key=lambda x: x.get("id", ""))
+
+
+# ---------------------------------------------------------------------------
+# Cache status
+# ---------------------------------------------------------------------------
+
+
+def cache_status(ttl_days: int = 30) -> dict[str, Any]:
+    """Return freshness information for all cached RSIDs.
+
+    Returns a dict:
+        {
+            "dimensions": {rsid: {"updated": str|None, "fresh": bool, "days_old": int|None}},
+            "metrics":    {rsid: ...},
+            "calculated_metrics": {"updated": str|None, "fresh": bool, "days_old": int|None},
+        }
+    """
+    last_updated = _read_last_updated()
+    today = date.today()
+
+    def _entry(key: str) -> dict[str, Any]:
+        updated = last_updated.get(key)
+        if updated is None:
+            return {"updated": None, "fresh": False, "days_old": None}
+        last = date.fromisoformat(updated)
+        days_old = (today - last).days
+        return {"updated": updated, "fresh": days_old < ttl_days, "days_old": days_old}
+
+    dim_rsids = sorted(f.stem for f in _DIM_DIR.glob("*.json")) if _DIM_DIR.exists() else []
+    met_rsids = sorted(f.stem for f in _MET_DIR.glob("*.json")) if _MET_DIR.exists() else []
+
+    return {
+        "dimensions": {rsid: _entry(f"dimensions/{rsid}") for rsid in dim_rsids},
+        "metrics": {rsid: _entry(f"metrics/{rsid}") for rsid in met_rsids},
+        "calculated_metrics": _entry("calculated_metrics"),
+    }

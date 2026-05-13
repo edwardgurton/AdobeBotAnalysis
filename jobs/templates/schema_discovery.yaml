@@ -1,0 +1,24 @@
+job_type: schema_discovery
+client: Legend
+description: "Fetch dimension and metric metadata for all Legend RSIDs"
+
+# Which RSIDs to fetch metadata for.
+# Use the investigation list to cover all actively-monitored report suites.
+rsids:
+  source: file
+  file: data/rsid_lists/botInvestigationMinThresholdVisits.txt
+  # source: single
+  # single: trillioncoverscom
+  # source: list
+  # list:
+  #   - trillioncoverscom
+  #   - anotherrsid
+
+# What to fetch: dimensions | metrics | both
+mode: both
+
+# Re-fetch if cache entry is older than this many days (0 = always refresh)
+cache_ttl_days: 30
+
+# Set true to ignore TTL and fetch everything regardless of cache age
+force_refresh: false

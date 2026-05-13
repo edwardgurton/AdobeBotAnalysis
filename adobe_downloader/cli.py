@@ -629,8 +629,7 @@ def get_segment(client: str, segment_id: str, output: Path | None) -> None:
         finally:
             await ac.close()
         click.secho(
-            f"Saved segment {data.get('id', segment_id)} "
-            f"({data.get('name', '')!r}) -> {output}",
+            f"Saved segment {data.get('id', segment_id)} ({data.get('name', '')!r}) -> {output}",
             fg="green",
         )
 
@@ -642,7 +641,9 @@ def get_segment(client: str, segment_id: str, output: Path | None) -> None:
 
 
 @main.command("search-lookup")
-@click.option("--dimension", "-d", required=True, help="Friendly dimension name (e.g. 'BrowserType').")
+@click.option(
+    "--dimension", "-d", required=True, help="Friendly dimension name (e.g. 'BrowserType')."
+)
 @click.option("--value", "-v", required=True, help="String value to look up.")
 def search_lookup(dimension: str, value: str) -> None:
     """Search a local lookup file for a dimension value's numeric ID."""
@@ -800,9 +801,7 @@ def reset(config: Path, confirm: bool) -> None:
     )
 
     if not confirm:
-        click.secho(
-            "This will delete all job state. Pass --confirm to proceed.", fg="yellow"
-        )
+        click.secho("This will delete all job state. Pass --confirm to proceed.", fg="yellow")
         sys.exit(1)
 
     try:
@@ -991,13 +990,17 @@ def cleanup(
         try:
             days = int(older_than[:-1])
         except ValueError:
-            click.secho(f"Invalid --older-than value: {older_than!r}. Use format like '30d'.", fg="red")
+            click.secho(
+                f"Invalid --older-than value: {older_than!r}. Use format like '30d'.", fg="red"
+            )
             sys.exit(1)
     else:
         try:
             days = int(older_than)
         except ValueError:
-            click.secho(f"Invalid --older-than value: {older_than!r}. Use format like '30d'.", fg="red")
+            click.secho(
+                f"Invalid --older-than value: {older_than!r}. Use format like '30d'.", fg="red"
+            )
             sys.exit(1)
 
     base = output_base or Path.cwd()
@@ -1017,7 +1020,9 @@ def cleanup(
 @main.command("validate-output")
 @click.option("--config", "-c", required=True, type=click.Path(exists=True, path_type=Path))
 @click.option("--retry/--no-retry", default=False, help="Re-download missing/empty files.")
-@click.option("--dry-run/--no-dry-run", default=False, help="Report missing files without re-downloading.")
+@click.option(
+    "--dry-run/--no-dry-run", default=False, help="Report missing files without re-downloading."
+)
 def validate_output(config: Path, retry: bool, dry_run: bool) -> None:
     """Check all expected output files exist and are non-empty."""
     import asyncio
@@ -1061,9 +1066,7 @@ def validate_output(config: Path, retry: bool, dry_run: bool) -> None:
         sm = StateManager(db_path, job_id, config, config_hash)
         ac = AdobeClient.from_client_name(job.client)
 
-    result = asyncio.run(
-        run_validate_output(job, retry=retry, dry_run=dry_run, ac=ac, sm=sm)
-    )
+    result = asyncio.run(run_validate_output(job, retry=retry, dry_run=dry_run, ac=ac, sm=sm))
 
     total = result["total"]
     valid = result["valid"]
@@ -1191,11 +1194,12 @@ def update_rsids(
             await ac.close()
 
         click.secho(
-            f"\nDone. {result.total_suites} suites fetched, "
-            f"{result.failed} failed.",
+            f"\nDone. {result.total_suites} suites fetched, {result.failed} failed.",
             fg="green" if result.failed == 0 else "yellow",
         )
-        click.echo(f"  Investigation ({investigation_threshold}+ visits): {result.investigation_count}")
+        click.echo(
+            f"  Investigation ({investigation_threshold}+ visits): {result.investigation_count}"
+        )
         click.echo(f"  Validation    ({validation_threshold}+ visits): {result.validation_count}")
         click.secho(f"  -> {result.investigation_list}", fg="cyan")
         click.secho(f"  -> {result.validation_list}", fg="cyan")
@@ -1210,6 +1214,149 @@ def update_rsids(
     except Exception as exc:
         click.secho(f"Error: {exc}", fg="red", bold=True)
         sys.exit(1)
+
+
+@main.group()
+def schema() -> None:
+    """Fetch and search the local Adobe Analytics schema cache."""
+
+
+@schema.command("fetch")
+@click.option("--config", "-c", required=True, type=click.Path(exists=True, path_type=Path))
+def schema_fetch(config: Path) -> None:
+    """Run schema discovery: fetch dimension/metric metadata and update the local cache."""
+    import asyncio
+
+    from adobe_downloader.config.loader import load_config
+    from adobe_downloader.config.schema import SchemaDiscoveryJobConfig
+    from adobe_downloader.core.api_client import AdobeClient
+    from adobe_downloader.flows.schema_discovery import run_schema_discovery
+
+    try:
+        job = load_config(config)
+    except Exception as exc:
+        click.secho(f"Failed to load config: {exc}", fg="red", bold=True)
+        sys.exit(1)
+
+    if not isinstance(job, SchemaDiscoveryJobConfig):
+        click.secho(
+            f"'schema fetch' requires a schema_discovery config (got {job.job_type!r})",
+            fg="red",
+        )
+        sys.exit(1)
+
+    click.echo(f"Client  : {job.client}")
+    click.echo(f"Mode    : {job.mode}")
+    click.echo(f"TTL     : {job.cache_ttl_days} day(s)")
+    click.echo(f"Force   : {job.force_refresh}")
+
+    async def _run() -> None:
+        ac = AdobeClient(job.client)
+        try:
+            await run_schema_discovery(ac, job)
+        finally:
+            await ac.close()
+
+    try:
+        asyncio.run(_run())
+    except FileNotFoundError as exc:
+        click.secho(str(exc), fg="red", bold=True)
+        sys.exit(1)
+    except Exception as exc:
+        click.secho(f"Error: {exc}", fg="red", bold=True)
+        sys.exit(1)
+
+    click.secho("Schema cache updated.", fg="green", bold=True)
+
+
+@schema.command("search")
+@click.option(
+    "--query", "-q", required=True, help="Substring to match in ID, name, or description."
+)
+@click.option(
+    "--type",
+    "item_type",
+    default=None,
+    type=click.Choice(["dimension", "metric"], case_sensitive=False),
+    help="Restrict results to dimensions or metrics only.",
+)
+def schema_search(query: str, item_type: str | None) -> None:
+    """Search the local schema cache for dimensions or metrics matching a query."""
+    from adobe_downloader.utils.schema_cache import search_schema
+
+    results = search_schema(query, item_type)
+    if not results:
+        click.secho(f"No matches for {query!r}.", fg="yellow")
+        return
+
+    click.echo(f"Found {len(results)} match(es) for {query!r}:")
+    for item in results:
+        kind = item.get("kind", "unknown")
+        item_id = item.get("id", "")
+        name = item.get("name", "")
+        type_ = item.get("type", "")
+        desc = item.get("description", "")
+        rsids: list[str] = item.get("rsids", [])
+
+        color = "cyan" if kind == "dimension" else "blue"
+        click.secho(f"  [{kind}] {item_id}  {name}", fg=color, bold=True)
+        if rsids:
+            shown = ", ".join(rsids[:5])
+            suffix = "..." if len(rsids) > 5 else ""
+            click.echo(f"    RSIDs      : {shown}{suffix}")
+        else:
+            click.echo("    RSIDs      : company-wide")
+        click.echo(f"    Type       : {type_}")
+        if desc:
+            click.echo(f"    Description: {desc}")
+        click.echo("")
+
+
+@schema.command("status")
+@click.option(
+    "--ttl",
+    default=30,
+    show_default=True,
+    help="Days before a cache entry is considered stale.",
+)
+def schema_status(ttl: int) -> None:
+    """Show cache freshness for all cached RSIDs."""
+    from adobe_downloader.utils.schema_cache import cache_status
+
+    info = cache_status(ttl)
+
+    def _print_entry(label: str, entry: dict) -> None:  # type: ignore[type-arg]
+        if entry["updated"] is None:
+            click.secho(f"  {label:<40} not cached", fg="yellow")
+        else:
+            age = f"{entry['days_old']}d old"
+            tag = "FRESH" if entry["fresh"] else "STALE"
+            fg = "green" if entry["fresh"] else "yellow"
+            click.secho(f"  {label:<40} {entry['updated']}  ({age})  [{tag}]", fg=fg)
+
+    click.echo(f"Cache status (TTL: {ttl} day(s))")
+    click.echo("")
+
+    dim_info = info["dimensions"]
+    if dim_info:
+        click.echo("Dimensions:")
+        for rsid, entry in sorted(dim_info.items()):
+            _print_entry(rsid, entry)
+    else:
+        click.secho("  No dimension cache entries.", fg="yellow")
+    click.echo("")
+
+    met_info = info["metrics"]
+    if met_info:
+        click.echo("Metrics:")
+        for rsid, entry in sorted(met_info.items()):
+            _print_entry(rsid, entry)
+    else:
+        click.secho("  No metric cache entries.", fg="yellow")
+    click.echo("")
+
+    calc = info["calculated_metrics"]
+    _print_entry("Calculated metrics", calc)
 
 
 @main.command("list-rsids")

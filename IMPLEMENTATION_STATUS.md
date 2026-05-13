@@ -15,11 +15,11 @@ Status legend: `☐ todo` · `🔄 in-progress` · `✅ done` · `⚠️ blocked
 
 ## Current State
 
-**Active step:** Step 23 — `schema` CLI command group
+**Active step:** Step 24 — Wire semantic layer into search output
 
-**Last commit:** `Step 22: schema discovery flow` (4416165) — SchemaDiscoveryJobConfig, run_schema_discovery(), 14 tests; 400 total passing
+**Last commit:** `Step 23: schema CLI command group` — schema fetch/search/status, search_schema(), cache_status(), 16 tests; 416 total passing
 
-**Next concrete action:** Add `schema` Click group to `cli.py` with `fetch` (config-driven), `search --query STR [--type dimension|metric]`, `status` sub-commands. Create `jobs/templates/schema_discovery.yaml`.
+**Next concrete action:** When `data/semantic_layer/dimensions.yaml` (or metrics) exists, append `display_name`, `use_when`, `contexts`, `notes` fields to each `schema search` result. Read-only join on local YAML, no API call. Add tests to `tests/test_cli_schema.py`.
 
 **In-flight (uncommitted) work:** *(none)*
 
@@ -212,12 +212,14 @@ Status legend: `☐ todo` · `🔄 in-progress` · `✅ done` · `⚠️ blocked
 - **Tests:** `tests/test_schema_discovery.py` — mock AdobeClient, verify cache writes + index rebuild.
 - **Validation:** `pytest tests/test_schema_discovery.py` passes.
 
-### ☐ Step 23 — `schema` CLI command group
+### ✅ Step 23 — `schema` CLI command group
+- **Completed:** 2026-05-13
 - **Target file:** `adobe_downloader/cli.py`
 - **Adds:** `schema` Click group with `fetch` (config-driven), `search --query STR [--type dimension|metric]`, `status` (cache freshness per RSID).
 - **New template:** `jobs/templates/schema_discovery.yaml`.
-- **Tests:** `tests/test_cli_schema.py` — Click test runner for all sub-commands.
-- **Validation:** `adobe-downloader schema --help` works; tests pass.
+- **Also added:** `search_schema()` and `cache_status()` to `adobe_downloader/utils/schema_cache.py`.
+- **Tests:** `tests/test_cli_schema.py` — 16 tests; Click CliRunner for all sub-commands.
+- **Validation:** `adobe-downloader schema --help` works; 416 total tests pass.
 
 ### ☐ Step 24 — Wire semantic layer into search output
 - **Target file:** `adobe_downloader/cli.py` (schema search command)
@@ -412,6 +414,13 @@ Status legend: `☐ todo` · `🔄 in-progress` · `✅ done` · `⚠️ blocked
 - **Done this session:** Added `get_dimensions(rsid)`, `get_metrics(rsid)`, `get_calculated_metrics()` to `AdobeClient` in `core/api_client.py` (all via `_get()` wrapper; dimensions uses `?expansion=support`). Created `adobe_downloader/utils/schema_cache.py` — local file cache for dimension/metric metadata under `data/schema_cache/`, TTL via `last_updated.json`, `rebuild_index()` for grep-friendly markdown. Created `tests/test_schema_client.py` (9 tests) and `tests/test_schema_cache.py`. Also added user documentation: `user-docs/user-manual.html`, `user-docs/claude-reference.md`, `user-docs/technical-reference.md`. Updated RSID list files.
 - **Left in flight:** IMPLEMENTATION_STATUS.md was not updated to mark Step 21 done; corrected in subsequent session.
 - **Next action:** Step 22 — Schema discovery flow (`flows/schema_discovery.py`, `SchemaDiscoveryJobConfig`).
+
+### 2026-05-13 (step 23)
+- **Worked on:** Step 23
+- **Commits:** `Step 23: schema CLI command group` (1 commit)
+- **Done this session:** Added `search_schema(query, type_filter)` and `cache_status(ttl_days)` to `utils/schema_cache.py`. Added `schema` Click group to `cli.py` with three sub-commands: `fetch` (loads `SchemaDiscoveryJobConfig`, creates `AdobeClient`, runs `run_schema_discovery()`), `search --query STR [--type dimension|metric]` (aggregates across RSID JSON cache files, deduplicates by ID, matches on id/name/description), `status --ttl N` (shows FRESH/STALE freshness per RSID from `last_updated.json`). Created `jobs/templates/schema_discovery.yaml`. Created `tests/test_cli_schema.py` — 16 tests using Click `CliRunner`. All 416 tests pass.
+- **Left in flight:** Nothing.
+- **Next action:** Step 24 — Wire semantic layer into search output.
 
 ### 2026-05-12 (step 22)
 - **Worked on:** Step 22
