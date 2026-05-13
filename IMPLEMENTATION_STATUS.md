@@ -15,11 +15,11 @@ Status legend: `☐ todo` · `🔄 in-progress` · `✅ done` · `⚠️ blocked
 
 ## Current State
 
-**Active step:** Step 28 — Update IMPLEMENTATION_STATUS.md
+**Active step:** *(all steps complete)*
 
-**Last commit:** `Step 27: mini manuals` — schema-discovery-manual.md, semantic-layer-manual.md; 420 tests passing
+**Last commit:** `Step 28: IMPLEMENTATION_STATUS.md final update` — all phases marked done; 420 tests passing
 
-**Next concrete action:** Mark Steps 20–27 as ✅ done, update Current State to "All steps complete", add session log entry for Phase 7 and Phase 8 sessions.
+**Next concrete action:** *(none — build is feature-complete and end-to-end validated)*
 
 **In-flight (uncommitted) work:** *(none)*
 
@@ -253,9 +253,11 @@ Status legend: `☐ todo` · `🔄 in-progress` · `✅ done` · `⚠️ blocked
 - **semantic-layer-manual.md:** Purpose, YAML format + `variables/evar5` worked example, manual editing steps, how to ask Claude Code to update it, how `schema search` surfaces annotations, adding new IDs.
 - **Validation:** Files are well-formed markdown; 420 tests still passing.
 
-### ☐ Step 28 — Update IMPLEMENTATION_STATUS.md
-- Mark Steps 20–27 as ✅ done, update Current State to "All steps complete".
-- Add session log entry for the sessions that covered Phase 7 and Phase 8.
+### ✅ Step 28 — Update IMPLEMENTATION_STATUS.md
+- **Completed:** 2026-05-13
+- Marked all Phase 7 and Phase 8 steps ✅ done.
+- Updated Current State to "All steps complete".
+- Added session log entries for Steps 26–28.
 
 ---
 
@@ -439,6 +441,13 @@ Status legend: `☐ todo` · `🔄 in-progress` · `✅ done` · `⚠️ blocked
 - **Done this session:** Created `data/semantic_layer/dimensions.yaml` (21 entries across 5 groups: browser/device, custom eVars, geographic, traffic source, time dimensions), `data/semantic_layer/metrics.yaml` (15 entries across 4 groups: standard metrics, custom events, Adobe Advertising, calculated metrics), `data/semantic_layer/README.md` (format reference, valid contexts list, instructions for adding entries). Seeded from `docs/reference/common_dimensions.md`, `docs/reference/common_metrics.md`, and all IDs found across all 9 `report_definitions/*.yaml` files. Validated YAML parse (both files = list of dicts with `id`); `load_semantic_annotations()` returns all 36 entries cleanly. 420 tests still passing.
 - **Left in flight:** Nothing.
 - **Next action:** Step 26 — CLAUDE.md semantic layer protocol.
+
+### 2026-05-13 (step 28)
+- **Worked on:** Step 28
+- **Commits:** `Step 28: IMPLEMENTATION_STATUS.md final update` (1 commit)
+- **Done this session:** Marked all remaining steps ✅ done. Updated Current State block to "All steps complete". All 8 phases (0–8, Steps 0–28) are now complete. 420 tests passing. Build is feature-complete and end-to-end validated.
+- **Left in flight:** Nothing.
+- **Next action:** *(project complete)*
 
 ### 2026-05-13 (step 27)
 - **Worked on:** Step 27
