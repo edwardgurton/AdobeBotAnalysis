@@ -15,11 +15,11 @@ Status legend: `☐ todo` · `🔄 in-progress` · `✅ done` · `⚠️ blocked
 
 ## Current State
 
-**Active step:** Step 25 — Semantic layer YAML schema + seed data
+**Active step:** Step 26 — CLAUDE.md semantic layer protocol
 
-**Last commit:** `Step 24: wire semantic layer into schema search` — load_semantic_annotations(), inject display_name/use_when/contexts/notes into search results, 4 new tests; 420 total passing
+**Last commit:** `Step 25: semantic layer YAML seed data` — dimensions.yaml (21 entries), metrics.yaml (15 entries), README.md; 420 tests passing
 
-**Next concrete action:** Create `data/semantic_layer/dimensions.yaml`, `data/semantic_layer/metrics.yaml`, `data/semantic_layer/README.md`. Seed from `docs/reference/common_dimensions.md`, `docs/reference/common_metrics.md`, and all dimension/metric IDs in `report_definitions/*.yaml`.
+**Next concrete action:** Add a "Semantic layer" section to CLAUDE.md instructing Claude Code to update `data/semantic_layer/` when users provide dimension/metric context; specify commit format `Semantic: add context for {id}`; add references to mini manuals (Step 27).
 
 **In-flight (uncommitted) work:** *(none)*
 
@@ -231,11 +231,13 @@ Status legend: `☐ todo` · `🔄 in-progress` · `✅ done` · `⚠️ blocked
 
 ## Phase 8 — Semantic Layer
 
-### ☐ Step 25 — Semantic layer YAML schema + seed data
+### ✅ Step 25 — Semantic layer YAML schema + seed data
+- **Completed:** 2026-05-13
 - **New files:** `data/semantic_layer/dimensions.yaml`, `data/semantic_layer/metrics.yaml`, `data/semantic_layer/README.md`.
 - **Schema per entry:** `display_name`, `description`, `use_when`, `preferred_over: []`, `contexts: []`, `notes`.
 - **Seed from:** `docs/reference/common_dimensions.md`, `docs/reference/common_metrics.md`, all dimension/metric IDs in `report_definitions/*.yaml`.
-- **Validation:** Files parse as valid YAML; `schema search` returns semantic annotations.
+- **Notes:** 21 dimension entries across 5 groups (browser/device, custom eVars, geographic, traffic source, time); 15 metric entries across 4 groups (standard, custom events, AdCloud, calculated). `load_semantic_annotations()` confirms all 36 entries load cleanly. 420 tests still passing.
+- **Validation:** Files parse as valid YAML; `load_semantic_annotations()` returns all 36 entries; `schema search` returns semantic annotations when cache is populated.
 
 ### ☐ Step 26 — CLAUDE.md semantic layer protocol
 - **Target file:** `CLAUDE.md`
@@ -428,6 +430,13 @@ Status legend: `☐ todo` · `🔄 in-progress` · `✅ done` · `⚠️ blocked
 - **Done this session:** Added `_SEMANTIC_ROOT = Path("data/semantic_layer")`, `_SEMANTIC_FIELDS` tuple, and `load_semantic_annotations(kind)` to `utils/schema_cache.py`. Updated `search_schema()` to call `load_semantic_annotations` post-collection and merge `display_name`/`use_when`/`preferred_over`/`contexts`/`notes` into matching results. Updated `schema_search` in `cli.py` to display those fields when present. Added `_SEMANTIC_ROOT` patching to autouse fixture in `tests/test_cli_schema.py`; added 4 new tests (absent YAML, dimension YAML, partial annotation, metric YAML). 420 total tests pass.
 - **Left in flight:** Nothing.
 - **Next action:** Step 25 — Semantic layer YAML schema + seed data.
+
+### 2026-05-13 (step 25)
+- **Worked on:** Step 25
+- **Commits:** `Step 25: semantic layer YAML seed data` (1 commit)
+- **Done this session:** Created `data/semantic_layer/dimensions.yaml` (21 entries across 5 groups: browser/device, custom eVars, geographic, traffic source, time dimensions), `data/semantic_layer/metrics.yaml` (15 entries across 4 groups: standard metrics, custom events, Adobe Advertising, calculated metrics), `data/semantic_layer/README.md` (format reference, valid contexts list, instructions for adding entries). Seeded from `docs/reference/common_dimensions.md`, `docs/reference/common_metrics.md`, and all IDs found across all 9 `report_definitions/*.yaml` files. Validated YAML parse (both files = list of dicts with `id`); `load_semantic_annotations()` returns all 36 entries cleanly. 420 tests still passing.
+- **Left in flight:** Nothing.
+- **Next action:** Step 26 — CLAUDE.md semantic layer protocol.
 
 ### 2026-05-12 (step 22)
 - **Worked on:** Step 22
