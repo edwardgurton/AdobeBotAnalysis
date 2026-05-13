@@ -15,11 +15,11 @@ Status legend: `☐ todo` · `🔄 in-progress` · `✅ done` · `⚠️ blocked
 
 ## Current State
 
-**Active step:** Step 24 — Wire semantic layer into search output
+**Active step:** Step 25 — Semantic layer YAML schema + seed data
 
-**Last commit:** `Step 23: schema CLI command group` — schema fetch/search/status, search_schema(), cache_status(), 16 tests; 416 total passing
+**Last commit:** `Step 24: wire semantic layer into schema search` — load_semantic_annotations(), inject display_name/use_when/contexts/notes into search results, 4 new tests; 420 total passing
 
-**Next concrete action:** When `data/semantic_layer/dimensions.yaml` (or metrics) exists, append `display_name`, `use_when`, `contexts`, `notes` fields to each `schema search` result. Read-only join on local YAML, no API call. Add tests to `tests/test_cli_schema.py`.
+**Next concrete action:** Create `data/semantic_layer/dimensions.yaml`, `data/semantic_layer/metrics.yaml`, `data/semantic_layer/README.md`. Seed from `docs/reference/common_dimensions.md`, `docs/reference/common_metrics.md`, and all dimension/metric IDs in `report_definitions/*.yaml`.
 
 **In-flight (uncommitted) work:** *(none)*
 
@@ -221,10 +221,10 @@ Status legend: `☐ todo` · `🔄 in-progress` · `✅ done` · `⚠️ blocked
 - **Tests:** `tests/test_cli_schema.py` — 16 tests; Click CliRunner for all sub-commands.
 - **Validation:** `adobe-downloader schema --help` works; 416 total tests pass.
 
-### ☐ Step 24 — Wire semantic layer into search output
-- **Target file:** `adobe_downloader/cli.py` (schema search command)
-- **Notes:** When `data/semantic_layer/dimensions.yaml` (or metrics) exists, append `display_name`, `use_when`, `contexts`, `notes` fields to each search result. No API call — read-only join on local YAML.
-- **Tests:** Add cases to `tests/test_cli_schema.py` covering presence and absence of semantic layer.
+### ✅ Step 24 — Wire semantic layer into search output
+- **Completed:** 2026-05-13
+- **Target file:** `adobe_downloader/utils/schema_cache.py`, `adobe_downloader/cli.py`
+- **Notes:** Added `_SEMANTIC_ROOT`, `_SEMANTIC_FIELDS`, `load_semantic_annotations("dimension"|"metric")` to `schema_cache.py`; reads `data/semantic_layer/{kind}s.yaml`, returns `{}` gracefully when absent. `search_schema()` joins annotations into matching results. CLI `schema search` displays `display_name`, `use_when`, `contexts`, `notes` when present. 4 new tests (no-semantic-layer, dimension YAML, partial annotation, metric YAML); 420 total passing.
 - **Validation:** `adobe-downloader schema search --query "browser"` shows semantic fields when YAML present.
 
 ---
@@ -421,6 +421,13 @@ Status legend: `☐ todo` · `🔄 in-progress` · `✅ done` · `⚠️ blocked
 - **Done this session:** Added `search_schema(query, type_filter)` and `cache_status(ttl_days)` to `utils/schema_cache.py`. Added `schema` Click group to `cli.py` with three sub-commands: `fetch` (loads `SchemaDiscoveryJobConfig`, creates `AdobeClient`, runs `run_schema_discovery()`), `search --query STR [--type dimension|metric]` (aggregates across RSID JSON cache files, deduplicates by ID, matches on id/name/description), `status --ttl N` (shows FRESH/STALE freshness per RSID from `last_updated.json`). Created `jobs/templates/schema_discovery.yaml`. Created `tests/test_cli_schema.py` — 16 tests using Click `CliRunner`. All 416 tests pass.
 - **Left in flight:** Nothing.
 - **Next action:** Step 24 — Wire semantic layer into search output.
+
+### 2026-05-13 (step 24)
+- **Worked on:** Step 24
+- **Commits:** `Step 24: wire semantic layer into schema search` (1 commit)
+- **Done this session:** Added `_SEMANTIC_ROOT = Path("data/semantic_layer")`, `_SEMANTIC_FIELDS` tuple, and `load_semantic_annotations(kind)` to `utils/schema_cache.py`. Updated `search_schema()` to call `load_semantic_annotations` post-collection and merge `display_name`/`use_when`/`preferred_over`/`contexts`/`notes` into matching results. Updated `schema_search` in `cli.py` to display those fields when present. Added `_SEMANTIC_ROOT` patching to autouse fixture in `tests/test_cli_schema.py`; added 4 new tests (absent YAML, dimension YAML, partial annotation, metric YAML). 420 total tests pass.
+- **Left in flight:** Nothing.
+- **Next action:** Step 25 — Semantic layer YAML schema + seed data.
 
 ### 2026-05-12 (step 22)
 - **Worked on:** Step 22
