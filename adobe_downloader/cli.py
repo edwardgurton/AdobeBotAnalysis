@@ -1309,6 +1309,17 @@ def schema_search(query: str, item_type: str | None) -> None:
         click.echo(f"    Type       : {type_}")
         if desc:
             click.echo(f"    Description: {desc}")
+        for field, label in [
+            ("display_name", "Display Name"),
+            ("use_when", "Use When   "),
+            ("contexts", "Contexts   "),
+            ("notes", "Notes      "),
+        ]:
+            val = item.get(field)
+            if val:
+                if isinstance(val, list):
+                    val = ", ".join(str(v) for v in val)
+                click.echo(f"    {label}: {val}")
         click.echo("")
 
 

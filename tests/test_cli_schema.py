@@ -46,6 +46,7 @@ def _patch_cache(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(schema_cache, "_LAST_UPDATED_FILE", cache / "index" / "last_updated.json")
     monkeypatch.setattr(schema_cache, "_DIM_INDEX_FILE", cache / "index" / "dimensions_index.md")
     monkeypatch.setattr(schema_cache, "_MET_INDEX_FILE", cache / "index" / "metrics_index.md")
+    monkeypatch.setattr(schema_cache, "_SEMANTIC_ROOT", tmp_path / "semantic_layer")
 
 
 @pytest.fixture()
@@ -254,3 +255,68 @@ def test_schema_status_stale_with_zero_ttl(runner: CliRunner) -> None:
     result = runner.invoke(main, ["schema", "status", "--ttl", "0"])
     assert result.exit_code == 0
     assert "STALE" in result.output
+
+
+# ---------------------------------------------------------------------------
+# schema search — semantic layer
+# ---------------------------------------------------------------------------
+
+
+def test_schema_search_no_semantic_layer(runner: CliRunner) -> None:
+    """No dimensions.yaml → results show no semantic fields."""
+    schema_cache.write_dimensions("rsid_a", _DIMS)
+    result = runner.invoke(main, ["schema", "search", "--query", "browser"])
+    assert result.exit_code == 0
+    assert "Display Name" not in result.output
+    assert "Use When" not in result.output
+
+
+def test_schema_search_with_dimension_semantic_layer(runner: CliRunner, tmp_path: Path) -> None:
+    """dimensions.yaml present → annotated dimension gains semantic fields."""
+    sem_dir = tmp_path / "semantic_layer"
+    sem_dir.mkdir(parents=True, exist_ok=True)
+    (sem_dir / "dimensions.yaml").write_text(
+        "- id: variables/browser\n"
+        "  display_name: Browser Type\n"
+        "  use_when: Segment by browser vendor\n"
+        "  contexts: [bot_investigation]\n"
+        "  notes: Use browsertype lookup for IDs\n",
+        encoding="utf-8",
+    )
+    schema_cache.write_dimensions("rsid_a", _DIMS)
+    result = runner.invoke(main, ["schema", "search", "--query", "browser"])
+    assert result.exit_code == 0
+    assert "Browser Type" in result.output
+    assert "Segment by browser vendor" in result.output
+    assert "bot_investigation" in result.output
+    assert "Use browsertype lookup for IDs" in result.output
+
+
+def test_schema_search_partial_semantic_layer(runner: CliRunner, tmp_path: Path) -> None:
+    """Only annotated IDs gain semantic fields; unannotated IDs are unaffected."""
+    sem_dir = tmp_path / "semantic_layer"
+    sem_dir.mkdir(parents=True, exist_ok=True)
+    (sem_dir / "dimensions.yaml").write_text(
+        "- id: variables/browser\n  display_name: Browser Type\n",
+        encoding="utf-8",
+    )
+    schema_cache.write_dimensions("rsid_a", _DIMS)
+    # geocountry is not annotated — searching it should not show Display Name
+    result = runner.invoke(main, ["schema", "search", "--query", "geocountry"])
+    assert result.exit_code == 0
+    assert "Display Name" not in result.output
+
+
+def test_schema_search_with_metric_semantic_layer(runner: CliRunner, tmp_path: Path) -> None:
+    """metrics.yaml present → annotated metric gains semantic fields."""
+    sem_dir = tmp_path / "semantic_layer"
+    sem_dir.mkdir(parents=True, exist_ok=True)
+    (sem_dir / "metrics.yaml").write_text(
+        "- id: metrics/visits\n  display_name: Sessions\n  use_when: Primary engagement metric\n",
+        encoding="utf-8",
+    )
+    schema_cache.write_metrics("rsid_a", _METS)
+    result = runner.invoke(main, ["schema", "search", "--query", "visits"])
+    assert result.exit_code == 0
+    assert "Sessions" in result.output
+    assert "Primary engagement metric" in result.output

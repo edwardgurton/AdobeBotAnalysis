@@ -7,6 +7,8 @@ from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import Any
 
+import yaml
+
 _CACHE_ROOT = Path("data/schema_cache")
 _DIM_DIR = _CACHE_ROOT / "dimensions"
 _MET_DIR = _CACHE_ROOT / "metrics"
@@ -15,6 +17,10 @@ _INDEX_DIR = _CACHE_ROOT / "index"
 _LAST_UPDATED_FILE = _INDEX_DIR / "last_updated.json"
 _DIM_INDEX_FILE = _INDEX_DIR / "dimensions_index.md"
 _MET_INDEX_FILE = _INDEX_DIR / "metrics_index.md"
+
+_SEMANTIC_ROOT = Path("data/semantic_layer")
+
+_SEMANTIC_FIELDS = ("display_name", "use_when", "preferred_over", "contexts", "notes")
 
 
 def _ensure_dirs() -> None:
@@ -234,6 +240,37 @@ def _rebuild_metrics_index() -> None:
 
 
 # ---------------------------------------------------------------------------
+# Semantic layer
+# ---------------------------------------------------------------------------
+
+
+def load_semantic_annotations(kind: str) -> dict[str, dict[str, Any]]:
+    """Return {id: annotation_dict} from data/semantic_layer/{kind}s.yaml.
+
+    kind: "dimension" or "metric". Returns {} if file absent or unparseable.
+    Only the fields listed in _SEMANTIC_FIELDS are kept.
+    """
+    path = _SEMANTIC_ROOT / f"{kind}s.yaml"
+    if not path.exists():
+        return {}
+    try:
+        data = yaml.safe_load(path.read_text(encoding="utf-8"))
+    except Exception:
+        return {}
+    if not isinstance(data, list):
+        return {}
+    result: dict[str, dict[str, Any]] = {}
+    for entry in data:
+        if not isinstance(entry, dict):
+            continue
+        entry_id: str = entry.get("id", "")
+        if not entry_id:
+            continue
+        result[entry_id] = {k: entry[k] for k in _SEMANTIC_FIELDS if k in entry}
+    return result
+
+
+# ---------------------------------------------------------------------------
 # Search
 # ---------------------------------------------------------------------------
 
@@ -313,6 +350,16 @@ def search_schema(
                 item = {**met, "rsids": [], "kind": "calculated"}
                 if _matches(item):
                     results[met_id] = item
+
+    # Inject semantic layer annotations (read-only join on local YAML, no API call)
+    if type_filter in (None, "dimension"):
+        for ann_id, ann in load_semantic_annotations("dimension").items():
+            if ann_id in results:
+                results[ann_id].update(ann)
+    if type_filter in (None, "metric"):
+        for ann_id, ann in load_semantic_annotations("metric").items():
+            if ann_id in results:
+                results[ann_id].update(ann)
 
     return sorted(results.values(), key=lambda x: x.get("id", ""))
 
