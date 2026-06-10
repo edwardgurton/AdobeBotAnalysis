@@ -67,7 +67,7 @@
     - bot_investigation
     - bot_validation
     - bot_rule_compare
-  notes: Legend-specific implementation; event3 maps to the clickout link tracking event. Prefer cm3938_602b915cb99757640284234e (Raw Clickouts) for calculated-metric consistency.
+  notes: Legend-specific implementation; event3 maps to the clickout link tracking event.
 
 # ---------------------------------------------------------------------------
 # Adobe Advertising (AdCloud) metrics
@@ -125,16 +125,15 @@
   notes: Company-wide calculated metric in the Legend account.
 
 - id: cm3938_602b915cb99757640284234e
-  display_name: Raw Clickouts
-  description: Calculated metric — raw count of clickout events without attribution weighting.
-  use_when: Baseline clickout volume in bot investigation and validation; preferred over metrics/event3 for consistency.
-  preferred_over:
-    - metrics/event3
+  display_name: Engaged Visits
+  description: Calculated metric — Visits where the visitor met at least one engagement criterion: a Partner Clickout, 30+ seconds spent on a page, or an Internal click.
+  use_when: Distinguishing genuine traffic from bots; bots typically produce zero or negligible engaged visits. Core signal for bot filtering decisions.
+  preferred_over: []
   contexts:
     - bot_investigation
     - bot_validation
     - bot_rule_compare
-  notes: Company-wide calculated metric in the Legend account.
+  notes: Built on metrics/visits filtered by the Engaged Visit segment (Partner Clickout OR time on page ≥ 30s OR Internal click). Company-wide calculated metric in the Legend account.
 
 - id: cm3938_67877f0e25c74e65d1f3f449
   display_name: Raw Clickouts (Linear 7-Day)
