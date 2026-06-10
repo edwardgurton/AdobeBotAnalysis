@@ -105,15 +105,15 @@
 # ---------------------------------------------------------------------------
 
 - id: cm3938_66d0bfba05c95b4eca739eb4
-  display_name: Engaged Visits
-  description: Calculated metric — visits meeting an engagement threshold (e.g. multiple page views or sufficient time on site).
-  use_when: Distinguishing genuine traffic from bots; bots typically produce zero or negligible engaged visits.
+  display_name: First Time Visits
+  description: Calculated metric — Visits filtered to Visit Number = 1, i.e. sessions from visitors on their very first visit within the date range.
+  use_when: Segmenting new-visitor traffic; useful for understanding acquisition and first-touch behaviour separately from return visits.
   preferred_over: []
   contexts:
     - bot_investigation
     - bot_validation
     - bot_rule_compare
-  notes: Key signal for bot filtering decisions. Company-wide calculated metric in the Legend account.
+  notes: Built on metrics/visits with a Visit Number = 1 segment filter. Company-wide calculated metric in the Legend account.
 
 - id: cm3938_5fcf3ee998b6d77a9d7167ad
   display_name: Engagement Rate
