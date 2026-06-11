@@ -10,7 +10,14 @@
       "Bash(python -m adobe_downloader --version)",
       "Bash(xargs grep -l \"bot_rule_compare\")",
       "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\EdwardGurton\\\\OneDrive - Station10\\\\Documents\\\\GitHub\\\\AdobeBotAnalysis\" -Recurse -ErrorAction SilentlyContinue)",
-      "Bash(Select-Object -First 50)"
+      "Bash(Select-Object -First 50)",
+      "Bash(ls -la \"C:/Adobe_Downloads\" 2>/dev/null || echo \"Directory does not exist\")",
+      "Read(//c/Adobe_Downloads/**)",
+      "Bash(read f *)",
+      "Bash(python3)",
+      "Bash(Get-ChildItem \"c:\\\\Users\\\\EdwardGurton\\\\OneDrive - Station10\\\\Documents\\\\GitHub\\\\AdobeBotAnalysis\\\\tests\\\\fixtures\\\\transforms\\\\bot_rule_compare\")",
+      "Bash(Select-Object Name)",
+      "PowerShell(Get-ChildItem \"c:\\\\Users\\\\EdwardGurton\\\\OneDrive - Station10\\\\Documents\\\\GitHub\\\\AdobeBotAnalysis\\\\tests\\\\fixtures\\\\transforms\\\\bot_rule_compare\" | ForEach-Object { $_.Name.Length, $_.Name })"
     ]
   }
 }

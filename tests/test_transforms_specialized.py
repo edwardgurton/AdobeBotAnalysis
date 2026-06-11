@@ -41,6 +41,23 @@ def test_detect_bot_rule_compare(tmp_path: Path) -> None:
     assert _detect_transform_type(p) == "bot_rule_compare"
 
 
+def test_detect_bot_rule_compare_production_alltraffic(tmp_path: Path) -> None:
+    p = tmp_path / (
+        "Legend_botInvestigationMetricsByBrowser"
+        "_SportsBookReviewcom-SG-GeoCountry-Compare-V1-AllTraffic_2026-03-01_2026-05-31.json"
+    )
+    assert _detect_transform_type(p) == "bot_rule_compare"
+
+
+def test_detect_bot_rule_compare_production_segment(tmp_path: Path) -> None:
+    p = tmp_path / (
+        "Legend_botInvestigationMetricsByBrowser"
+        "_SBRcom-SGGeo-Compare-V1-Segment"
+        "_DIMSEGs3938_67efce1e3c0b4a6a3f4e8c9a_2026-03-01_2026-05-31.json"
+    )
+    assert _detect_transform_type(p) == "bot_rule_compare"
+
+
 def test_detect_final_bot_rule_metrics(tmp_path: Path) -> None:
     p = tmp_path / (
         "Legend_LegendFinalBotMetricsCurrentIncludeByYear_Extra_rsid_rule_2026-01-01_2026-01-31.json"
@@ -187,6 +204,45 @@ def test_bot_rule_compare_row_count() -> None:
     csv_text = transform_bot_rule_compare(json_path, _HEADERS_DIR)
     lines = [ln for ln in csv_text.splitlines() if ln.strip()]
     assert len(lines) == 3  # header + 2 rows
+
+
+def test_bot_rule_compare_production_alltraffic_metadata() -> None:
+    json_path = _FIXTURES / "bot_rule_compare" / (
+        "Legend_botInvestigationMetricsByBrowser"
+        "_SportsBookReviewcom-SG-GeoCountry-Compare-V1-AllTraffic_2026-03-01_2026-05-31.json"
+    )
+    csv_text = transform_bot_rule_compare(json_path, _HEADERS_DIR)
+    row = csv_text.splitlines()[1].split(",")
+    assert row[13] == "SportsBookReviewcom"  # rsidName
+    assert row[14] == "SG-GeoCountry"        # botRuleName
+    assert row[15] == "V1"                   # compareVersion
+    assert row[16] == "AllTraffic"           # trafficType
+    assert row[17] == "true"                 # isCompare
+    assert row[18] == "false"                # isSegment
+    assert row[19] == ""                     # segmentId (empty for AllTraffic)
+    assert row[20] == ""                     # segmentHash (empty for AllTraffic)
+    assert row[21] == "2026-03-01"           # startDate
+    assert row[22] == "2026-05-31"           # endDate
+
+
+def test_bot_rule_compare_production_segment_metadata() -> None:
+    json_path = _FIXTURES / "bot_rule_compare" / (
+        "Legend_botInvestigationMetricsByBrowser"
+        "_SBRcom-SGGeo-Compare-V1-Segment"
+        "_DIMSEGs3938_67efce1e3c0b4a6a3f4e8c9a_2026-03-01_2026-05-31.json"
+    )
+    csv_text = transform_bot_rule_compare(json_path, _HEADERS_DIR)
+    row = csv_text.splitlines()[1].split(",")
+    assert row[13] == "SBRcom"                           # rsidName
+    assert row[14] == "SGGeo"                            # botRuleName
+    assert row[15] == "V1"                               # compareVersion
+    assert row[16] == "Segment"                          # trafficType
+    assert row[17] == "false"                            # isCompare
+    assert row[18] == "true"                             # isSegment
+    assert row[19] == "s3938_67efce1e3c0b4a6a3f4e8c9a"  # segmentId reconstructed
+    assert row[20] == "67efce1e3c0b4a6a3f4e8c9a"        # segmentHash
+    assert row[21] == "2026-03-01"                       # startDate
+    assert row[22] == "2026-05-31"                       # endDate
 
 
 # ---------------------------------------------------------------------------

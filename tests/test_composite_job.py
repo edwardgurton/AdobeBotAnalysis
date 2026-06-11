@@ -530,7 +530,7 @@ class TestTransformConcatStep:
                 "step": "transform_concat",
                 "id": "transform",
                 "depends_on": "dl_step",
-                "transform": {"type": "standard"},
+                "transform": {},
                 "concat": {"enabled": False},
             }
         )
@@ -538,7 +538,13 @@ class TestTransformConcatStep:
         csv_folder = json_folder.parent / "CSV"
         csv_folder.mkdir(parents=True, exist_ok=True)
 
-        def _fake_dispatch(src: Path, output_path: Path | None = None) -> None:
+        def _fake_dispatch(
+            src: Path,
+            transform_type: str | None = None,
+            headers_dir: object = None,
+            *,
+            output_path: Path | None = None,
+        ) -> None:
             # Write a dummy CSV so the step sees a successful transform
             p = output_path or src.with_suffix(".csv")
             p.parent.mkdir(parents=True, exist_ok=True)

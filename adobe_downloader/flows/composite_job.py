@@ -294,7 +294,7 @@ async def _run_transform_concat_step(
     transform_raw = extra.get("transform") or {}
     concat_raw = extra.get("concat") or {}
 
-    transform_type: str = transform_raw.get("type", "standard")
+    explicit_type: str | None = transform_raw.get("type")
     source_pattern: str | None = transform_raw.get("source_pattern")
     concat_enabled: bool = concat_raw.get("enabled", True)
 
@@ -335,7 +335,7 @@ async def _run_transform_concat_step(
     for jf in json_files:
         csv_path = make_csv_output_path(jf)
         try:
-            transform_report_dispatch(jf, output_path=csv_path)
+            transform_report_dispatch(jf, explicit_type, output_path=csv_path)
             csv_paths.append(csv_path)
             ok += 1
         except Exception as exc:
