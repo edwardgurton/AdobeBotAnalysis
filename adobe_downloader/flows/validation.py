@@ -26,6 +26,7 @@ def enumerate_expected_paths(
     output_base: Path,
     segments: SegmentSource | None = None,
     file_name_extra: str | None = None,
+    job_name: str | None = None,
 ) -> list[Path]:
     """Return every JSON output path that a report_download run would produce."""
     paths: list[Path] = []
@@ -41,8 +42,58 @@ def enumerate_expected_paths(
                             date_range=dr,
                             file_name_extra=file_name_extra,
                             segment_id=seg_id,
+                            job_name=job_name,
                         )
                     )
+    return paths
+
+
+def enumerate_bot_rule_compare_paths(
+    client_name: str,
+    rsid_clean_names: list[str],
+    bot_rules: list[Any],
+    date_range: DateRange,
+    comparison_round: float,
+    output_base: Path,
+    report_defs: list[Any],
+    job_name: str | None = None,
+) -> list[Path]:
+    """Return every JSON output path that a bot_rule_compare run would produce.
+
+    For each clean_name × bot_rule × report_def (skipping report_to_skip), two paths
+    are emitted: the Segment variant and the AllTraffic variant.
+    """
+    paths: list[Path] = []
+    for clean_name in rsid_clean_names:
+        for bot_rule in bot_rules:
+            investigation_name = (
+                f"{clean_name}-{bot_rule.segment_name}-Compare-V{comparison_round}"
+            )
+            for report_def in report_defs:
+                if report_def.name == bot_rule.report_to_skip:
+                    continue
+                paths.append(
+                    make_output_path(
+                        base_folder=output_base,
+                        client=client_name,
+                        report_name=report_def.name,
+                        date_range=date_range,
+                        file_name_extra=f"{investigation_name}-Segment",
+                        segment_id=bot_rule.segment_id,
+                        job_name=job_name,
+                    )
+                )
+                paths.append(
+                    make_output_path(
+                        base_folder=output_base,
+                        client=client_name,
+                        report_name=report_def.name,
+                        date_range=date_range,
+                        file_name_extra=f"{investigation_name}-AllTraffic",
+                        segment_id=None,
+                        job_name=job_name,
+                    )
+                )
     return paths
 
 

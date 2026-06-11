@@ -1,0 +1,38 @@
+job_type: composite
+client: Legend
+description: "Bot rule compare: Sportsbook Review – Singapore country segment, Mar–May 2026"
+
+date_range:
+  from: "2026-03-01"
+  to: "2026-05-31"
+
+output:
+  base_folder: "C:/Adobe_Downloads"
+  job_name: "geo_singapore_sbr_mar_may26"
+
+steps:
+  - step: bot_rule_compare
+    id: download_compare
+    rsids:
+      source: single
+      single: SportsBookReviewcom
+    bot_rules:
+      source: inline
+      rules:
+        - segment_id: s3938_67efce1e3c0b4a6a3f4e8c9a
+          segment_name: "SG-GeoCountry"
+          report_to_skip: ""
+    comparison_round: 1
+
+  - step: validate_output
+    id: validate
+    depends_on: download_compare
+    config_ref: download_compare
+
+  - step: transform_concat
+    id: transform
+    depends_on: validate
+    transform:
+      type: bot_rule_compare
+      source_pattern: ".*SG-GeoCountry-Compare.*\\.json$"
+      concat: true

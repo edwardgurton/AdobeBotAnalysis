@@ -367,8 +367,14 @@
       <h3>Install the package</h3>
       <p>From the repository root, install in editable mode:</p>
       <pre><code>pip install -e .</code></pre>
-      <p>This installs the <code>adobe-downloader</code> command into your Python environment. Verify it works:</p>
+      <p>This registers the <code>adobe-downloader</code> command. Verify it works:</p>
       <pre><code>adobe-downloader --version</code></pre>
+
+      <div class="callout warn">
+        <p><strong>Windows:</strong> If you see a warning that the script is not on PATH, or if <code>adobe-downloader</code> is not recognised as a command, use the <code>python -m</code> form instead. It works identically:</p>
+        <pre style="margin:0.5rem 0 0">python -m adobe_downloader --version</pre>
+        <p style="margin-top:0.6rem">Substitute <code>python -m adobe_downloader</code> for <code>adobe-downloader</code> in every command shown in this manual.</p>
+      </div>
 
       <h3>Credentials file</h3>
       <p>Each client needs a credentials file at:</p>

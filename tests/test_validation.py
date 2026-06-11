@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -10,6 +11,7 @@ import pytest
 from adobe_downloader.config.schema import DateRange, RsidSource, SegmentSource
 from adobe_downloader.flows.validation import (
     check_output_files,
+    enumerate_bot_rule_compare_paths,
     enumerate_expected_paths,
 )
 
@@ -129,6 +131,96 @@ def test_enumerate_count_rsids_x_dates(tmp_path: Path) -> None:
     )
     assert len(paths) == 4  # 2 rsids × 2 months × 1 report
     assert len(set(paths)) == 2  # only 2 unique file paths (rsid not in name)
+
+
+# ---------------------------------------------------------------------------
+# enumerate_bot_rule_compare_paths
+# ---------------------------------------------------------------------------
+
+
+def _make_bot_rule(segment_id: str, segment_name: str, report_to_skip: str = "") -> Any:
+    from adobe_downloader.flows.bot_rule_compare import BotRule
+    return BotRule(segment_id=segment_id, segment_name=segment_name, report_to_skip=report_to_skip)
+
+
+def test_bot_rule_compare_paths_segment_and_alltraffic(tmp_path: Path) -> None:
+    paths = enumerate_bot_rule_compare_paths(
+        client_name="Client",
+        rsid_clean_names=["SiteA"],
+        bot_rules=[_make_bot_rule("seg1", "MyRule")],
+        date_range=_date_range("2026-03-01", "2026-05-31"),
+        comparison_round=1.0,
+        output_base=tmp_path,
+        report_defs=[_make_report_def("botInvestigationMetricsByRegion")],
+    )
+    assert len(paths) == 2
+    names = [p.name for p in paths]
+    assert any("Segment" in n and "DIMSEGseg1" in n for n in names)
+    assert any("AllTraffic" in n and "DIMSEG" not in n for n in names)
+
+
+def test_bot_rule_compare_paths_skips_report_to_skip(tmp_path: Path) -> None:
+    paths = enumerate_bot_rule_compare_paths(
+        client_name="Client",
+        rsid_clean_names=["SiteA"],
+        bot_rules=[_make_bot_rule("seg1", "MyRule", report_to_skip="botInvestigationMetricsByDomain")],
+        date_range=_date_range("2026-03-01", "2026-05-31"),
+        comparison_round=1.0,
+        output_base=tmp_path,
+        report_defs=[
+            _make_report_def("botInvestigationMetricsByDomain"),
+            _make_report_def("botInvestigationMetricsByRegion"),
+        ],
+    )
+    # Domain skipped; Region → Segment + AllTraffic = 2
+    assert len(paths) == 2
+    assert all("Domain" not in p.name for p in paths)
+
+
+def test_bot_rule_compare_paths_multiple_rules(tmp_path: Path) -> None:
+    paths = enumerate_bot_rule_compare_paths(
+        client_name="Client",
+        rsid_clean_names=["SiteA"],
+        bot_rules=[
+            _make_bot_rule("seg1", "Rule1"),
+            _make_bot_rule("seg2", "Rule2"),
+        ],
+        date_range=_date_range("2026-03-01", "2026-05-31"),
+        comparison_round=1.0,
+        output_base=tmp_path,
+        report_defs=[_make_report_def("botInvestigationMetricsByRegion")],
+    )
+    # 2 rules × 1 report × 2 variants = 4
+    assert len(paths) == 4
+
+
+def test_bot_rule_compare_paths_multiple_rsids(tmp_path: Path) -> None:
+    paths = enumerate_bot_rule_compare_paths(
+        client_name="Client",
+        rsid_clean_names=["SiteA", "SiteB"],
+        bot_rules=[_make_bot_rule("seg1", "Rule1")],
+        date_range=_date_range("2026-03-01", "2026-05-31"),
+        comparison_round=1.0,
+        output_base=tmp_path,
+        report_defs=[_make_report_def("botInvestigationMetricsByRegion")],
+    )
+    # 2 rsids × 1 rule × 1 report × 2 variants = 4
+    assert len(paths) == 4
+
+
+def test_bot_rule_compare_paths_investigation_name_in_filename(tmp_path: Path) -> None:
+    paths = enumerate_bot_rule_compare_paths(
+        client_name="Legend",
+        rsid_clean_names=["trihybridsportsbookreviewcom"],
+        bot_rules=[_make_bot_rule("s3938_abc", "SG-GeoCountry")],
+        date_range=_date_range("2026-03-01", "2026-05-31"),
+        comparison_round=1.0,
+        output_base=tmp_path,
+        report_defs=[_make_report_def("botInvestigationMetricsByRegion")],
+    )
+    names = [p.name for p in paths]
+    assert any("SG-GeoCountry-Compare-V1.0-Segment" in n for n in names)
+    assert any("SG-GeoCountry-Compare-V1.0-AllTraffic" in n for n in names)
 
 
 # ---------------------------------------------------------------------------
@@ -489,3 +581,98 @@ async def test_composite_validate_output_missing_config_ref_raises(tmp_path: Pat
 
     with pytest.raises(ValueError, match="config_ref"):
         await _run_validate_output_step(step, job, {}, MagicMock(), MagicMock(), False)
+
+
+@pytest.mark.asyncio
+async def test_composite_validate_output_bot_rule_compare_all_present(tmp_path: Path) -> None:
+    """validate_output with bot_rule_compare config_ref enumerates Segment+AllTraffic pairs."""
+    from adobe_downloader.config.schema import CompositeJobConfig
+    from adobe_downloader.flows.bot_rule_compare import BotRule
+    from adobe_downloader.flows.composite_job import _run_validate_output_step
+    from adobe_downloader.flows.report_download import make_output_path
+
+    bot_rule = BotRule(segment_id="seg1", segment_name="SG-GeoCountry", report_to_skip="")
+    rd = _make_report_def("botInvestigationMetricsByRegion")
+    dr = _date_range("2026-03-01", "2026-05-31")
+
+    # Seed both expected files on disk
+    investigation_name = "trihybridsportsbookreviewcom-SG-GeoCountry-Compare-V1.0"
+    seg_path = make_output_path(tmp_path, "Legend", rd.name, dr,
+                                file_name_extra=f"{investigation_name}-Segment",
+                                segment_id="seg1")
+    all_path = make_output_path(tmp_path, "Legend", rd.name, dr,
+                                file_name_extra=f"{investigation_name}-AllTraffic")
+    seg_path.parent.mkdir(parents=True, exist_ok=True)
+    seg_path.write_text('{"rows": []}')
+    all_path.write_text('{"rows": []}')
+
+    step = MagicMock()
+    step.id = "validate"
+    step.extra_fields.return_value = {"config_ref": "download_compare", "retry": False}
+
+    ref_step = MagicMock()
+    ref_step.id = "download_compare"
+    ref_step.step = "bot_rule_compare"
+    ref_step.extra_fields.return_value = {
+        "rsids": {"source": "single", "single": "trihybridsportsbookreviewcom"},
+        "bot_rules": {
+            "source": "inline",
+            "rules": [{"segment_id": "seg1", "segment_name": "SG-GeoCountry"}],
+        },
+        "comparison_round": 1,
+    }
+
+    job = MagicMock(spec=CompositeJobConfig)
+    job.client = "Legend"
+    job.steps = [ref_step, step]
+    job.date_range = dr
+    job.output = None
+
+    with patch("adobe_downloader.flows.composite_job._coerce_date_range", return_value=dr), \
+         patch("adobe_downloader.flows.composite_job._resolve_output_base", return_value=str(tmp_path)), \
+         patch("adobe_downloader.config.report_definitions.load_report_group", return_value=[rd]):
+
+        result = await _run_validate_output_step(step, job, {}, MagicMock(), MagicMock(), False)
+
+    assert result["missing_count"] == 0
+
+
+@pytest.mark.asyncio
+async def test_composite_validate_output_bot_rule_compare_reports_missing(tmp_path: Path) -> None:
+    """validate_output with bot_rule_compare config_ref reports missing files."""
+    from adobe_downloader.config.schema import CompositeJobConfig
+    from adobe_downloader.flows.composite_job import _run_validate_output_step
+
+    rd = _make_report_def("botInvestigationMetricsByRegion")
+    dr = _date_range("2026-03-01", "2026-05-31")
+
+    step = MagicMock()
+    step.id = "validate"
+    step.extra_fields.return_value = {"config_ref": "download_compare", "retry": False}
+
+    ref_step = MagicMock()
+    ref_step.id = "download_compare"
+    ref_step.step = "bot_rule_compare"
+    ref_step.extra_fields.return_value = {
+        "rsids": {"source": "single", "single": "trihybridsportsbookreviewcom"},
+        "bot_rules": {
+            "source": "inline",
+            "rules": [{"segment_id": "seg1", "segment_name": "SG-GeoCountry"}],
+        },
+        "comparison_round": 1,
+    }
+
+    job = MagicMock(spec=CompositeJobConfig)
+    job.client = "Legend"
+    job.steps = [ref_step, step]
+    job.date_range = dr
+    job.output = None
+
+    with patch("adobe_downloader.flows.composite_job._coerce_date_range", return_value=dr), \
+         patch("adobe_downloader.flows.composite_job._resolve_output_base", return_value=str(tmp_path)), \
+         patch("adobe_downloader.config.report_definitions.load_report_group", return_value=[rd]):
+
+        result = await _run_validate_output_step(step, job, {}, MagicMock(), MagicMock(), False)
+
+    # 1 report × 2 variants = 2 expected, all missing
+    assert result["missing_count"] == 2

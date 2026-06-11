@@ -80,10 +80,36 @@ def transform_report(
     rows: list[list[str | int | float]] = []
 
     if "rows" in raw:
+        # Detect unauthorized/errored metric columns and record their positions so
+        # we can pad None into the data array at those slots.
+        columns_meta = raw.get("columns", {})
+        error_col_ids: set[str] = {
+            e["columnId"] for e in columns_meta.get("columnErrors", [])
+        }
+        if error_col_ids:
+            successful_ids: list[str] = columns_meta.get("columnIds", [])
+            all_col_ids = sorted(successful_ids + list(error_col_ids), key=lambda x: int(x))
+            _log.warning(
+                "Column error(s) in %s — padding with empty values for columns: %s",
+                json_path.name,
+                sorted(error_col_ids, key=int),
+            )
+        else:
+            all_col_ids = []
+
         for row in raw["rows"]:
             item_id = row.get("itemId", "")
             value = row.get("value", "")
-            data = row.get("data", [])
+            data: list[str | int | float | None] = list(row.get("data", []))
+            if error_col_ids:
+                expanded: list[str | int | float | None] = []
+                data_iter = iter(data)
+                for col_id in all_col_ids:
+                    if col_id in error_col_ids:
+                        expanded.append(None)
+                    else:
+                        expanded.append(next(data_iter, None))
+                data = expanded
             rows.append([item_id, value, *data, file_name_col, from_date, to_date])
     elif "summaryData" in raw:
         totals = raw["summaryData"].get("totals", [])

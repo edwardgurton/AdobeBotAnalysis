@@ -187,6 +187,12 @@ async def _run_report_download_step(
     # Resolve report definitions
     report_defs = _resolve_report_defs(extra)
 
+    from adobe_downloader.flows.preflight import validate_report_metrics
+    from adobe_downloader.flows.report_download import iterate_rsids
+
+    rsid_list = list(iterate_rsids(rsids))
+    await validate_report_metrics(ac, rsid_list, report_defs, date_range)
+
     def _progress(status: str, rsid: str, name: str) -> None:
         _log.info("  %s %s / %s", status, rsid, name)
 
@@ -205,6 +211,7 @@ async def _run_report_download_step(
         step_id=step.id,
         test_limits=job.test_limits if job.test_mode else None,
         on_progress=_progress,
+        job_name=job.output.job_name if job.output else None,
     )
 
     if result.failed:
@@ -342,8 +349,13 @@ async def _run_transform_concat_step(
 
     if concat_enabled and csv_paths:
         file_pattern = concat_raw.get("file_pattern", "*.csv")
-        stem = extra.get("id", step.id)
-        concat_out = csv_folder / f"{stem}_concat.csv"
+        job_name = job.output.job_name if job.output else None
+        if job_name:
+            final_folder = Path(job.output.base_folder) / job.client / "BotRuleCompareFinal"
+            final_folder.mkdir(parents=True, exist_ok=True)
+            concat_out = final_folder / f"BOTCOMPARE_{job_name}.csv"
+        else:
+            concat_out = csv_folder / f"{step.id}_concat.csv"
         count = concatenate_csvs(csv_folder, file_pattern, concat_out)
         if count:
             _log.info("Step %s: concatenated %d CSVs -> %s", step.id, count, concat_out)
@@ -365,14 +377,18 @@ async def _run_validate_output_step(
     ac: Any,
     no_resume: bool,
 ) -> dict[str, Any]:
-    """Check all expected output files from a prior report_download step.
+    """Check all expected output files from a prior download step.
 
-    config_ref must name a prior report_download step.  If retry=True and
-    files are missing, the step resets the stale DB rows and re-runs the
-    download.
+    Supports both report_download and bot_rule_compare config_refs.
+    For report_download steps, retry=True resets stale DB rows and re-downloads.
+    For bot_rule_compare steps, retry=True logs a warning (retry not supported).
     """
     from adobe_downloader.flows.report_download import run_report_download
-    from adobe_downloader.flows.validation import check_output_files, enumerate_expected_paths
+    from adobe_downloader.flows.validation import (
+        check_output_files,
+        enumerate_bot_rule_compare_paths,
+        enumerate_expected_paths,
+    )
 
     extra = step.extra_fields()
     config_ref: str | None = extra.get("config_ref")
@@ -381,7 +397,6 @@ async def _run_validate_output_step(
     if config_ref is None:
         raise ValueError(f"Step {step.id!r}: config_ref is required for validate_output")
 
-    # Locate the referenced step's config in the composite job definition.
     ref_step = next((s for s in job.steps if s.id == config_ref), None)
     if ref_step is None:
         raise ValueError(
@@ -390,14 +405,58 @@ async def _run_validate_output_step(
 
     ref_extra = ref_step.extra_fields()
 
-    # Resolve all parameters needed to enumerate expected paths.
     date_range = _coerce_date_range(ref_extra.get("date_range") or job.date_range)
     if date_range is None:
         raise ValueError(f"Step {step.id!r}: date_range required for validation enumeration")
 
+    output_base = Path(_resolve_output_base(ref_extra, job))
+
+    # --- bot_rule_compare: enumerate Segment + AllTraffic pairs ---
+    if ref_step.step == "bot_rule_compare":
+        from adobe_downloader.config.report_definitions import load_report_group
+        from adobe_downloader.flows.report_download import iterate_rsids
+
+        rsids_raw = ref_extra.get("rsids")
+        if rsids_raw is None:
+            raise ValueError(f"Step {step.id!r}: rsids required on referenced step {config_ref!r}")
+        rsid_clean_names = list(iterate_rsids(RsidSource.model_validate(rsids_raw)))
+
+        comparison_round = float(ref_extra.get("comparison_round", 1.0))
+        bot_rules = _parse_bot_rules_from_config(
+            ref_extra.get("bot_rules") or {}, step_outputs, step.id
+        )
+        report_defs = load_report_group("bot_rule_compare")
+
+        expected = enumerate_bot_rule_compare_paths(
+            client_name=job.client,
+            rsid_clean_names=rsid_clean_names,
+            bot_rules=bot_rules,
+            date_range=date_range,
+            comparison_round=comparison_round,
+            output_base=output_base,
+            report_defs=report_defs,
+            job_name=job.output.job_name if job.output else None,
+        )
+
+        valid, missing = check_output_files(expected)
+        missing_count = len(missing)
+        _log.info(
+            "Step %s: %d expected, %d valid, %d missing/empty",
+            step.id, len(expected), len(valid), missing_count,
+        )
+        for p in missing[:5]:
+            _log.warning("  missing: %s", p)
+        if missing_count and retry:
+            _log.warning(
+                "Step %s: retry=True is not supported for bot_rule_compare steps — "
+                "re-run the download step manually to recover missing files",
+                step.id,
+            )
+        return {"missing_count": missing_count}
+
+    # --- report_download: standard enumeration with optional retry ---
     interval: str = ref_extra.get("interval", "full")
     file_name_extra: str | None = ref_extra.get("file_name_extra")
-    output_base = Path(_resolve_output_base(ref_extra, job))
 
     rsids_raw = ref_extra.get("rsids")
     if rsids_raw is None:
@@ -416,6 +475,7 @@ async def _run_validate_output_step(
         output_base=output_base,
         segments=segments,
         file_name_extra=file_name_extra,
+        job_name=job.output.job_name if job.output else None,
     )
 
     valid, missing = check_output_files(expected)
@@ -536,7 +596,7 @@ async def _run_bot_rule_compare_step(
     ac: Any,
     no_resume: bool,
 ) -> dict[str, Any]:
-    from adobe_downloader.flows.bot_rule_compare import BotRule, parse_bot_rule_csv, run_bot_rule_compare
+    from adobe_downloader.flows.bot_rule_compare import run_bot_rule_compare
     from adobe_downloader.utils.rsid_lookup import find_latest_rsid_file
 
     extra = step.extra_fields()
@@ -548,7 +608,6 @@ async def _run_bot_rule_compare_step(
     output_base = _resolve_output_base(extra, job)
     comparison_round: float = float(extra.get("comparison_round", 1.0))
 
-    # --- Resolve RSID clean names ---
     rsids_raw = extra.get("rsids")
     if rsids_raw is None:
         raise ValueError(f"Step {step.id!r}: rsids is required for bot_rule_compare")
@@ -557,7 +616,6 @@ async def _run_bot_rule_compare_step(
     from adobe_downloader.flows.report_download import iterate_rsids
     rsid_clean_names = list(iterate_rsids(rsids))
 
-    # --- Resolve RSID lookup file ---
     rsid_lookup_raw: str | None = extra.get("rsid_lookup_file")
     if rsid_lookup_raw:
         rsid_lookup_file = Path(rsid_lookup_raw)
@@ -567,37 +625,7 @@ async def _run_bot_rule_compare_step(
         if rsid_lookup_file is None:
             raise FileNotFoundError("No RSID lookup file found in data/report_suite_lists")
 
-    # --- Resolve bot rules ---
-    bot_rules_raw = extra.get("bot_rules") or {}
-    bot_rules_source: str = bot_rules_raw.get("source", "file")
-
-    if bot_rules_source == "file":
-        rules_file = Path(bot_rules_raw["file"])
-        bot_rules = parse_bot_rule_csv(rules_file)
-    elif bot_rules_source == "step_output":
-        dep_step_id = bot_rules_raw["step_id"]
-        output_key = bot_rules_raw["output_key"]
-        if dep_step_id not in step_outputs:
-            raise ValueError(
-                f"Step {step.id!r}: bot_rules.step_output references {dep_step_id!r} "
-                "which has not yet produced outputs"
-            )
-        rules_file = Path(step_outputs[dep_step_id][output_key])
-        bot_rules = parse_bot_rule_csv(rules_file)
-    elif bot_rules_source == "inline":
-        from adobe_downloader.flows.bot_rule_compare import BotRule, DIMENSION_MAPPING
-        raw_rules: list[dict[str, Any]] = bot_rules_raw.get("rules", [])
-        bot_rules = []
-        for r in raw_rules:
-            short = r.get("report_to_skip", "")
-            full = DIMENSION_MAPPING.get(short, short if short.startswith("botInvestigation") else f"botInvestigationMetricsBy{short}")
-            bot_rules.append(BotRule(
-                segment_id=r["segment_id"],
-                segment_name=r["segment_name"],
-                report_to_skip=full,
-            ))
-    else:
-        raise ValueError(f"Step {step.id!r}: unknown bot_rules.source {bot_rules_source!r}")
+    bot_rules = _parse_bot_rules_from_config(extra.get("bot_rules") or {}, step_outputs, step.id)
 
     result = await run_bot_rule_compare(
         client=ac,
@@ -612,6 +640,7 @@ async def _run_bot_rule_compare_step(
         no_resume=no_resume,
         step_id=step.id,
         test_limits=job.test_limits if job.test_mode else None,
+        job_name=job.output.job_name if job.output else None,
     )
 
     if result.failed:
@@ -798,6 +827,45 @@ async def _run_rsid_update_step(
         "investigation_list": str(result.investigation_list),
         "validation_list": str(result.validation_list),
     }
+
+
+def _parse_bot_rules_from_config(
+    bot_rules_raw: dict[str, Any],
+    step_outputs: dict[str, dict[str, Any]],
+    step_id: str,
+) -> list[Any]:  # list[BotRule]
+    """Parse a bot_rules config dict into a list of BotRule objects."""
+    from adobe_downloader.flows.bot_rule_compare import DIMENSION_MAPPING, BotRule, parse_bot_rule_csv
+
+    source: str = bot_rules_raw.get("source", "file")
+
+    if source == "file":
+        return parse_bot_rule_csv(Path(bot_rules_raw["file"]))
+    if source == "step_output":
+        dep_step_id = bot_rules_raw["step_id"]
+        output_key = bot_rules_raw["output_key"]
+        if dep_step_id not in step_outputs:
+            raise ValueError(
+                f"Step {step_id!r}: bot_rules.step_output references {dep_step_id!r} "
+                "which has not yet produced outputs"
+            )
+        return parse_bot_rule_csv(Path(step_outputs[dep_step_id][output_key]))
+    if source == "inline":
+        raw_rules: list[dict[str, Any]] = bot_rules_raw.get("rules", [])
+        bot_rules = []
+        for r in raw_rules:
+            short = r.get("report_to_skip", "")
+            full = DIMENSION_MAPPING.get(
+                short,
+                short if short.startswith("botInvestigation") else f"botInvestigationMetricsBy{short}",
+            )
+            bot_rules.append(BotRule(
+                segment_id=r["segment_id"],
+                segment_name=r["segment_name"],
+                report_to_skip=full,
+            ))
+        return bot_rules
+    raise ValueError(f"Step {step_id!r}: unknown bot_rules.source {source!r}")
 
 
 def _resolve_output_base(extra: dict[str, Any], job: CompositeJobConfig) -> str:

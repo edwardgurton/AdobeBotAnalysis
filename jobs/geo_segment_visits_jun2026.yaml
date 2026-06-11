@@ -1,0 +1,136 @@
+job_type: composite
+client: Legend
+description: "Geo segment visits — Cookie Banner Geos vs Non-Cookie Banner Geos, 4 sites, 400 days to 2026-06-10"
+
+date_range:
+  from: "2025-05-06"
+  to: "2026-06-10"
+
+output:
+  base_folder: "C:/Users/EdwardGurton/Documents/Work/Adobe Downloads"
+
+# YAML anchors — these top-level keys are ignored by schema validation
+_report: &report
+  name: geoSegmentVisitsByDay
+  dimension: variables/daterangeday
+  row_limit: 50
+  segments: []
+  metrics:
+    - cm3938_66d0bfba05c95b4eca739eb4
+  csv_headers:
+    - id
+    - day
+    - unique_visitors
+    - visits
+    - first_time_visits
+    - fileName
+    - fromDate
+    - toDate
+
+_seg_cookie: &seg_cookie
+  source: inline
+  ids:
+    - s3938_61bb0165a88ab931afa78e4c  # Master Bot Filter EXCLUDE
+    - s3938_6a29296b8a5b9066d7649201  # Cookie Banner Geos
+
+_seg_noncookie: &seg_noncookie
+  source: inline
+  ids:
+    - s3938_61bb0165a88ab931afa78e4c  # Master Bot Filter EXCLUDE
+    - s3938_6a292996740b0f028e0da16f  # Non Cookie Banner Geos
+
+steps:
+  # ─── Cookie Banner Geos ───────────────────────────────────────────────────
+
+  - step: report_download
+    id: download_cookie_coverscom
+    file_name_extra: "cookie-coverscom"
+    rsids:
+      source: single
+      single: trillioncoverscom
+    segments: *seg_cookie
+    report: *report
+    interval: month
+
+  - step: report_download
+    id: download_cookie_sbr
+    file_name_extra: "cookie-sbr"
+    rsids:
+      source: single
+      single: trihybridsportsbookreviewcom
+    segments: *seg_cookie
+    report: *report
+    interval: month
+
+  - step: report_download
+    id: download_cookie_adcom
+    file_name_extra: "cookie-adcom"
+    rsids:
+      source: single
+      single: tribuneapuestasdeportivascom
+    segments: *seg_cookie
+    report: *report
+    interval: month
+
+  - step: report_download
+    id: download_cookie_oddspedia
+    file_name_extra: "cookie-oddspedia"
+    rsids:
+      source: single
+      single: trimotoroddspediacom
+    segments: *seg_cookie
+    report: *report
+    interval: month
+
+  # ─── Non Cookie Banner Geos ───────────────────────────────────────────────
+
+  - step: report_download
+    id: download_noncookie_coverscom
+    file_name_extra: "noncookie-coverscom"
+    rsids:
+      source: single
+      single: trillioncoverscom
+    segments: *seg_noncookie
+    report: *report
+    interval: month
+
+  - step: report_download
+    id: download_noncookie_sbr
+    file_name_extra: "noncookie-sbr"
+    rsids:
+      source: single
+      single: trihybridsportsbookreviewcom
+    segments: *seg_noncookie
+    report: *report
+    interval: month
+
+  - step: report_download
+    id: download_noncookie_adcom
+    file_name_extra: "noncookie-adcom"
+    rsids:
+      source: single
+      single: tribuneapuestasdeportivascom
+    segments: *seg_noncookie
+    report: *report
+    interval: month
+
+  - step: report_download
+    id: download_noncookie_oddspedia
+    file_name_extra: "noncookie-oddspedia"
+    rsids:
+      source: single
+      single: trimotoroddspediacom
+    segments: *seg_noncookie
+    report: *report
+    interval: month
+
+  # ─── Transform + concatenate ──────────────────────────────────────────────
+
+  - step: transform_concat
+    id: transform_all
+    depends_on: download_noncookie_oddspedia
+    transform:
+      type: standard
+      source_pattern: ".*geoSegmentVisitsByDay.*\\.json$"
+    concat:
+      enabled: true

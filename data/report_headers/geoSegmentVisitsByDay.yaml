@@ -1,0 +1,10 @@
+report_name: geoSegmentVisitsByDay
+columns:
+  - id
+  - day
+  - unique_visitors
+  - visits
+  - first_time_visits
+  - fileName
+  - fromDate
+  - toDate

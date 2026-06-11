@@ -38,13 +38,19 @@ def make_output_path(
     date_range: DateRange,
     file_name_extra: str | None = None,
     segment_id: str | None = None,
+    job_name: str | None = None,
 ) -> Path:
     """Return the canonical JSON output path for one report download.
 
     Matches JS convention:
       {base}/{client}/JSON/{client}_{report}{_extra}_{DIMSEG{id}_}{from}_{to}.json
+    When job_name is set, a job-specific subfolder is inserted:
+      {base}/{client}/{job_name}/JSON/...
     """
-    folder = Path(base_folder) / client / "JSON"
+    folder = Path(base_folder) / client
+    if job_name:
+        folder = folder / job_name
+    folder = folder / "JSON"
     extra_part = f"_{file_name_extra}" if file_name_extra else ""
     seg_part = f"DIMSEG{segment_id}_" if segment_id else ""
     filename = (
@@ -170,6 +176,7 @@ async def run_report_download(
     step_id: str | None = None,
     test_limits: TestLimits | None = None,
     on_progress: Callable[[str, str, str], None] | None = None,
+    job_name: str | None = None,
 ) -> ReportDownloadResult:
     """Execute the full RSIDs x date_intervals x segments x report_defs download loop.
 
@@ -192,7 +199,10 @@ async def run_report_download(
             rsid_list, date_intervals, all_segments, test_limits
         )
 
-    json_folder = Path(output_base) / client_name / "JSON"
+    json_folder = Path(output_base) / client_name
+    if job_name:
+        json_folder = json_folder / job_name
+    json_folder = json_folder / "JSON"
 
     result = ReportDownloadResult(job_id=sm.job_id, json_folder=json_folder)
 
@@ -228,6 +238,7 @@ async def run_report_download(
                         date_range=date_interval,
                         file_name_extra=file_name_extra,
                         segment_id=seg_id,
+                        job_name=job_name,
                     )
 
                     req_id, canonical_id = sm.track_request(

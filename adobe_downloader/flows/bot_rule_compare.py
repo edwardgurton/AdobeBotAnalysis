@@ -129,6 +129,7 @@ async def run_bot_rule_compare(
     no_resume: bool = False,
     step_id: str | None = None,
     test_limits: TestLimits | None = None,
+    job_name: str | None = None,
 ) -> BotRuleCompareResult:
     """Download Segment + AllTraffic comparison files for each RSID × bot rule.
 
@@ -144,7 +145,10 @@ async def run_bot_rule_compare(
 
     rsid_map = load_rsid_lookup(rsid_lookup_file)
     report_defs = load_report_group("bot_rule_compare")
-    json_folder = Path(output_base) / client_name / "JSON"
+    json_folder = Path(output_base) / client_name
+    if job_name:
+        json_folder = json_folder / job_name
+    json_folder = json_folder / "JSON"
 
     if test_limits is not None:
         from adobe_downloader.utils.test_mode import apply_rsid_limit
@@ -187,6 +191,7 @@ async def run_bot_rule_compare(
                     step_id=step_id,
                     result=result,
                     label=f"{clean_name}/{report_def.name}/Segment",
+                    job_name=job_name,
                 )
 
                 # --- AllTraffic download (canonical dedup across rules) ---
@@ -205,6 +210,7 @@ async def run_bot_rule_compare(
                     step_id=step_id,
                     result=result,
                     label=f"{clean_name}/{report_def.name}/AllTraffic",
+                    job_name=job_name,
                 )
 
     return result
@@ -230,6 +236,7 @@ async def _download_variant(
     step_id: str | None,
     result: BotRuleCompareResult,
     label: str,
+    job_name: str | None = None,
 ) -> None:
     """Download one Segment or AllTraffic variant, updating *result* in place.
 
@@ -247,6 +254,7 @@ async def _download_variant(
         date_range=date_range,
         file_name_extra=file_name_extra,
         segment_id=segment_id_for_path,
+        job_name=job_name,
     )
 
     # Include output filename in the key so each AllTraffic investigation name

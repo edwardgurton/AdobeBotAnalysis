@@ -3,7 +3,14 @@
     "allow": [
       "Bash(git add *)",
       "Bash(git commit *)",
-      "PowerShell(Get-ChildItem \"c:\\\\Users\\\\EdwardGurton\\\\OneDrive - Station10\\\\Documents\\\\GitHub\\\\AdobeBotAnalysis\\\\user-docs\" -Force -File | ForEach-Object { @{Name = $_.Name; Size = $_.Length; Modified = $_.LastWriteTime} })"
+      "Bash(pip install *)",
+      "Bash(python -c ' *)",
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\EdwardGurton\\\\OneDrive - Station10\\\\Documents\\\\GitHub\\\\AdobeBotAnalysis\" -Recurse -Directory)",
+      "Bash(Select-Object -First 20)",
+      "Bash(python -m adobe_downloader --version)",
+      "Bash(xargs grep -l \"bot_rule_compare\")",
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\EdwardGurton\\\\OneDrive - Station10\\\\Documents\\\\GitHub\\\\AdobeBotAnalysis\" -Recurse -ErrorAction SilentlyContinue)",
+      "Bash(Select-Object -First 50)"
     ]
   }
 }

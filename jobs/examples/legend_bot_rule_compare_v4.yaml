@@ -10,9 +10,8 @@ output:
   base_folder: "/Users/edwardgurton/Documents/Work/Adobe Downloads"
 
 steps:
-  - step: report_download
+  - step: bot_rule_compare
     id: download_compare
-    report_group: bot_rule_compare
     rsids:
       source: file
       file: data/rsid_lists/legend_investigation.txt
@@ -20,8 +19,7 @@ steps:
     bot_rules:
       source: file
       file: data/bot_compare_lists/Apr25-CompareV4.csv
-    interval: full
-    file_name_extra: "FebMay25-UserAgent-Compare-V4"
+    comparison_round: 4
 
   - step: validate_output
     id: validate
@@ -33,5 +31,5 @@ steps:
     depends_on: validate
     transform:
       type: bot_rule_compare
-      source_pattern: ".*FebMay25-UserAgent-Compare-V4.*\\.json$"
+      source_pattern: ".*Compare-V4.*\\.json$"
       concat: true

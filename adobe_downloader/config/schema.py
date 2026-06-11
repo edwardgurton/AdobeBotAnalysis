@@ -41,6 +41,7 @@ class PostProcessing(BaseModel):
 
 class OutputConfig(BaseModel):
     base_folder: str
+    job_name: str | None = None
 
 
 class RsidSource(BaseModel):
