@@ -40,6 +40,20 @@ These are non-negotiable:
 - Work on `main`. One commit per logical change.
 - Never commit anything from `jobs/` (run configs), `credentials/`, or any output folder.
 
+## Segment filtering policy (Legend client)
+
+Three tiers — apply exactly one per request:
+
+| Tier | Segment | ID |
+|---|---|---|
+| General data analysis | Master Bot Exclusion Production | `s3938_61bb0165a88ab931afa78e4c` |
+| Bot identification | Master Bot Exclusion Development | `s3938_66fe79408ff02713f66ed76b` |
+| Utility / no filter | None | — |
+
+Development is a strict superset of Production — never apply both. Bot identification workflows (investigation, compare, validation) use Development. General analysis (clickouts, segment builder for non-bot-identification) uses Production. Lookups and metric validation use neither.
+
+Full details: `user-docs/claude-reference.md` → Segment Filtering Policy. Segment annotations: `data/semantic_layer/segments.yaml`.
+
 ## Semantic layer
 
 `data/semantic_layer/` holds human-curated annotations for Adobe Analytics dimensions and metrics. These are surfaced by `adobe-downloader schema search`.

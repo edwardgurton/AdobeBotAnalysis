@@ -25,6 +25,30 @@ Dense reference for answering operational questions. All field names, types, and
 
 ---
 
+## Segment Filtering Policy
+
+All Legend API requests apply one of three filter tiers. Apply only one at a time — the tiers are mutually exclusive.
+
+| Tier | Segment | ID | Apply to |
+|---|---|---|---|
+| General data analysis | Master Bot Exclusion Production | `s3938_61bb0165a88ab931afa78e4c` | Clickouts, segment builder for general analysis, `LegendClickoutsByGeoregionNAOnly`, `LegendClickoutsAdCloudMetrics`, `toplineMetricsForRsidValidation` |
+| Bot identification | Master Bot Exclusion Development | `s3938_66fe79408ff02713f66ed76b` | All bot investigation, bot rule compare, bot validation, segment builder geo-country reports used for bot rule creation |
+| Utility / no filter | None | — | All lookup reports, explicitly unfiltered investigation reports |
+
+**Key constraint:** Development is a strict superset of Production. Never apply both — it is redundant and adds unnecessary latency to Adobe API calls.
+
+**Include segments** (mutually exclusive with Exclude; used to measure bot traffic volume, not exclude it):
+
+| Segment | ID | Used in |
+|---|---|---|
+| Master Bot Filter Include | `s3938_666ae77965ae5e6a3c2c1709` | `bot_validation` include reports |
+| Current Approved Bot Rules Include | `s3938_64b141c647aa8c3cec5a1a95` | `LegendFinalBotMetricsCurrentIncludeByYear` |
+| Development Bot Rules Include | `s3938_6892257b8fb8265765efa206` | `LegendFinalBotMetricsDevelopmentIncludeByYear` |
+
+Full annotations: `data/semantic_layer/segments.yaml`.
+
+---
+
 ## Job Types
 
 ### `report_download`
@@ -217,8 +241,7 @@ client: Legend
 lookup_generation:
   dimension: variables/browsertype   # Adobe variable ID
   rsid: trillioncoverscom
-  segments:
-    - s3938_61bb0165a88ab931afa78e4c  # optional: filter to specific traffic
+  segments: []                        # lookup reports do not require bot exclusion segments
   output_file: null                   # null = auto-named under data/lookups/variablesbrowsertype/lookup.txt
 
 date_range:
@@ -457,7 +480,7 @@ All reports are in `report_definitions/`. Each file defines a `group`, `descript
 
 ### Group: `bot_investigation` (transform: `bot_investigation`)
 
-Default segments: Master Bot Filter (Exclude). Default row_limit: 500.
+Default segments: Master Bot Exclusion Development (`s3938_66fe79408ff02713f66ed76b`). Default row_limit: 500.
 Default metrics: event3, Clickouts CM, Engaged Visits CM, itemtimespent, pageviews.
 
 | Report name | Dimension | Row limit |
@@ -498,7 +521,7 @@ Same 13 report shapes as above, no default segments (all traffic).
 
 ### Group: `bot_validation` (transform: `bot_validation`)
 
-Default segments: Master Bot Filter (Exclude). Default row_limit: 5000.
+Default segments: Master Bot Exclusion Development (`s3938_66fe79408ff02713f66ed76b`). Default row_limit: 5000.
 Default metrics: event3, Clickouts CM, Engagement Rate CM, Engaged Visits CM, itemtimespent, pageviews.
 
 | Report name | Dimension | Segments (override) | Row limit |
@@ -514,8 +537,8 @@ Default metrics: event3, Clickouts CM, Engagement Rate CM, Engaged Visits CM, it
 
 ### Group: `bot_rule_compare` (transform: `bot_rule_compare`)
 
-No default segments (supplied per-rule at runtime). Default row_limit: 500.
-Same metrics as bot_investigation.
+Default segments: Master Bot Exclusion Development (`s3938_66fe79408ff02713f66ed76b`). Default row_limit: 500.
+Same metrics as bot_investigation. The Development segment is applied as a base to both the Segment variant (rule segment appended at runtime) and the AllTraffic variant (Development only), matching the legacy JS behaviour.
 
 | Report name | Dimension | Row limit |
 |---|---|---|
@@ -567,10 +590,10 @@ Dimension-only inputs for segment condition building.
 
 | Report name | Dimension | Segments | Row limit |
 |---|---|---|---|
-| `SegmentsBuildervariablesgeocountry` | `variables/geocountry` | Master Bot Filter | 12 |
-| `SegmentsBuilderCountry50` | `variables/geocountry` | Master Bot Filter | 500 |
-| `SegmentsBuildervariablesgeoregion` | `variables/georegion` | All-traffic segment | 100 |
-| `SegmentsBuildervariablesmarketingchannelmarketing-channel-attribution` | `variables/marketingchannel.marketing-channel-attribution` | All-traffic segment | 100 |
+| `SegmentsBuildervariablesgeocountry` | `variables/geocountry` | Master Bot Exclusion Development | 12 |
+| `SegmentsBuilderCountry50` | `variables/geocountry` | Master Bot Exclusion Development | 500 |
+| `SegmentsBuildervariablesgeoregion` | `variables/georegion` | Master Bot Exclusion Production | 100 |
+| `SegmentsBuildervariablesmarketingchannelmarketing-channel-attribution` | `variables/marketingchannel.marketing-channel-attribution` | Master Bot Exclusion Production | 100 |
 
 ### Group: `clickouts` (transform: `clickouts`)
 
@@ -579,8 +602,8 @@ Default metrics: 4 clickout custom metrics.
 
 | Report name | Dimension | Segments | Additional metrics |
 |---|---|---|---|
-| `LegendClickoutsByGeoregionNAOnly` | `variables/georegion` | All-traffic + NA-only filter | — |
-| `LegendClickoutsAdCloudMetrics` | `variables/marketingchannel.marketing-channel-attribution` | AdCloud traffic segment | amo_cost, amo_clicks, amo_impressions |
+| `LegendClickoutsByGeoregionNAOnly` | `variables/georegion` | Production + NA-only filter | — |
+| `LegendClickoutsAdCloudMetrics` | `variables/marketingchannel.marketing-channel-attribution` | Production + AdCloud traffic | amo_cost, amo_clicks, amo_impressions |
 
 ---
 

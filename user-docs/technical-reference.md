@@ -599,6 +599,30 @@ Post-processing utilities handle file lifecycle management after a download job 
 
 ---
 
+## Segment Filtering Policy
+
+All Legend API requests apply one of three filter tiers depending on the workflow's purpose. Apply only one tier at a time — they are mutually exclusive.
+
+| Tier | Segment | ID | When to apply |
+|---|---|---|---|
+| General data analysis | Master Bot Exclusion Production | `s3938_61bb0165a88ab931afa78e4c` | Any report analysing traffic that is not specifically bot identification: clickouts, general segment builder runs |
+| Bot identification | Master Bot Exclusion Development | `s3938_66fe79408ff02713f66ed76b` | Bot investigation, bot rule compare, bot validation, geo segment builder used for bot rule creation |
+| Utility / no filter | None | — | Lookup table generation, topline RSID metric validation, explicitly unfiltered report groups |
+
+**Why not both?** Development is a strict superset of Production — every Production-excluded bot is also Development-excluded. Applying both adds a redundant filter that slows Adobe's response without changing the result.
+
+**Specialised include segments** (narrow traffic *to* bot traffic — mutually exclusive with Exclude segments):
+
+| Segment | ID | Used in |
+|---|---|---|
+| Master Bot Filter Include | `s3938_666ae77965ae5e6a3c2c1709` | `bot_validation` include reports |
+| Current Approved Bot Rules Include | `s3938_64b141c647aa8c3cec5a1a95` | `final_bot_metrics` current include report |
+| Development Bot Rules Include | `s3938_6892257b8fb8265765efa206` | `final_bot_metrics` development include report |
+
+Full annotations for all segment IDs are in `data/semantic_layer/segments.yaml`.
+
+---
+
 ## Report Definitions Registry (`config/report_definitions.py`)
 
 Report definitions live in `report_definitions/*.yaml` files at the repo root. Each file defines one named group of related reports.
