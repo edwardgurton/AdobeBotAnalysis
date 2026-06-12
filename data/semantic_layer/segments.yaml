@@ -1,0 +1,147 @@
+# Semantic layer — segments
+#
+# Each entry annotates an Adobe Analytics segment ID used in this project.
+# Fields: id, display_name, description, use_when, contexts, notes.
+#
+# To add a new entry: append a block following the same structure and commit
+# with message "Semantic: add context for <id>".
+# Never delete an entry without confirmation.
+
+# ---------------------------------------------------------------------------
+# Master Bot Exclusion segments (Legend account)
+# ---------------------------------------------------------------------------
+
+- id: s3938_61bb0165a88ab931afa78e4c
+  display_name: Master Bot Exclusion Production
+  description: >
+    Excludes all bot rules that have been formally approved and promoted to the
+    production filter. This is the stable, live set of bot rules applied to all
+    standard Legend data analysis.
+  use_when: >
+    Apply to all Legend data analysis reports that are not part of a bot
+    identification workflow: clickouts, segment builder reports used for general
+    (non-bot-investigation) analysis. Do NOT combine with the Development segment
+    — Development is a strict superset of Production, so applying both is
+    redundant and slows down Adobe API response times.
+  contexts:
+    - clickouts
+    - segment_builder
+    - topline
+  notes: >
+    Production ⊂ Development: every rule in Production is also in Development.
+    Apply only one of the two at a time. For any bot identification workflow,
+    always use Development instead.
+
+- id: s3938_66fe79408ff02713f66ed76b
+  display_name: Master Bot Exclusion Development
+  description: >
+    Excludes all bot rules in the development set — a superset of Production that
+    includes both approved live rules and candidate rules under active development
+    or testing. Applied to all bot identification workflows so that analysis is
+    performed against traffic that has already cleared the broadest known filter.
+  use_when: >
+    Apply to all bot identification workflows: bot investigation, bot rule compare,
+    bot validation, and any segment builder reports used as part of bot rule
+    creation (e.g. geo-country lookups for building geo-segment conditions). Because
+    Development includes everything in Production, never apply both simultaneously.
+  contexts:
+    - bot_investigation
+    - bot_rule_compare
+    - bot_validation
+    - segment_builder
+  notes: >
+    Development ⊃ Production: applying both is redundant and wastes API time.
+    This was the segment the legacy JS code baked into every bot investigation and
+    compare workflow via clientLegend.yaml. The Python port now applies it through
+    report_definitions YAML defaults.
+
+# ---------------------------------------------------------------------------
+# Bot Include segments — used to isolate identified bot traffic
+# ---------------------------------------------------------------------------
+
+- id: s3938_666ae77965ae5e6a3c2c1709
+  display_name: Master Bot Filter Include
+  description: >
+    Includes only sessions that match the current master bot include segment.
+    Used in bot validation to isolate traffic confirmed or suspected to be bot
+    traffic, for comparison against the excluded baseline.
+  use_when: >
+    bot_validation include reports: botFilterIncludeMetricsByMonth and
+    botFilterIncludexBotRuleMetricsByMonth. Do not apply alongside an Exclude
+    segment — Include and Exclude are mutually exclusive filter approaches.
+  contexts:
+    - bot_validation
+  notes: >
+    Not the same as the Current Approved Include (s3938_64b141c647aa8c3cec5a1a95)
+    used in final_bot_metrics. Both are include filters but serve different
+    workflows.
+
+- id: s3938_64b141c647aa8c3cec5a1a95
+  display_name: Current Approved Bot Rules Include
+  description: >
+    Includes sessions matching the current set of production-approved bot rules.
+    Used in final_bot_metrics to measure the total volume of traffic caught by
+    the live approved filter.
+  use_when: LegendFinalBotMetricsCurrentIncludeByYear in the final_bot_metrics group.
+  contexts:
+    - final_bot_metrics
+  notes: ""
+
+- id: s3938_6892257b8fb8265765efa206
+  display_name: Development Bot Rules Include
+  description: >
+    Includes sessions matching the current development set of bot rules — approved
+    rules plus in-progress candidates. Used in final_bot_metrics to measure the
+    total traffic volume the development filter would capture.
+  use_when: LegendFinalBotMetricsDevelopmentIncludeByYear in the final_bot_metrics group.
+  contexts:
+    - final_bot_metrics
+  notes: ""
+
+# ---------------------------------------------------------------------------
+# Analytical filter segments
+# ---------------------------------------------------------------------------
+
+- id: s3938_681e521d16e3be6770921fa8
+  display_name: NA-Only Geographic Filter
+  description: >
+    Restricts traffic to visitors from North America only (USA and Canada).
+    Applied alongside the Production bot exclusion in clickout geographic reports.
+  use_when: LegendClickoutsByGeoregionNAOnly in the clickouts group.
+  contexts:
+    - clickouts
+  notes: ""
+
+- id: s3938_686797a0feff97c4e3c747c9
+  display_name: AdCloud Traffic Segment
+  description: >
+    Filters to traffic attributed to Adobe Advertising (AdCloud) campaigns.
+    Applied alongside the Production bot exclusion in the AdCloud clickout
+    attribution report.
+  use_when: LegendClickoutsAdCloudMetrics in the clickouts group.
+  contexts:
+    - clickouts
+  notes: Only applicable to report suites with Adobe Advertising integration enabled.
+
+- id: s3938_67c09bc9b1a3887faa7d3844
+  display_name: Suspicious Marketing Channels
+  description: >
+    Flags sessions attributed to marketing channels considered suspicious
+    indicators of bot traffic. Applied in bot validation cross-analysis reports.
+  use_when: >
+    botFilterExcludexBotRuleXSuspiciousMarketingChannelsMetricsByMonth in
+    bot_validation. Used to cross-analyse bot rule effectiveness within
+    suspicious-channel traffic specifically.
+  contexts:
+    - bot_validation
+  notes: ""
+
+- id: s3938_67c09bfb5bc6d048a2295f86
+  display_name: Desktop Segment
+  description: >
+    Restricts traffic to desktop device sessions. Applied in bot validation
+    cross-analysis reports to isolate bot rule effectiveness on desktop traffic.
+  use_when: botFilterExcludexBotRuleXDesktopMetricsByMonth in bot_validation.
+  contexts:
+    - bot_validation
+  notes: ""

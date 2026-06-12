@@ -11,6 +11,7 @@ Adobe Analytics IDs.
 |------|----------|
 | `dimensions.yaml` | 21 dimension annotations (variables/\*, eVars, time dimensions) |
 | `metrics.yaml` | 15 metric annotations (standard metrics, custom events, calculated metrics) |
+| `segments.yaml` | Key segment annotations — bot exclusion tiers, include segments, and analytical filters |
 
 ## YAML format
 
@@ -31,6 +32,10 @@ Valid `contexts` values match the report group names in `report_definitions/`:
 `bot_investigation`, `bot_investigation_unfiltered`, `bot_validation`,
 `bot_rule_compare`, `final_bot_metrics`, `segment_builder`, `lookup`,
 `clickouts`.
+
+### `segments.yaml` format
+
+Segment entries use the same fields but `id` is an Adobe segment ID (`s3938_…`) rather than a variable or metric ID. The `preferred_over` field is omitted for segments.
 
 ## How to add or update an entry
 
