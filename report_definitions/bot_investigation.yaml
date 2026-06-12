@@ -4,7 +4,7 @@ transform_type: bot_investigation
 
 defaults:
   segments:
-    - s3938_66fe79408ff02713f66ed76b  # Master Bot Filter
+    - s3938_66fe79408ff02713f66ed76b  # Master Bot Exclusion Development
   metrics:
     - metrics/event3
     - cm3938_602b915cb99757640284234e

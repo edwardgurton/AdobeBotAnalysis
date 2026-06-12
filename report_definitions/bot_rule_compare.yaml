@@ -3,7 +3,8 @@ description: "Bot rule comparison reports (segment vs all-traffic across suspici
 transform_type: bot_rule_compare
 
 defaults:
-  segments: []  # no default segments; supplied per-rule at runtime
+  segments:
+    - s3938_66fe79408ff02713f66ed76b  # Master Bot Exclusion Development
   metrics:
     - metrics/event3
     - cm3938_602b915cb99757640284234e

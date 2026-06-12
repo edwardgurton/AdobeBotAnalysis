@@ -73,10 +73,7 @@ def _csv_content(rows: list[dict[str, str]]) -> str:
 class TestParseBotRuleCsv:
     def test_basic_parse(self, tmp_path: Path) -> None:
         csv = tmp_path / "rules.csv"
-        csv.write_text(
-            "DimSegmentId,botRuleName,reportToIgnore\n"
-            "seg123,Philippines-Rule,Domain\n"
-        )
+        csv.write_text("DimSegmentId,botRuleName,reportToIgnore\nseg123,Philippines-Rule,Domain\n")
         rules = parse_bot_rule_csv(csv)
         assert len(rules) == 1
         assert rules[0].segment_id == "seg123"
@@ -95,9 +92,7 @@ class TestParseBotRuleCsv:
         ]
         for short, expected_full in short_names:
             csv = tmp_path / f"rules_{short.replace(' ', '_')}.csv"
-            csv.write_text(
-                f"DimSegmentId,botRuleName,reportToIgnore\nseg1,Rule1,{short}\n"
-            )
+            csv.write_text(f"DimSegmentId,botRuleName,reportToIgnore\nseg1,Rule1,{short}\n")
             rules = parse_bot_rule_csv(csv)
             assert rules[0].report_to_skip == expected_full, f"failed for {short}"
 
@@ -124,9 +119,7 @@ class TestParseBotRuleCsv:
 
     def test_bom_handled(self, tmp_path: Path) -> None:
         csv = tmp_path / "rules.csv"
-        csv.write_bytes(
-            b"\xef\xbb\xbfDimSegmentId,botRuleName,reportToIgnore\nseg1,Rule1,Domain\n"
-        )
+        csv.write_bytes(b"\xef\xbb\xbfDimSegmentId,botRuleName,reportToIgnore\nseg1,Rule1,Domain\n")
         rules = parse_bot_rule_csv(csv)
         assert rules[0].segment_id == "seg1"
 
@@ -144,9 +137,7 @@ class TestParseBotRuleCsv:
 
     def test_unknown_short_name_fallback(self, tmp_path: Path) -> None:
         csv = tmp_path / "rules.csv"
-        csv.write_text(
-            "DimSegmentId,botRuleName,reportToIgnore\nseg1,Rule1,SomeDimension\n"
-        )
+        csv.write_text("DimSegmentId,botRuleName,reportToIgnore\nseg1,Rule1,SomeDimension\n")
         rules = parse_bot_rule_csv(csv)
         assert rules[0].report_to_skip == "botInvestigationMetricsBySomeDimension"
 
@@ -208,7 +199,10 @@ class TestRunBotRuleCompare:
         rd2.name = "botInvestigationMetricsByRegion"
         rd2.segments = []
 
-        with patch("adobe_downloader.config.report_definitions.load_report_group") as mock_load, _patch_build_request():
+        with (
+            patch("adobe_downloader.config.report_definitions.load_report_group") as mock_load,
+            _patch_build_request(),
+        ):
             mock_load.return_value = [rd1, rd2]
 
             result = await run_bot_rule_compare(
@@ -248,11 +242,15 @@ class TestRunBotRuleCompare:
         rd1.segments = []
 
         # Use different bodies for Segment vs AllTraffic so only AllTraffic deduplicates
-        def _build_req(report_def: Any, date_range: Any, rsid: str, segments: list[str]) -> dict[str, Any]:
+        def _build_req(
+            report_def: Any, date_range: Any, rsid: str, segments: list[str]
+        ) -> dict[str, Any]:
             return {"rsuite": rsid, "globalFilters": [{"id": s} for s in segments]}
 
-        with patch("adobe_downloader.config.report_definitions.load_report_group") as mock_load, \
-             patch("adobe_downloader.core.request_builder.build_request", side_effect=_build_req):
+        with (
+            patch("adobe_downloader.config.report_definitions.load_report_group") as mock_load,
+            patch("adobe_downloader.core.request_builder.build_request", side_effect=_build_req),
+        ):
             mock_load.return_value = [rd1]
 
             result = await run_bot_rule_compare(
@@ -285,7 +283,10 @@ class TestRunBotRuleCompare:
 
         bot_rules = [BotRule("seg1", "Rule1", "botInvestigationMetricsByDomain")]
 
-        with patch("adobe_downloader.config.report_definitions.load_report_group") as mock_load, _patch_build_request():
+        with (
+            patch("adobe_downloader.config.report_definitions.load_report_group") as mock_load,
+            _patch_build_request(),
+        ):
             mock_load.return_value = [rd1]
 
             result = await run_bot_rule_compare(
@@ -318,7 +319,10 @@ class TestRunBotRuleCompare:
 
         bot_rules = [BotRule("seg1", "Rule1", "botInvestigationMetricsByDomain")]
 
-        with patch("adobe_downloader.config.report_definitions.load_report_group") as mock_load, _patch_build_request():
+        with (
+            patch("adobe_downloader.config.report_definitions.load_report_group") as mock_load,
+            _patch_build_request(),
+        ):
             mock_load.return_value = [rd1]
 
             # First run — downloads both
@@ -369,7 +373,10 @@ class TestRunBotRuleCompare:
 
         bot_rules = [BotRule("seg1", "Rule1", "botInvestigationMetricsByDomain")]
 
-        with patch("adobe_downloader.config.report_definitions.load_report_group") as mock_load, _patch_build_request():
+        with (
+            patch("adobe_downloader.config.report_definitions.load_report_group") as mock_load,
+            _patch_build_request(),
+        ):
             mock_load.return_value = [rd1]
 
             result = await run_bot_rule_compare(
@@ -401,7 +408,10 @@ class TestRunBotRuleCompare:
 
         bot_rules = [BotRule("seg1", "MyRule", "botInvestigationMetricsByDomain")]
 
-        with patch("adobe_downloader.config.report_definitions.load_report_group") as mock_load, _patch_build_request():
+        with (
+            patch("adobe_downloader.config.report_definitions.load_report_group") as mock_load,
+            _patch_build_request(),
+        ):
             mock_load.return_value = [rd1]
 
             await run_bot_rule_compare(
@@ -430,10 +440,13 @@ class TestRunBotRuleCompare:
         assert "DIMSEG" not in all_traffic_files[0]
 
     async def test_multiple_rsids(self, tmp_path: Path) -> None:
-        rsid_file = _make_rsid_file(tmp_path, [
-            ("triarsid1", "SiteA"),
-            ("triarsid2", "SiteB"),
-        ])
+        rsid_file = _make_rsid_file(
+            tmp_path,
+            [
+                ("triarsid1", "SiteA"),
+                ("triarsid2", "SiteB"),
+            ],
+        )
         sm = _make_mock_sm(tmp_path)
         client = AsyncMock()
         client.get_report = AsyncMock(return_value=_FAKE_REPORT_RESPONSE)
@@ -444,11 +457,15 @@ class TestRunBotRuleCompare:
 
         bot_rules = [BotRule("seg1", "Rule1", "botInvestigationMetricsByDomain")]
 
-        def _build_req(report_def: Any, date_range: Any, rsid: str, segments: list[str]) -> dict[str, Any]:
+        def _build_req(
+            report_def: Any, date_range: Any, rsid: str, segments: list[str]
+        ) -> dict[str, Any]:
             return {"rsuite": rsid, "globalFilters": [{"id": s} for s in segments]}
 
-        with patch("adobe_downloader.config.report_definitions.load_report_group") as mock_load, \
-             patch("adobe_downloader.core.request_builder.build_request", side_effect=_build_req):
+        with (
+            patch("adobe_downloader.config.report_definitions.load_report_group") as mock_load,
+            patch("adobe_downloader.core.request_builder.build_request", side_effect=_build_req),
+        ):
             mock_load.return_value = [rd1]
 
             result = await run_bot_rule_compare(
@@ -477,27 +494,31 @@ class TestRunBotRuleCompare:
 
 class TestBotRuleCompareSchema:
     def test_step_type_accepted(self) -> None:
-        step = CompositeStep.model_validate({
-            "step": "bot_rule_compare",
-            "id": "compare",
-        })
+        step = CompositeStep.model_validate(
+            {
+                "step": "bot_rule_compare",
+                "id": "compare",
+            }
+        )
         assert step.step == "bot_rule_compare"
 
     def test_composite_job_with_bot_rule_compare_step(self) -> None:
-        job = CompositeJobConfig.model_validate({
-            "job_type": "composite",
-            "client": "Legend",
-            "output": {"base_folder": "/tmp/out"},
-            "steps": [
-                {
-                    "step": "bot_rule_compare",
-                    "id": "compare",
-                    "rsids": {"source": "list", "list": ["CleanName1"]},
-                    "bot_rules": {"source": "file", "file": "data/rules.csv"},
-                    "comparison_round": 1.0,
-                }
-            ],
-        })
+        job = CompositeJobConfig.model_validate(
+            {
+                "job_type": "composite",
+                "client": "Legend",
+                "output": {"base_folder": "/tmp/out"},
+                "steps": [
+                    {
+                        "step": "bot_rule_compare",
+                        "id": "compare",
+                        "rsids": {"source": "list", "list": ["CleanName1"]},
+                        "bot_rules": {"source": "file", "file": "data/rules.csv"},
+                        "comparison_round": 1.0,
+                    }
+                ],
+            }
+        )
         assert job.steps[0].step == "bot_rule_compare"
 
 
@@ -509,17 +530,23 @@ class TestBotRuleCompareSchema:
 class TestBotRuleCompareReportDefs:
     def test_group_loads_ten_reports(self) -> None:
         from adobe_downloader.config.report_definitions import load_report_group
+
         reports = load_report_group("bot_rule_compare")
         assert len(reports) == 10
 
-    def test_no_default_segments(self) -> None:
+    def test_default_segments(self) -> None:
         from adobe_downloader.config.report_definitions import load_report_group
+
+        DEV_SEGMENT = "s3938_66fe79408ff02713f66ed76b"
         reports = load_report_group("bot_rule_compare")
         for rd in reports:
-            assert rd.segments == [], f"{rd.name} should have no default segments"
+            assert DEV_SEGMENT in rd.segments, (
+                f"{rd.name} should include Master Bot Exclusion Development segment"
+            )
 
     def test_all_expected_report_names_present(self) -> None:
         from adobe_downloader.config.report_definitions import load_report_group
+
         reports = load_report_group("bot_rule_compare")
         names = {rd.name for rd in reports}
         expected = {

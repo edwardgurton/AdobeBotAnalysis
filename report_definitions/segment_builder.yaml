@@ -12,7 +12,7 @@ reports:
     dimension: variables/geocountry
     row_limit: 12
     segments:
-      - s3938_66fe79408ff02713f66ed76b  # Master Bot Filter
+      - s3938_66fe79408ff02713f66ed76b  # Master Bot Exclusion Development
     csv_headers:
       - id
       - geo_country
@@ -26,7 +26,7 @@ reports:
     dimension: variables/geocountry
     row_limit: 500
     segments:
-      - s3938_66fe79408ff02713f66ed76b  # Master Bot Filter
+      - s3938_66fe79408ff02713f66ed76b  # Master Bot Exclusion Development
     csv_headers:
       - id
       - geo_country

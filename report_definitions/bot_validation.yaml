@@ -4,7 +4,7 @@ transform_type: bot_validation
 
 defaults:
   segments:
-    - s3938_66fe79408ff02713f66ed76b  # Master Bot Filter (Exclude)
+    - s3938_66fe79408ff02713f66ed76b  # Master Bot Exclusion Development
   metrics:
     - metrics/event3
     - cm3938_602b915cb99757640284234e
@@ -54,7 +54,7 @@ reports:
   botFilterIncludeMetricsByMonth:
     dimension: variables/daterangemonth
     segments:
-      - s3938_666ae77965ae5e6a3c2c1709  # Master Bot Filter (Include)
+      - s3938_666ae77965ae5e6a3c2c1709  # Master Bot Filter Include
     csv_headers:
       - id
       - month
@@ -74,7 +74,7 @@ reports:
   botFilterIncludexBotRuleMetricsByMonth:
     dimension: variables/daterangemonth
     segments:
-      - s3938_666ae77965ae5e6a3c2c1709  # Master Bot Filter (Include)
+      - s3938_666ae77965ae5e6a3c2c1709  # Master Bot Filter Include
     csv_headers:
       - id
       - month
@@ -94,7 +94,7 @@ reports:
   botFilterExcludexBotRuleXSuspiciousMarketingChannelsMetricsByMonth:
     dimension: variables/daterangemonth
     segments:
-      - s3938_66fe79408ff02713f66ed76b  # Master Bot Filter (Exclude)
+      - s3938_66fe79408ff02713f66ed76b  # Master Bot Exclusion Development
       - s3938_67c09bc9b1a3887faa7d3844  # Suspicious Marketing Channels
     csv_headers:
       - id
@@ -112,7 +112,7 @@ reports:
   botFilterExcludexBotRuleXDesktopMetricsByMonth:
     dimension: variables/daterangemonth
     segments:
-      - s3938_66fe79408ff02713f66ed76b  # Master Bot Filter (Exclude)
+      - s3938_66fe79408ff02713f66ed76b  # Master Bot Exclusion Development
       - s3938_67c09bfb5bc6d048a2295f86  # Desktop segment
     csv_headers:
       - id
