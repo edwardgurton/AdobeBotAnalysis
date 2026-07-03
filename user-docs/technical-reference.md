@@ -86,7 +86,18 @@ adobe:
 - `x-proxy-global-company-id: <globalCompanyID>`
 - `x-gw-ims-org-id: <adobeOrgID>`
 
-**`_get` / `_post` pattern**: Both methods follow the same structure: obtain a token, define an inner `_call` coroutine decorated with the tenacity retry, then `await _call()`. The actual HTTP verb is delegated to `self._rate_limiter.execute(self._http.get, ...)` or `self._http.post`. After the response returns, `r.raise_for_status()` is called inside `_call` so HTTP error codes propagate as `httpx.HTTPStatusError` and are caught by the tenacity retry predicate.
+**`_get` / `_post` pattern**: Both methods follow the same structure: obtain a token, log the request at DEBUG level, define an inner `_call` coroutine decorated with the tenacity retry, then `await _call()`. The actual HTTP verb is delegated to `self._rate_limiter.execute(self._http.get, ...)` or `self._http.post`. After the response returns, `r.raise_for_status()` is called inside `_call` inside a try/except so HTTP errors are logged at DEBUG before re-raising. The `httpx.HTTPStatusError` is then caught by the tenacity retry predicate.
+
+**Debug logging**: When the root logger is at DEBUG level (triggered by `--debug`), `_get` and `_post` emit:
+- `DEBUG  GET/POST <url>`
+- `DEBUG    headers: {... Authorization: Bearer *** ...}` (token is always masked)
+- `DEBUG    params: {...}` (GET requests with query params only)
+- `DEBUG    body:\n{...pretty JSON...}` (POST only, capped at 20 000 characters)
+
+On any HTTP error response:
+- `DEBUG    response <status> <reason>\n<body text>` (capped at 20 000 characters)
+
+The module-level helper `_sanitize_headers` performs the token masking. The body cap constant `_BODY_LOG_LIMIT = 20_000` can be raised if you need to inspect larger responses.
 
 **Public API methods**:
 - `get_report(request_body)` — POST to `/reports`; returns the JSON response dict.
@@ -95,6 +106,24 @@ adobe:
 - `share_segment(segment_id, user_ids)` — POST to `/componentmetadata/shares` once per user ID.
 - `get_users()` — paginated GET to `/users`, iterates until `lastPage=True`.
 - `get_authenticated_user()` — GET to `/users/me`.
+
+---
+
+## Logging (`utils/logging.py`)
+
+`setup_logging(output_dir, client, job_name, *, debug)` configures the root Python logger. It is called once per CLI invocation, before any API activity starts.
+
+**Console handler**: Always attached. Level is `INFO` by default; drops to `DEBUG` when `debug=True` (i.e. `--debug` flag was passed). Format: `HH:MM:SS  LEVEL     name  message`.
+
+**File handler**: Attached only when `output_dir` is not `None`. Written to `<output_dir>/<client>/.logs/<job_name>.log` as a rotating file (10 MB per file, 5 backups). Always at `DEBUG` level regardless of the `--debug` flag — the file captures full detail on every run. Format includes `funcName:lineno` for developer context.
+
+**Job types without an output directory** (`segment_creation`, `lookup_generation`): `setup_logging(None, client, debug=debug)` is called, attaching only the console handler. The file log is omitted because there is no natural base folder for these job types.
+
+**Which commands call `setup_logging`**:
+- `adobe-downloader run` — for all job types (report_download, composite, segment_creation, lookup_generation, rsid_update)
+- `adobe-downloader validate-output` — when `--retry` is used (makes API calls)
+
+`setup_logging` is idempotent: if the root logger already has handlers, it returns immediately without adding duplicates. This means it is safe to call from both top-level CLI code and nested helper functions — only the first call takes effect.
 
 ---
 
@@ -348,6 +377,35 @@ The composite job runner names the concatenation output `{step_id}_concat.csv` w
 | `Dimension2Item` | Required if `Dimension2` is set |
 
 All rows are validated before any API calls are made. Validation errors accumulate and are raised together.
+
+### Permitted dimensions
+
+`Dimension1` and `Dimension2` must be one of the friendly names defined in `data/segment_creation_dimensions.yaml` — any other value raises `ValueError` before segment creation (this check is skipped on `- Special` rows, which never resolve a dimension):
+
+| Friendly name(s) | Adobe variable | Requires lookup? |
+|---|---|---|
+| `PageURL`, `Page URL` | `variables/evar2` | No |
+| `Domain` | `variables/filtereddomain` | No |
+| `UserAgent`, `User Agent` | `variables/evar23` | No |
+| `Region`, `Regions` | `variables/georegion` | Yes |
+| `OperatingSystem`, `OperatingSystems`, `Operating System`, `Operating Systems` | `variables/operatingsystem` | No |
+| `MonitorResolution`, `Monitor Resolution` | `variables/monitorresolution` | Yes |
+| `MobileManufacturer`, `Mobile Manufacturer` | `variables/mobilemanufacturer` | No |
+| `MarketingChannel`, `Marketing Channel` | `variables/marketingchannel` | Yes |
+| `BrowserType`, `Browser Type` | `variables/browsertype` | Yes |
+| `ReferringDomain`, `Referring Domain` | `variables/referringdomain` | No |
+| `Country`, `Countries` | `variables/geocountry` | Yes |
+
+`create_segment.py` loads this YAML once at import time (`_load_dimension_config`) and builds `DIMENSION_MAPPING`, `DIMENSION_DESCRIPTIONS`, and `DIMENSIONS_REQUIRING_LOOKUP` from it — those names are kept as the public API so `flows/segment_creation.py`, `cli.py`'s `search-lookup`, `segments/lookup_generator.py`, and `segments/lookup_searcher.py` are unaffected by the refactor.
+
+Originally this mapping was a static dict ported verbatim from `DIMENSION_MAPPING` in `legacy_js/createSegmentFromList.js`, with no runtime flow to extend it (the JS comment above the array literally said "Add or remove values here"). Add a new dimension with:
+
+```
+adobe-downloader add-dimension --name Country --name Countries \
+  --adobe-variable variables/geocountry --requires-lookup
+```
+
+`--name` may repeat to register aliases. The command appends a new entry to `data/segment_creation_dimensions.yaml` (refusing to run if any given name already exists) and, if `--requires-lookup` is set, prints a reminder to populate `data/lookups/<cleaned-variable>/lookup.txt` (via a `lookup_generation` job or by hand).
 
 ### Row processing
 

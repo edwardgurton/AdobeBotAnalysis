@@ -188,8 +188,10 @@ async def run_report_download(
     from adobe_downloader.core.request_builder import build_request
     from adobe_downloader.state_manager import compute_request_key
 
+    from adobe_downloader.utils.rsid_lookup import resolve_rsid_names
+
     date_intervals = list(iterate_dates(date_range, interval))
-    rsid_list = list(iterate_rsids(rsids))
+    rsid_list = resolve_rsid_names(list(iterate_rsids(rsids)))
     all_segments = list(iterate_segments(segments))
 
     if test_limits is not None:

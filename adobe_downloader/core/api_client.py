@@ -1,5 +1,7 @@
 """Adobe Analytics API client."""
 
+import json
+import logging
 import time
 from typing import Any
 
@@ -10,6 +12,17 @@ from adobe_downloader.core.auth import fetch_token
 from adobe_downloader.core.rate_limiter import SlidingWindowRateLimiter, make_retry
 
 _API_BASE = "https://analytics.adobe.io/api"
+_log = logging.getLogger(__name__)
+
+_BODY_LOG_LIMIT = 20_000  # characters — cap logged body size to avoid flooding the console
+
+
+def _sanitize_headers(headers: dict[str, str]) -> dict[str, str]:
+    """Return a copy of *headers* with the Authorization token masked."""
+    return {
+        k: ("Bearer ***" if k == "Authorization" else v)
+        for k, v in headers.items()
+    }
 
 
 class AdobeClient:
@@ -48,12 +61,27 @@ class AdobeClient:
         """Rate-limited GET with tenacity retry."""
         token = await self._get_token()
 
+        if _log.isEnabledFor(logging.DEBUG):
+            _log.debug("GET  %s", url)
+            _log.debug("  headers: %s", _sanitize_headers(self._headers(token)))
+            if "params" in kwargs:
+                _log.debug("  params:  %s", kwargs["params"])
+
         @self._retry
         async def _call() -> httpx.Response:
             r = await self._rate_limiter.execute(
                 self._http.get, url, headers=self._headers(token), **kwargs
             )
-            r.raise_for_status()
+            try:
+                r.raise_for_status()
+            except httpx.HTTPStatusError:
+                _log.debug(
+                    "  response %d %s\n%s",
+                    r.status_code,
+                    r.reason_phrase,
+                    r.text[:_BODY_LOG_LIMIT],
+                )
+                raise
             return r
 
         return await _call()
@@ -62,12 +90,30 @@ class AdobeClient:
         """Rate-limited POST with tenacity retry."""
         token = await self._get_token()
 
+        if _log.isEnabledFor(logging.DEBUG):
+            _log.debug("POST %s", url)
+            _log.debug("  headers: %s", _sanitize_headers(self._headers(token)))
+            if "json" in kwargs:
+                _log.debug(
+                    "  body:\n%s",
+                    json.dumps(kwargs["json"], indent=2, ensure_ascii=False)[:_BODY_LOG_LIMIT],
+                )
+
         @self._retry
         async def _call() -> httpx.Response:
             r = await self._rate_limiter.execute(
                 self._http.post, url, headers=self._headers(token), **kwargs
             )
-            r.raise_for_status()
+            try:
+                r.raise_for_status()
+            except httpx.HTTPStatusError:
+                _log.debug(
+                    "  response %d %s\n%s",
+                    r.status_code,
+                    r.reason_phrase,
+                    r.text[:_BODY_LOG_LIMIT],
+                )
+                raise
             return r
 
         return await _call()

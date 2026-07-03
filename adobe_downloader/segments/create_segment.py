@@ -3,70 +3,42 @@
 import re
 from pathlib import Path
 
+import yaml
+
 # ---------------------------------------------------------------------------
-# Dimension mapping tables (ported from createSegmentFromList.js)
+# Dimension mapping tables (originally ported from createSegmentFromList.js,
+# now curated in data/segment_creation_dimensions.yaml — see `adobe-downloader
+# add-dimension` to add a new one)
 # ---------------------------------------------------------------------------
 
-DIMENSION_MAPPING: dict[str, str] = {
-    "PageURL": "variables/evar2",
-    "Page URL": "variables/evar2",
-    "Domain": "variables/filtereddomain",
-    "UserAgent": "variables/evar23",
-    "User Agent": "variables/evar23",
-    "Region": "variables/georegion",
-    "Regions": "variables/georegion",
-    "OperatingSystem": "variables/operatingsystem",
-    "OperatingSystems": "variables/operatingsystem",
-    "Operating System": "variables/operatingsystem",
-    "Operating Systems": "variables/operatingsystem",
-    "MonitorResolution": "variables/monitorresolution",
-    "Monitor Resolution": "variables/monitorresolution",
-    "MobileManufacturer": "variables/mobilemanufacturer",
-    "Mobile Manufacturer": "variables/mobilemanufacturer",
-    "MarketingChannel": "variables/marketingchannel",
-    "Marketing Channel": "variables/marketingchannel",
-    "BrowserType": "variables/browsertype",
-    "Browser Type": "variables/browsertype",
-    "Referring Domain": "variables/referringdomain",
-    "ReferringDomain": "variables/referringdomain",
-}
+_REPO_ROOT = Path(__file__).resolve().parents[2]
+DIMENSIONS_CONFIG_PATH = _REPO_ROOT / "data" / "segment_creation_dimensions.yaml"
 
-DIMENSION_DESCRIPTIONS: dict[str, str] = {
-    "PageURL": "Page URL",
-    "Page URL": "Page URL",
-    "Domain": "Domain",
-    "UserAgent": "User Agent",
-    "User Agent": "User Agent",
-    "Region": "Region",
-    "Regions": "Region",
-    "OperatingSystem": "Operating Systems",
-    "OperatingSystems": "Operating Systems",
-    "Operating System": "Operating Systems",
-    "Operating Systems": "Operating Systems",
-    "MonitorResolution": "Monitor Resolution",
-    "Monitor Resolution": "Monitor Resolution",
-    "MobileManufacturer": "Mobile Manufacturer",
-    "Mobile Manufacturer": "Mobile Manufacturer",
-    "MarketingChannel": "Marketing Channel",
-    "Marketing Channel": "Marketing Channel",
-    "BrowserType": "Browser Type",
-    "Browser Type": "Browser Type",
-    "Referring Domain": "Referring Domain",
-    "ReferringDomain": "Referring Domain",
-}
 
-# Dimensions that store values as numeric IDs (require lookup file)
-DIMENSIONS_REQUIRING_LOOKUP: frozenset[str] = frozenset(
-    [
-        "BrowserType",
-        "Browser Type",
-        "MonitorResolution",
-        "Monitor Resolution",
-        "MarketingChannel",
-        "Marketing Channel",
-        "Region",
-        "Regions",
-    ]
+def _load_dimension_config(
+    path: Path,
+) -> tuple[dict[str, str], dict[str, str], frozenset[str]]:
+    """Build (mapping, descriptions, requires_lookup) from the dimension whitelist YAML."""
+    raw = yaml.safe_load(path.read_text(encoding="utf-8"))
+    entries = raw.get("dimensions", []) if isinstance(raw, dict) else []
+
+    mapping: dict[str, str] = {}
+    descriptions: dict[str, str] = {}
+    requires_lookup: set[str] = set()
+    for entry in entries:
+        names: list[str] = entry["names"]
+        adobe_variable: str = entry["adobe_variable"]
+        description: str = entry.get("description", names[0])
+        for name in names:
+            mapping[name] = adobe_variable
+            descriptions[name] = description
+            if entry.get("requires_lookup", False):
+                requires_lookup.add(name)
+    return mapping, descriptions, frozenset(requires_lookup)
+
+
+DIMENSION_MAPPING, DIMENSION_DESCRIPTIONS, DIMENSIONS_REQUIRING_LOOKUP = _load_dimension_config(
+    DIMENSIONS_CONFIG_PATH
 )
 
 ALLOWED_DIMENSIONS: frozenset[str] = frozenset(DIMENSION_MAPPING.keys())

@@ -2,6 +2,9 @@
 
 from pathlib import Path
 
+_REPO_ROOT = Path(__file__).resolve().parents[2]
+_REPORT_SUITE_LISTS_DIR = _REPO_ROOT / "data" / "report_suite_lists"
+
 
 def load_rsid_lookup(file_path: Path) -> dict[str, str]:
     """Load a report suites file into a {clean_name: rsid} dict.
@@ -39,3 +42,28 @@ def lookup_rsid(clean_name: str, file_path: Path) -> str | None:
         if k.lower() == lower:
             return v
     return None
+
+
+def resolve_rsid_names(
+    rsid_list: list[str],
+    rsid_dir: Path | None = None,
+) -> list[str]:
+    """Resolve any clean names in *rsid_list* to real RSIDs.
+
+    Values that are already RSIDs (not found as clean names) pass through unchanged.
+    Uses the most recently modified file in *rsid_dir* (defaults to
+    data/report_suite_lists/).
+    """
+    lookup_dir = rsid_dir if rsid_dir is not None else _REPORT_SUITE_LISTS_DIR
+    latest = find_latest_rsid_file(lookup_dir)
+    if latest is None:
+        return rsid_list
+    mapping = load_rsid_lookup(latest)
+    resolved: list[str] = []
+    for name in rsid_list:
+        lower = name.lower()
+        match = mapping.get(name) or next(
+            (v for k, v in mapping.items() if k.lower() == lower), None
+        )
+        resolved.append(match if match is not None else name)
+    return resolved

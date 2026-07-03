@@ -121,7 +121,17 @@ def list_users(client: str) -> None:
     default=False,
     help="Run in test mode: cap RSIDs, date intervals, and segments per test_limits config.",
 )
-def run(config: Path, report: str | None, no_resume: bool, test_mode: bool) -> None:
+@click.option(
+    "--debug",
+    is_flag=True,
+    default=False,
+    help=(
+        "Enable DEBUG logging: print every API request URL, headers, and body to the console, "
+        "plus the full response body on any HTTP error. "
+        "Always written to the .logs file regardless of this flag."
+    ),
+)
+def run(config: Path, report: str | None, no_resume: bool, test_mode: bool, debug: bool) -> None:
     """Execute a job: report_download, segment_creation, lookup_generation, or composite."""
     from adobe_downloader.config.loader import load_config
     from adobe_downloader.config.report_definitions import load_report_group, load_report_registry
@@ -148,22 +158,22 @@ def run(config: Path, report: str | None, no_resume: bool, test_mode: bool) -> N
         sys.exit(1)
 
     if isinstance(job, SegmentCreationJobConfig):
-        _run_segment_creation_job(job)
+        _run_segment_creation_job(job, debug=debug)
         return
 
     if isinstance(job, LookupGenerationJobConfig):
-        _run_lookup_generation_job(job)
+        _run_lookup_generation_job(job, debug=debug)
         return
 
     if isinstance(job, RsidUpdateJobConfig):
-        _run_rsid_update_job(job)
+        _run_rsid_update_job(job, debug=debug)
         return
 
     if isinstance(job, CompositeJobConfig):
         # CLI --test flag overrides config; merge into job object
         if test_mode and not job.test_mode:
             job = job.model_copy(update={"test_mode": True})
-        _run_composite_job(job, config, no_resume)
+        _run_composite_job(job, config, no_resume, debug=debug)
         return
 
     if not isinstance(job, ReportDownloadConfig):
@@ -233,6 +243,16 @@ def run(config: Path, report: str | None, no_resume: bool, test_mode: bool) -> N
                 "Use --no-resume to start fresh or proceed to resume with new config.",
                 fg="yellow",
             )
+
+    from adobe_downloader.utils.logging import setup_logging
+    setup_logging(
+        Path(job.output.base_folder),
+        job.client,
+        job_name=config.stem,
+        debug=debug,
+    )
+    if debug:
+        click.secho("Debug mode enabled — API request details will be printed to console.", fg="yellow")
 
     date_intervals = list(iterate_dates(job.date_range, job.interval))
     rsid_list = list(iterate_rsids(job.rsids))
@@ -313,7 +333,13 @@ def run(config: Path, report: str | None, no_resume: bool, test_mode: bool) -> N
     )
 
 
-def _run_composite_job(job: object, config: Path, no_resume: bool) -> None:
+def _run_composite_job(
+    job: object,
+    config: Path,
+    no_resume: bool,
+    *,
+    debug: bool = False,
+) -> None:
     """Dispatch helper for composite jobs (called from `run`)."""
     from adobe_downloader.config.schema import CompositeJobConfig
     from adobe_downloader.core.api_client import AdobeClient
@@ -324,6 +350,7 @@ def _run_composite_job(job: object, config: Path, no_resume: bool) -> None:
         compute_job_id,
         state_db_path,
     )
+    from adobe_downloader.utils.logging import setup_logging
 
     assert isinstance(job, CompositeJobConfig)
 
@@ -339,6 +366,15 @@ def _run_composite_job(job: object, config: Path, no_resume: bool) -> None:
     job_id = compute_job_id(config, config_hash)
     db_path = state_db_path(job.output.base_folder, job.client, job_id)
     sm = StateManager(db_path, job_id, config, config_hash)
+
+    setup_logging(
+        Path(job.output.base_folder),
+        job.client,
+        job_name=config.stem,
+        debug=debug,
+    )
+    if debug:
+        click.secho("Debug mode enabled — API request details will be printed to console.", fg="yellow")
 
     click.echo(f"Job ID     : {job_id}")
     click.echo(f"Steps      : {len(job.steps)}")
@@ -425,15 +461,24 @@ def _write_job_completion(
         click.secho(f"Warning: could not write job history: {exc}", fg="yellow")
 
 
-def _run_rsid_update_job(job: object) -> None:
+def _run_rsid_update_job(job: object, *, debug: bool = False) -> None:
     """Dispatch helper for rsid_update jobs (called from `run`)."""
     import asyncio
 
     from adobe_downloader.config.schema import RsidUpdateJobConfig
     from adobe_downloader.core.api_client import AdobeClient
     from adobe_downloader.flows.rsid_update import run_rsid_update
+    from adobe_downloader.utils.logging import setup_logging
 
     assert isinstance(job, RsidUpdateJobConfig)
+
+    setup_logging(
+        Path(job.output.base_folder),
+        job.client,
+        debug=debug,
+    )
+    if debug:
+        click.secho("Debug mode enabled — API request details will be printed to console.", fg="yellow")
 
     if job.date_range is None:
         click.secho("date_range is required for rsid_update jobs.", fg="red", bold=True)
@@ -483,16 +528,21 @@ def _run_rsid_update_job(job: object) -> None:
         sys.exit(1)
 
 
-def _run_segment_creation_job(job: object) -> None:
+def _run_segment_creation_job(job: object, *, debug: bool = False) -> None:
     """Dispatch helper for segment_creation jobs (called from `run`)."""
     import asyncio
 
     from adobe_downloader.config.schema import SegmentCreationJobConfig
     from adobe_downloader.core.api_client import AdobeClient
     from adobe_downloader.flows.segment_creation import run_segment_creation
+    from adobe_downloader.utils.logging import setup_logging
     from adobe_downloader.utils.rsid_lookup import find_latest_rsid_file
 
     assert isinstance(job, SegmentCreationJobConfig)
+
+    setup_logging(None, job.client, debug=debug)
+    if debug:
+        click.secho("Debug mode enabled — API request details will be printed to console.", fg="yellow")
     sc = job.segment_creation
     input_csv = Path(sc.input_csv)
     if not input_csv.exists():
@@ -556,15 +606,20 @@ def _run_segment_creation_job(job: object) -> None:
         sys.exit(1)
 
 
-def _run_lookup_generation_job(job: object) -> None:
+def _run_lookup_generation_job(job: object, *, debug: bool = False) -> None:
     """Dispatch helper for lookup_generation jobs (called from `run`)."""
     import asyncio
 
     from adobe_downloader.config.schema import LookupGenerationJobConfig
     from adobe_downloader.core.api_client import AdobeClient
     from adobe_downloader.flows.lookup_generation import run_lookup_generation
+    from adobe_downloader.utils.logging import setup_logging
 
     assert isinstance(job, LookupGenerationJobConfig)
+
+    setup_logging(None, job.client, debug=debug)
+    if debug:
+        click.secho("Debug mode enabled — API request details will be printed to console.", fg="yellow")
     lg = job.lookup_generation
 
     if job.date_range is None:
@@ -690,6 +745,75 @@ def search_lookup(dimension: str, value: str) -> None:
             click.echo("Similar entries:")
             for k in close:
                 click.echo(f"  {k!r} -> {lookup[k]}")
+
+
+@main.command("add-dimension")
+@click.option(
+    "--name",
+    "-n",
+    "names",
+    multiple=True,
+    required=True,
+    help="Friendly name accepted in Dimension1/Dimension2. Repeat for aliases, "
+    "e.g. -n Country -n Countries.",
+)
+@click.option(
+    "--adobe-variable",
+    "-a",
+    required=True,
+    help="Adobe Analytics variable ID, e.g. variables/geocountry.",
+)
+@click.option(
+    "--description",
+    "-d",
+    default=None,
+    help="Description text used in the segment predicate. Defaults to the first --name.",
+)
+@click.option(
+    "--requires-lookup/--no-requires-lookup",
+    default=False,
+    help="Set if this dimension stores numeric item IDs and needs a data/lookups/ file.",
+)
+def add_dimension(
+    names: tuple[str, ...],
+    adobe_variable: str,
+    description: str | None,
+    requires_lookup: bool,
+) -> None:
+    """Add a new permitted Dimension1/Dimension2 value to segment_creation_dimensions.yaml."""
+    import re as _re
+
+    import yaml
+
+    from adobe_downloader.segments.create_segment import DIMENSION_MAPPING, DIMENSIONS_CONFIG_PATH
+
+    for name in names:
+        if name in DIMENSION_MAPPING:
+            click.secho(
+                f"{name!r} is already mapped to {DIMENSION_MAPPING[name]!r} — "
+                f"edit {DIMENSIONS_CONFIG_PATH} directly to change or remove it.",
+                fg="red",
+            )
+            sys.exit(1)
+
+    entry = {
+        "names": list(names),
+        "adobe_variable": adobe_variable,
+        "description": description or names[0],
+        "requires_lookup": requires_lookup,
+    }
+    block = yaml.safe_dump([entry], default_flow_style=False, sort_keys=False)
+    with DIMENSIONS_CONFIG_PATH.open("a", encoding="utf-8") as fh:
+        fh.write(block)
+
+    click.secho(f"Added {names[0]!r} -> {adobe_variable} to {DIMENSIONS_CONFIG_PATH}", fg="green")
+    if requires_lookup:
+        clean = _re.sub(r"[^a-zA-Z0-9]", "", adobe_variable)
+        click.echo(
+            f"This dimension requires a lookup file. Populate one at "
+            f"data/lookups/{clean}/lookup.txt (run a `lookup_generation` job with "
+            f"dimension: {adobe_variable}, or add entries by hand)."
+        )
 
 
 @main.command()
@@ -1023,7 +1147,16 @@ def cleanup(
 @click.option(
     "--dry-run/--no-dry-run", default=False, help="Report missing files without re-downloading."
 )
-def validate_output(config: Path, retry: bool, dry_run: bool) -> None:
+@click.option(
+    "--debug",
+    is_flag=True,
+    default=False,
+    help=(
+        "Enable DEBUG logging: print every API request URL, headers, and body to the console, "
+        "plus the full response body on any HTTP error."
+    ),
+)
+def validate_output(config: Path, retry: bool, dry_run: bool, debug: bool) -> None:
     """Check all expected output files exist and are non-empty."""
     import asyncio
 
@@ -1048,6 +1181,16 @@ def validate_output(config: Path, retry: bool, dry_run: bool) -> None:
         click.secho("Config has no date_range — cannot enumerate expected files.", fg="red")
         sys.exit(1)
 
+    from adobe_downloader.utils.logging import setup_logging
+    setup_logging(
+        Path(job.output.base_folder),
+        job.client,
+        job_name=config.stem,
+        debug=debug,
+    )
+    if debug:
+        click.secho("Debug mode enabled — API request details will be printed to console.", fg="yellow")
+
     ac = None
     sm = None
 
@@ -1064,7 +1207,7 @@ def validate_output(config: Path, retry: bool, dry_run: bool) -> None:
         job_id = compute_job_id(config, config_hash)
         db_path = state_db_path(job.output.base_folder, job.client, job_id)
         sm = StateManager(db_path, job_id, config, config_hash)
-        ac = AdobeClient.from_client_name(job.client)
+        ac = AdobeClient(job.client)
 
     result = asyncio.run(run_validate_output(job, retry=retry, dry_run=dry_run, ac=ac, sm=sm))
 

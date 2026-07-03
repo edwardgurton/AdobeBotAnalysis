@@ -9,12 +9,12 @@ Dense reference for answering operational questions. All field names, types, and
 | Command | Key Flags | Purpose |
 |---|---|---|
 | `adobe-downloader validate` | `-c/--config PATH` `--check-credentials/--no-check-credentials` | Parse YAML, run Pydantic validation, verify referenced files exist; warns if credentials missing |
-| `adobe-downloader run` | `-c/--config PATH` `-r/--report NAME` `--no-resume` `--test` | Execute a job: report_download, segment_creation, lookup_generation, rsid_update, or composite |
+| `adobe-downloader run` | `-c/--config PATH` `-r/--report NAME` `--no-resume` `--test` `--debug` | Execute a job: report_download, segment_creation, lookup_generation, rsid_update, or composite |
 | `adobe-downloader status` | `-c/--config PATH` | Print SQLite state for a report_download job (counts by status, last errors) |
 | `adobe-downloader retry` | `-c/--config PATH` `--failed-only` | Re-queue failed (or all pending+failed) requests for re-download |
 | `adobe-downloader reset` | `-c/--config PATH` `--confirm` | Wipe all job state (requires `--confirm`); allows clean restart |
 | `adobe-downloader transform` | `-j/--json-dir PATH` `-p/--pattern GLOB` `--concat/--no-concat` `--concat-output PATH` | Transform existing JSON files to CSV; optionally concatenate |
-| `adobe-downloader validate-output` | `-c/--config PATH` `--retry/--no-retry` `--dry-run/--no-dry-run` | Check all expected output files exist and are non-empty; `--retry` re-downloads missing files |
+| `adobe-downloader validate-output` | `-c/--config PATH` `--retry/--no-retry` `--dry-run/--no-dry-run` `--debug` | Check all expected output files exist and are non-empty; `--retry` re-downloads missing files |
 | `adobe-downloader history` | `-c/--client NAME` `-o/--output-base PATH` `--last N` `--status STR` `--since DATE` | Show recent job history from the job log |
 | `adobe-downloader cleanup` | `-c/--client NAME` `-o/--output-base PATH` `--older-than Nd` `--type TYPE` `--confirm` | Remove old files by type (`processed-json`, `logs`, `state`); requires `--confirm` |
 | `adobe-downloader get-segment` | `-c/--client NAME` `-s/--segment-id ID` `-o/--output PATH` | Fetch a segment definition from Adobe API and save as JSON |
@@ -22,6 +22,23 @@ Dense reference for answering operational questions. All field names, types, and
 | `adobe-downloader list-users` | `-c/--client NAME` | List Adobe Analytics users for a client |
 | `adobe-downloader list-rsids` | `-c/--client NAME` `--include-virtual/--no-include-virtual` | Fetch and display all report suites for a client |
 | `adobe-downloader update-rsids` | `-c/--client NAME` `--from DATE` `--to DATE` `--investigation-threshold N` `--validation-threshold N` `--include-virtual` `-o/--output-base PATH` `--suite-pairs-dir PATH` `--exclusion-file PATH` | Standalone RSID update: fetch suites, download topline metrics, write filtered lists |
+
+---
+
+## Debug Mode (`--debug`)
+
+`adobe-downloader run --debug` and `adobe-downloader validate-output --debug` enable full API transparency. When the flag is set:
+
+- The console log level drops from INFO to DEBUG — all `_log.debug(...)` messages in every module appear on stdout.
+- Every API request is printed **before** it is sent:
+  - Method + URL
+  - Request headers (Authorization token is masked as `Bearer ***`)
+  - Full request body as pretty-printed JSON (POST only; capped at 20 000 characters)
+- On any HTTP error (4xx / 5xx), the full response status and body are printed immediately before the exception propagates.
+
+**File log** (`<output_dir>/<client>/.logs/<job_name>.log`) is always written at DEBUG level regardless of whether `--debug` is set. It captures the same detail silently on every run. Check it first when diagnosing failures without re-running.
+
+**Note on composite jobs:** the composite job runner calls `validate_report_metrics` (a pre-flight probe) *before* the download loop. This probe makes one extra API request per RSID. If you are seeing 403 errors with a composite job but not with a standalone `report_download` job using the same config, the 403 is almost certainly coming from this preflight call. Use `--debug` to see the probe request body and Adobe's error response.
 
 ---
 

@@ -22,6 +22,7 @@ from adobe_downloader.flows.composite_job import (
     _resolve_output_base,
     _resolve_report_defs,
     _resolve_segments,
+    _state_key,
     run_composite_job,
 )
 from adobe_downloader.state_manager import (
@@ -140,12 +141,8 @@ class TestStepIdScoping:
         sm = _make_manager(tmp_path)
         body = {"rsid": "rsid1", "report": "rep1"}
 
-        req_id1, c1 = sm.track_request(
-            "key1", body, Path("/out/f1.json"), step_id="step_a"
-        )
-        req_id2, c2 = sm.track_request(
-            "key2", body, Path("/out/f2.json"), step_id="step_a"
-        )
+        req_id1, c1 = sm.track_request("key1", body, Path("/out/f1.json"), step_id="step_a")
+        req_id2, c2 = sm.track_request("key2", body, Path("/out/f2.json"), step_id="step_a")
         # Both same step, same body → second is canonical-linked
         assert c1 is None
         assert c2 == req_id1
@@ -340,6 +337,7 @@ class TestRunCompositeJob:
         async def _fake_run_rd(*a: Any, **kw: Any) -> Any:
             calls.append("called")
             from adobe_downloader.flows.report_download import ReportDownloadResult
+
             return ReportDownloadResult(job_id="x", json_folder=tmp_path)
 
         with patch("adobe_downloader.flows.report_download.run_report_download", _fake_run_rd):
@@ -364,6 +362,7 @@ class TestRunCompositeJob:
         async def _fake_run_rd(*a: Any, **kw: Any) -> Any:
             calls.append("called")
             from adobe_downloader.flows.report_download import ReportDownloadResult
+
             return ReportDownloadResult(job_id="x", json_folder=tmp_path)
 
         with (
@@ -486,14 +485,151 @@ class TestRunCompositeJob:
 
 
 # ---------------------------------------------------------------------------
+# test_mode / full-run state isolation (regression: a --test run must never
+# satisfy a later full run's resume check, or vice versa)
+# ---------------------------------------------------------------------------
+
+
+class TestTestModeStateIsolation:
+    async def test_test_mode_run_does_not_block_full_run(
+        self, tmp_path: Path, _fake_report_defs: list[Any]
+    ) -> None:
+        job, config_path, sm, ac = await _make_composite_job_with_download_step(
+            tmp_path, _fake_report_defs
+        )
+        test_job = job.model_copy(update={"test_mode": True})
+
+        from adobe_downloader.flows.report_download import ReportDownloadResult
+
+        calls: list[str] = []
+
+        async def _fake_run_rd(*a: Any, **kw: Any) -> Any:
+            calls.append("called")
+            return ReportDownloadResult(job_id="x", json_folder=tmp_path, downloaded=1)
+
+        with (
+            patch(
+                "adobe_downloader.flows.composite_job._resolve_report_defs",
+                return_value=_fake_report_defs,
+            ),
+            patch("adobe_downloader.flows.report_download.run_report_download", _fake_run_rd),
+        ):
+            # First run: --test mode. The capped download "completes" the step,
+            # but only under the test-mode-namespaced key.
+            await run_composite_job(test_job, config_path, sm, ac)
+            assert calls == ["called"]
+            assert sm.is_step_complete("dl_step") is False
+            assert sm.is_step_complete(_state_key("dl_step", test_job)) is True
+
+            # Second run: full mode, same sm/config — must NOT be skipped.
+            step_outputs = await run_composite_job(job, config_path, sm, ac)
+
+        assert calls == ["called", "called"]
+        assert step_outputs["dl_step"]["downloaded"] == 1
+        assert sm.is_step_complete("dl_step") is True
+
+    async def test_full_run_completion_unaffected_by_later_test_run(
+        self, tmp_path: Path, _fake_report_defs: list[Any]
+    ) -> None:
+        job, config_path, sm, ac = await _make_composite_job_with_download_step(
+            tmp_path, _fake_report_defs
+        )
+        test_job = job.model_copy(update={"test_mode": True})
+
+        from adobe_downloader.flows.report_download import ReportDownloadResult
+
+        calls: list[str] = []
+
+        async def _fake_run_rd(*a: Any, **kw: Any) -> Any:
+            calls.append("called")
+            return ReportDownloadResult(job_id="x", json_folder=tmp_path, downloaded=1)
+
+        with (
+            patch(
+                "adobe_downloader.flows.composite_job._resolve_report_defs",
+                return_value=_fake_report_defs,
+            ),
+            patch("adobe_downloader.flows.report_download.run_report_download", _fake_run_rd),
+        ):
+            # Full run completes for real first.
+            await run_composite_job(job, config_path, sm, ac)
+            assert calls == ["called"]
+
+            # A later --test run must not crash, and must not be silently
+            # skipped as if it were the (differently-scoped) full run.
+            await run_composite_job(test_job, config_path, sm, ac)
+
+        assert calls == ["called", "called"]
+        assert sm.is_step_complete("dl_step") is True
+
+    async def test_depends_on_resolved_from_db_same_mode(
+        self, tmp_path: Path, _fake_report_defs: list[Any]
+    ) -> None:
+        """A test-mode step's depends_on lookup must find a same-mode
+        dependency completed in a prior run, via the same namespaced key."""
+        job = CompositeJobConfig.model_validate(
+            {
+                "job_type": "composite",
+                "client": "Legend",
+                "output": {"base_folder": str(tmp_path)},
+                "date_range": {"from": "2025-01-01", "to": "2025-01-02"},
+                "test_mode": True,
+                "steps": [
+                    {
+                        "step": "report_download",
+                        "id": "dl_step",
+                        "report_group": "bot_investigation",
+                        "rsids": {"source": "single", "single": "rsid1"},
+                        "interval": "day",
+                        "depends_on": "prior_step",
+                    }
+                ],
+            }
+        )
+        config_path = tmp_path / "job.yaml"
+        config_path.write_text("job_type: composite\nclient: Legend\n")
+        config_hash = compute_config_hash(config_path)
+        job_id = compute_job_id(config_path, config_hash)
+        db_path = state_db_path(tmp_path, "Legend", job_id)
+        sm = StateManager(db_path, job_id, config_path, config_hash)
+        ac = MagicMock()
+
+        # Simulate prior_step completed in a previous *test-mode* run.
+        sm.mark_step_started(_state_key("prior_step", job))
+        sm.mark_step_complete(_state_key("prior_step", job), {"some_output": "value"})
+
+        from adobe_downloader.flows.report_download import ReportDownloadResult
+
+        fake_result = ReportDownloadResult(
+            job_id=sm.job_id,
+            json_folder=tmp_path / "Legend" / "JSON",
+            downloaded=1,
+        )
+
+        with (
+            patch(
+                "adobe_downloader.flows.composite_job._resolve_report_defs",
+                return_value=_fake_report_defs,
+            ),
+            patch(
+                "adobe_downloader.flows.report_download.run_report_download",
+                new_callable=lambda: lambda *a, **kw: _async_return(fake_result),
+            ),
+        ):
+            step_outputs = await run_composite_job(job, config_path, sm, ac)
+
+        assert "prior_step" in step_outputs
+        assert step_outputs["prior_step"]["some_output"] == "value"
+        assert sm.is_step_complete(_state_key("dl_step", job))
+
+
+# ---------------------------------------------------------------------------
 # transform_concat step: source folder auto-detection
 # ---------------------------------------------------------------------------
 
 
 class TestTransformConcatStep:
-    async def test_source_folder_auto_detected_from_prior_download(
-        self, tmp_path: Path
-    ) -> None:
+    async def test_source_folder_auto_detected_from_prior_download(self, tmp_path: Path) -> None:
         json_folder = tmp_path / "Legend" / "JSON"
         json_folder.mkdir(parents=True)
         jf = json_folder / "Legend_botInvestigationMetricsByBrowser_2025-01-01_2025-01-02.json"

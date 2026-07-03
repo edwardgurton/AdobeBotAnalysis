@@ -8,13 +8,14 @@ from adobe_downloader.config.schema import SchemaDiscoveryJobConfig
 from adobe_downloader.core.api_client import AdobeClient
 from adobe_downloader.flows.report_download import iterate_rsids
 from adobe_downloader.utils import schema_cache
+from adobe_downloader.utils.rsid_lookup import resolve_rsid_names
 
 logger = logging.getLogger(__name__)
 
 
 async def run_schema_discovery(client: AdobeClient, job: SchemaDiscoveryJobConfig) -> None:
     """Iterate RSIDs, fetch stale schema entries, then rebuild the search index."""
-    rsids = list(iterate_rsids(job.rsids))
+    rsids = resolve_rsid_names(list(iterate_rsids(job.rsids)))
     ttl = job.cache_ttl_days
     force = job.force_refresh
 

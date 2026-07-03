@@ -6,6 +6,7 @@ from pathlib import Path
 from adobe_downloader.config.schema import DateRange, LookupGenerationConfig
 from adobe_downloader.core.api_client import AdobeClient
 from adobe_downloader.segments.lookup_generator import generate_lookup_file
+from adobe_downloader.utils.rsid_lookup import resolve_rsid_names
 
 _log = logging.getLogger(__name__)
 
@@ -22,11 +23,12 @@ async def run_lookup_generation(
     Returns the path to the generated lookup file.
     """
     output_path = Path(config.output_file) if config.output_file else None
+    resolved_rsid = resolve_rsid_names([config.rsid])[0]
     return await generate_lookup_file(
         client=client,
         client_name=client_name,
         dimension=config.dimension,
-        rsid=config.rsid,
+        rsid=resolved_rsid,
         date_range=date_range,
         segments=config.segments,
         lookup_base=lookup_base,

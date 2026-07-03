@@ -1,0 +1,244 @@
+/**
+ * Lookup Table for variables/geocountry
+ * 
+ * Maps string values to their numeric IDs for use in Adobe Analytics segments.
+ * 
+ * Client: Legend
+ * Source: seeded from data/country_segment_lookup.json (per-country segments
+ *   created via the dim_to_segments flow), not a live lookup_generation fetch.
+ * Last Updated: 2026-07-02
+ * 
+ * Format: stringValue|numericId
+ */
+
+Afghanistan|749295988
+Aland Islands|317525152
+Albania|1934335887
+Algeria|1306398615
+American Samoa|105086985
+Andorra|914857137
+Angola|3631882659
+Anguilla|41728927
+Antigua and Barbuda|543835974
+Argentina|3089751146
+Armenia|2820596834
+Aruba|3153696852
+Australia|1177125985
+Austria|2309279173
+Azerbaijan|3214060502
+Bahamas|3225550346
+Bahrain|3096129737
+Bangladesh|986772634
+Barbados|3500175871
+Belarus|1844454344
+Belgium|3094747106
+Belize|2428523610
+Benin|2841164084
+Bermuda|623673642
+Bhutan|370943811
+Bolivia|1360504006
+Bonaire/Sint Eustatius/Saba|611013511
+Bosnia and Herzegovina|3150618885
+Botswana|751593820
+Brazil|824085840
+British Indian Ocean Territory|1465081046
+British Virgin Islands|1134532561
+Brunei Darussalam|2464260405
+Bulgaria|245561251
+Burkina Faso|1526438420
+Burundi|2298123736
+Cambodia|3467342675
+Cameroon|2215307081
+Canada|3228380618
+Cape Verde|3722741145
+Cayman Islands|826262613
+Central African Republic|3639208525
+Chad|3655886880
+Chile|3555154152
+China|3104901604
+Colombia|4234434262
+Comoros|1591869505
+Congo|705648675
+Cook Islands|2336252342
+Costa Rica|4217439089
+Cote D Ivoire|2791644949
+Croatia|2939867074
+Cuba|1686749082
+Curacao|3935015791
+Cyprus|3391892495
+Czech Republic|437835312
+Democratic Republic of The Congo|172398846
+Denmark|2218348079
+Djibouti|1279477331
+Dominican Republic|3883728058
+Dominica|1055513876
+Ecuador|3174911143
+Egypt|2890084639
+El Salvador|557817137
+Equatorial Guinea|3736370786
+Estonia|255097516
+Ethiopia|180587719
+Europe (Unknown Country)|2556457689
+Faroe Islands|2490474427
+Federated States of Micronesia|1927376610
+Fiji|2548127537
+Finland|2841441794
+France|2393484539
+French Guiana|2399895656
+French Polynesia|1190382565
+Gabon|3779824878
+Gambia|3345291608
+Georgia|2870784994
+Germany|1888766268
+Ghana|3203374993
+Gibraltar|399396516
+Greece|3973863131
+Greenland|2032732603
+Grenada|2432935727
+Guadeloupe|3005330290
+Guam|1726691306
+Guatemala|2270237589
+Guernsey|4128441213
+Guinea-Bissau|2396481462
+Guinea|1342361316
+Guyana|3741335794
+Haiti|4121158988
+Honduras|202358084
+Hong Kong SAR of China|3956704230
+Hungary|2117297930
+Iceland|1633222208
+India|1813761673
+Indonesia|2891552242
+Iran (Islamic Republic of)|1847552420
+Iraq|1647166342
+Ireland|2296081294
+Isle of Man|2808182762
+Israel|1617491890
+Italy|3746356729
+Jamaica|2294923469
+Japan|506321431
+Jersey|338375829
+Jordan|2011389551
+Kazakhstan|2611517738
+Kenya|2369788029
+Kiribati|1786502341
+Kuwait|642107786
+Kyrgyzstan|2375323248
+Lao Peoples Democratic Republic|731963020
+Latvia|1553490540
+Lebanon|1069666923
+Lesotho|755508512
+Liberia|3702105856
+Libyan Arab Jamahiriya|2637176371
+Liechtenstein|957341365
+Lithuania|886547519
+Luxembourg|4229735548
+Macau SAR of China|2796781492
+Macedonia|2543284531
+Madagascar|1282208978
+Malawi|452026331
+Malaysia|553496980
+Maldives|2366897706
+Mali|515860964
+Malta|1716347066
+Marshall Islands|1897224002
+Martinique|1177195403
+Mauritania|1238180626
+Mauritius|2087263304
+Mayotte|1596874523
+Mexico|927049179
+Moldova|3231033346
+Monaco|1339970340
+Mongolia|3959866209
+Montenegro|3251205079
+Montserrat|3356316555
+Morocco|152718535
+Mozambique|3597011872
+Myanmar|850183191
+Namibia|2439207153
+Nauru|659392987
+Nepal|3436324255
+Netherlands|1718674691
+New Caledonia|2717743113
+New Zealand|4262610955
+Nicaragua|1704276907
+Nigeria|1836967238
+Niger|4198631729
+Niue|3799524866
+Northern Mariana Islands|1782833650
+Norway|2984798737
+Oman|7307
+Pakistan|1448029111
+Palau|2465631166
+Palestinian Territories|3062986901
+Panama|2571843217
+Papua New Guinea|4151776307
+Paraguay|1516319432
+Peru|3558300739
+Philippines|1006742768
+Poland|191637189
+Portugal|2985882616
+Puerto Rico|874950837
+Qatar|1383990895
+Reunion|3330289176
+Romania|1084274778
+Russian Federation|1255785488
+Rwanda|1894473748
+Saint Barthelemy|1616724130
+Saint Kitts and Nevis|3538559908
+Saint Lucia|2561205181
+Saint Martin|2697558322
+Saint Vincent and The Grenadines|1006554360
+Samoa|3513815597
+San Marino|1049681843
+Sao Tome and Principe|3488977716
+Saudi Arabia|3589483000
+Senegal|4006661762
+Serbia|3484402194
+Seychelles|3090884918
+Sierra Leone|582409011
+Singapore|4007560033
+Sint Maarten|548149091
+Slovakia (Slovak Republic)|946780485
+Slovenia|3653427037
+Solomon Islands|4275181022
+Somalia|1797355945
+South Africa|2697929101
+South Korea|2973880281
+South Sudan|3556491057
+Spain|2155215220
+Sri Lanka|1488936833
+St. Pierre and Miquelon|3272838001
+Suriname|535132834
+Svalbard and Jan Mayen Islands|82034475
+Swaziland|1433886021
+Sweden|2756077237
+Switzerland|2849325920
+Taiwan region|3047707419
+Tajikistan|2702317341
+Tanzania|1602670039
+Thailand|2346951077
+Timor-Leste|3420000337
+Togo|801857873
+Tonga|2129810383
+Trinidad and Tobago|298381923
+Tunisia|3993900130
+Turkey|3700928874
+Turkmenistan|2021948016
+Turks and Caicos Islands|4097148735
+Uganda|4072579384
+Ukraine|1823883788
+United Arab Emirates|4002193968
+United Kingdom|3423869995
+United States|1173709922
+Unspecified|0
+Uruguay|1482301699
+US Virgin Islands|4258910208
+Uzbekistan|3826923149
+Vanuatu|2966445269
+Venezuela|3157173422
+Viet Nam|3460799111
+Wallis and Futuna Islands|1343921003
+Yemen|2210777200
+Zambia|155706886
+Zimbabwe|3256595345

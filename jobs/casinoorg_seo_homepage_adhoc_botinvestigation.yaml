@@ -1,0 +1,39 @@
+job_type: composite
+client: Legend
+description: "Single bot investigation for Casino.org SEO homepage visits — download + validate + transform"
+
+date_range:
+  from: "2026-03-31"
+  to: "2026-06-30"
+
+output:
+  base_folder: "C:/Adobe_Downloads"
+  job_name: "casinoorg_seo_homepage_adhoc_bot_investigation_jul26"
+  job_name: "casinoorg_seo_homepage_bot_investigation_90d"
+
+steps:
+  - step: report_download
+    id: download_investigation
+    report_group: bot_investigation
+    rsids:
+      source: single
+      single: Casinoorg
+    segments:
+      source: inline
+      ids:
+        - s3938_6a42a053b08bc61633d6f4a9
+    interval: month
+    resume: true
+
+  - step: validate_output
+    id: validate
+    depends_on: download_investigation
+    config_ref: download_investigation
+    retry: true
+
+  - step: transform_concat
+    id: transform
+    depends_on: validate
+    transform:
+      type: bot_investigation
+      concat: true

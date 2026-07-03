@@ -17,6 +17,26 @@ from adobe_downloader.config.schema import (
 
 _log = logging.getLogger(__name__)
 
+# Prefix used for the final concatenated CSV, keyed by transform.type — so the
+# output name reflects what kind of investigation actually produced it.
+_TRANSFORM_TYPE_PREFIXES = {
+    "bot_investigation": "INVESTIGATION",
+    "bot_validation": "VALIDATION",
+    "bot_rule_compare": "COMPARE",
+    "final_bot_metrics": "FINALMETRICS",
+    "standard": "REPORT",
+    "summary_total": "SUMMARY",
+}
+
+
+def _state_key(step_id: str, job: CompositeJobConfig) -> str:
+    """Persisted step-state key, namespaced by test_mode.
+
+    A --test run's completion markers must never satisfy a full run's resume
+    check (or vice versa) — they cover different scopes of the same step.
+    """
+    return f"{step_id}::test" if job.test_mode else step_id
+
 
 # ---------------------------------------------------------------------------
 # Public entry point
@@ -51,7 +71,7 @@ async def run_composite_job(
                 dep_id = step.depends_on
                 if dep_id not in step_outputs:
                     # Try to reload from DB (e.g. dep completed in a prior run)
-                    dep_out = sm.get_step_outputs(dep_id)
+                    dep_out = sm.get_step_outputs(_state_key(dep_id, job))
                     if dep_out is not None:
                         step_outputs[dep_id] = dep_out
                     else:
@@ -61,8 +81,8 @@ async def run_composite_job(
                         )
 
             # Resume: skip already-completed steps
-            if not no_resume and sm.is_step_complete(step_id):
-                stored = sm.get_step_outputs(step_id)
+            if not no_resume and sm.is_step_complete(_state_key(step_id, job)):
+                stored = sm.get_step_outputs(_state_key(step_id, job))
                 if stored is not None:
                     step_outputs[step_id] = stored
                 _log.info("SKIP step %s (already done)", step_id)
@@ -73,7 +93,7 @@ async def run_composite_job(
             _log.info("START step %s [%s]", step_id, step.step)
             if on_progress:
                 on_progress(step_id, f"starting ({step.step})")
-            sm.mark_step_started(step_id)
+            sm.mark_step_started(_state_key(step_id, job))
 
             try:
                 outputs = await _dispatch_step(
@@ -86,11 +106,11 @@ async def run_composite_job(
                     on_progress=on_progress,
                 )
             except Exception as exc:
-                sm.mark_step_failed(step_id, str(exc))
+                sm.mark_step_failed(_state_key(step_id, job), str(exc))
                 _log.error("FAIL step %s: %s", step_id, exc)
                 raise
 
-            sm.mark_step_complete(step_id, outputs)
+            sm.mark_step_complete(_state_key(step_id, job), outputs)
             step_outputs[step_id] = outputs
             _log.info("DONE step %s", step_id)
             if on_progress:
@@ -139,9 +159,7 @@ async def _dispatch_step(
     if step_type == "rsid_update":
         return await _run_rsid_update_step(step, job, step_outputs, ac)
     if step_type == "generate_country_matrix":
-        raise NotImplementedError(
-            "generate_country_matrix step type is not yet implemented"
-        )
+        raise NotImplementedError("generate_country_matrix step type is not yet implemented")
     raise ValueError(f"Unknown step type: {step_type!r}")
 
 
@@ -189,8 +207,9 @@ async def _run_report_download_step(
 
     from adobe_downloader.flows.preflight import validate_report_metrics
     from adobe_downloader.flows.report_download import iterate_rsids
+    from adobe_downloader.utils.rsid_lookup import resolve_rsid_names
 
-    rsid_list = list(iterate_rsids(rsids))
+    rsid_list = resolve_rsid_names(list(iterate_rsids(rsids)))
     await validate_report_metrics(ac, rsid_list, report_defs, date_range)
 
     def _progress(status: str, rsid: str, name: str) -> None:
@@ -245,9 +264,15 @@ async def _run_segment_creation_step(
     input_csv = Path(sc_raw["input_csv"])
     share_with_users: list[str] = sc_raw.get("share_with_users", [])
     test_mode_row: int | None = sc_raw.get("test_mode_row")
-    compare_list_path = Path(sc_raw["compare_list_path"]) if sc_raw.get("compare_list_path") else None
-    validate_list_path = Path(sc_raw["validate_list_path"]) if sc_raw.get("validate_list_path") else None
-    segment_list_path = Path(sc_raw["segment_list_path"]) if sc_raw.get("segment_list_path") else None
+    compare_list_path = (
+        Path(sc_raw["compare_list_path"]) if sc_raw.get("compare_list_path") else None
+    )
+    validate_list_path = (
+        Path(sc_raw["validate_list_path"]) if sc_raw.get("validate_list_path") else None
+    )
+    segment_list_path = (
+        Path(sc_raw["segment_list_path"]) if sc_raw.get("segment_list_path") else None
+    )
 
     data_root = Path("data")
     lookup_base = data_root / "lookups"
@@ -313,7 +338,9 @@ async def _run_transform_concat_step(
                     break
 
     if source_folder_str is None:
-        raise ValueError(f"Step {step.id!r}: could not determine source folder for transform_concat")
+        raise ValueError(
+            f"Step {step.id!r}: could not determine source folder for transform_concat"
+        )
 
     source_folder = Path(source_folder_str)
     if not source_folder.exists():
@@ -351,9 +378,10 @@ async def _run_transform_concat_step(
         file_pattern = concat_raw.get("file_pattern", "*.csv")
         job_name = job.output.job_name if job.output else None
         if job_name:
-            final_folder = Path(job.output.base_folder) / job.client / "BotRuleCompareFinal"
+            final_folder = Path(job.output.base_folder) / job.client / job_name
             final_folder.mkdir(parents=True, exist_ok=True)
-            concat_out = final_folder / f"BOTCOMPARE_{job_name}.csv"
+            prefix = _TRANSFORM_TYPE_PREFIXES.get(explicit_type or "", "OUTPUT")
+            concat_out = final_folder / f"{prefix}_{job_name}.csv"
         else:
             concat_out = csv_folder / f"{step.id}_concat.csv"
         count = concatenate_csvs(csv_folder, file_pattern, concat_out)
@@ -399,9 +427,7 @@ async def _run_validate_output_step(
 
     ref_step = next((s for s in job.steps if s.id == config_ref), None)
     if ref_step is None:
-        raise ValueError(
-            f"Step {step.id!r}: config_ref {config_ref!r} does not match any step id"
-        )
+        raise ValueError(f"Step {step.id!r}: config_ref {config_ref!r} does not match any step id")
 
     ref_extra = ref_step.extra_fields()
 
@@ -442,7 +468,10 @@ async def _run_validate_output_step(
         missing_count = len(missing)
         _log.info(
             "Step %s: %d expected, %d valid, %d missing/empty",
-            step.id, len(expected), len(valid), missing_count,
+            step.id,
+            len(expected),
+            len(valid),
+            missing_count,
         )
         for p in missing[:5]:
             _log.warning("  missing: %s", p)
@@ -483,13 +512,18 @@ async def _run_validate_output_step(
 
     _log.info(
         "Step %s: %d expected, %d valid, %d missing/empty",
-        step.id, len(expected), len(valid), missing_count,
+        step.id,
+        len(expected),
+        len(valid),
+        missing_count,
     )
     for p in missing[:5]:
         _log.warning("  missing: %s", p)
 
     if missing_count and retry:
-        _log.info("Step %s: retry=True — resetting and re-downloading %d file(s)", step.id, missing_count)
+        _log.info(
+            "Step %s: retry=True — resetting and re-downloading %d file(s)", step.id, missing_count
+        )
         for p in missing:
             sm.reset_completed_for_path(p)
         sm.reset_incomplete_for_step(config_ref)
@@ -575,10 +609,13 @@ async def _run_dim_to_segments_step(
     if job.date_range is None:
         raise ValueError("dim_to_segments step requires a date_range on the composite job")
 
+    from adobe_downloader.utils.rsid_lookup import resolve_rsid_names
+
+    resolved_rsid = resolve_rsid_names([d2s_raw["rsid"]])[0]
     result = await dim_to_segments(
         client=ac,
         dimension=d2s_raw["dimension"],
-        rsid=d2s_raw["rsid"],
+        rsid=resolved_rsid,
         date_range=job.date_range,
         output_path=segment_list_path,
         additional_segments=d2s_raw.get("additional_segments"),
@@ -614,6 +651,7 @@ async def _run_bot_rule_compare_step(
     rsids = RsidSource.model_validate(rsids_raw)
 
     from adobe_downloader.flows.report_download import iterate_rsids
+
     rsid_clean_names = list(iterate_rsids(rsids))
 
     rsid_lookup_raw: str | None = extra.get("rsid_lookup_file")
@@ -698,7 +736,9 @@ async def _run_final_bot_metrics_step(
                 )
             seg_file_raw = step_outputs[dep_id][key]
         else:
-            raise ValueError(f"Step {step.id!r}: segment_list_file is required for final_bot_metrics")
+            raise ValueError(
+                f"Step {step.id!r}: segment_list_file is required for final_bot_metrics"
+            )
     segment_list_file = Path(seg_file_raw)
 
     rsid_lookup_raw: str | None = extra.get("rsid_lookup_file")
@@ -835,7 +875,11 @@ def _parse_bot_rules_from_config(
     step_id: str,
 ) -> list[Any]:  # list[BotRule]
     """Parse a bot_rules config dict into a list of BotRule objects."""
-    from adobe_downloader.flows.bot_rule_compare import DIMENSION_MAPPING, BotRule, parse_bot_rule_csv
+    from adobe_downloader.flows.bot_rule_compare import (
+        DIMENSION_MAPPING,
+        BotRule,
+        parse_bot_rule_csv,
+    )
 
     source: str = bot_rules_raw.get("source", "file")
 
@@ -857,13 +901,17 @@ def _parse_bot_rules_from_config(
             short = r.get("report_to_skip", "")
             full = DIMENSION_MAPPING.get(
                 short,
-                short if short.startswith("botInvestigation") else f"botInvestigationMetricsBy{short}",
+                short
+                if short.startswith("botInvestigation")
+                else f"botInvestigationMetricsBy{short}",
             )
-            bot_rules.append(BotRule(
-                segment_id=r["segment_id"],
-                segment_name=r["segment_name"],
-                report_to_skip=full,
-            ))
+            bot_rules.append(
+                BotRule(
+                    segment_id=r["segment_id"],
+                    segment_name=r["segment_name"],
+                    report_to_skip=full,
+                )
+            )
         return bot_rules
     raise ValueError(f"Step {step_id!r}: unknown bot_rules.source {source!r}")
 

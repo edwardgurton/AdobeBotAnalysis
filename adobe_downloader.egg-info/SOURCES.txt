@@ -1,5 +1,6 @@
 pyproject.toml
 adobe_downloader/__init__.py
+adobe_downloader/__main__.py
 adobe_downloader/cli.py
 adobe_downloader/state_manager.py
 adobe_downloader.egg-info/PKG-INFO
@@ -22,6 +23,7 @@ adobe_downloader/flows/bot_rule_compare.py
 adobe_downloader/flows/composite_job.py
 adobe_downloader/flows/final_bot_metrics.py
 adobe_downloader/flows/lookup_generation.py
+adobe_downloader/flows/preflight.py
 adobe_downloader/flows/report_download.py
 adobe_downloader/flows/rsid_update.py
 adobe_downloader/flows/schema_discovery.py
@@ -52,6 +54,7 @@ tests/test_final_bot_metrics.py
 tests/test_iteration.py
 tests/test_lookup_generation.py
 tests/test_post_process.py
+tests/test_preflight.py
 tests/test_rate_limiter.py
 tests/test_report_download.py
 tests/test_request_builder.py

@@ -4,3 +4,4 @@ __pycache__/
 .DS_Store
 # OAuth credentials — never commit
 credentials/
+.claude/settings.local.json
