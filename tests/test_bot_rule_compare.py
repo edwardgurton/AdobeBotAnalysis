@@ -21,6 +21,7 @@ from adobe_downloader.flows.bot_rule_compare import (
     BotRuleCompareResult,
     parse_bot_rule_csv,
     run_bot_rule_compare,
+    sanitize_bot_rule_name,
 )
 from adobe_downloader.state_manager import (
     StateManager,
@@ -434,10 +435,58 @@ class TestRunBotRuleCompare:
         all_traffic_files = [n for n in names if "AllTraffic" in n]
         assert len(segment_files) == 1
         assert len(all_traffic_files) == 1
-        assert "Coverscom-MyRule-Compare-V2.0-Segment" in segment_files[0]
-        assert "Coverscom-MyRule-Compare-V2.0-AllTraffic" in all_traffic_files[0]
+        assert "Coverscom-MyRule-Compare-V2-Segment" in segment_files[0]
+        assert "Coverscom-MyRule-Compare-V2-AllTraffic" in all_traffic_files[0]
         assert "DIMSEG" in segment_files[0]
         assert "DIMSEG" not in all_traffic_files[0]
+
+    async def test_investigation_name_sanitizes_underscores_in_rule_name(
+        self, tmp_path: Path
+    ) -> None:
+        """A bot rule name with underscores must not introduce extra underscore-
+        delimited tokens into the filename — that shifts transform_bot_rule_compare's
+        parts-based parsing into its legacy-format branch and corrupts segmentId."""
+        rsid_file = _make_rsid_file(tmp_path, [("triarsid1", "Coverscom")])
+        sm = _make_mock_sm(tmp_path)
+        client = AsyncMock()
+        client.get_report = AsyncMock(return_value=_FAKE_REPORT_RESPONSE)
+
+        rd1 = MagicMock()
+        rd1.name = "botInvestigationMetricsByRegion"
+        rd1.segments = []
+
+        bot_rules = [BotRule("seg1", "BOTCOMPARE_NL_01Rule", "botInvestigationMetricsByDomain")]
+
+        with (
+            patch("adobe_downloader.config.report_definitions.load_report_group") as mock_load,
+            _patch_build_request(),
+        ):
+            mock_load.return_value = [rd1]
+
+            await run_bot_rule_compare(
+                client=client,
+                client_name="Legend",
+                rsid_clean_names=["Coverscom"],
+                rsid_lookup_file=rsid_file,
+                bot_rules=bot_rules,
+                date_range=_date("2025-01-01", "2025-03-31"),
+                comparison_round=1.0,
+                output_base=str(tmp_path / "output"),
+                sm=sm,
+                no_resume=True,
+            )
+
+        json_dir = tmp_path / "output" / "Legend" / "JSON"
+        names = [f.name for f in json_dir.glob("*.json")]
+        segment_files = [n for n in names if "Segment" in n]
+
+        assert len(segment_files) == 1
+        # parts[2] must carry "-Compare-" intact (the condition
+        # transform_bot_rule_compare uses to pick the production-format parser) —
+        # an underscore in the rule name would otherwise split it into parts[2:4].
+        parts = segment_files[0].removesuffix(".json").split("_")
+        assert "-Compare-" in parts[2]
+        assert parts[2] == "Coverscom-BOTCOMPARE-NL-01Rule-Compare-V1-Segment"
 
     async def test_multiple_rsids(self, tmp_path: Path) -> None:
         rsid_file = _make_rsid_file(
@@ -485,6 +534,13 @@ class TestRunBotRuleCompare:
         # SiteB: Segment + AllTraffic = 2
         assert result.downloaded == 4
         assert result.failed == 0
+
+
+def test_sanitize_bot_rule_name_replaces_underscores() -> None:
+    assert sanitize_bot_rule_name("BOTCOMPARE_AdHocSEOHomepageNL_01Rule") == (
+        "BOTCOMPARE-AdHocSEOHomepageNL-01Rule"
+    )
+    assert sanitize_bot_rule_name("SG-GeoCountry") == "SG-GeoCountry"
 
 
 # ---------------------------------------------------------------------------

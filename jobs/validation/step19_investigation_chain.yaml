@@ -14,6 +14,7 @@ date_range:
 
 output:
   base_folder: "C:/Users/EdwardGurton/Documents/adobe_test_output"
+  job_name: "Step19InvestigationChain"
 
 steps:
   - step: rsid_update

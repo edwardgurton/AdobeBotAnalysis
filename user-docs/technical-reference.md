@@ -343,6 +343,8 @@ Five transform functions are registered in `_TRANSFORM_REGISTRY`. `transform_rep
 
 The dimension is derived from `reportType` by stripping the `"botInvestigationMetricsBy"` prefix. `is_segment` and `is_compare` are booleans stored as lowercase strings in the CSV. Per-row appended columns: `fileName, clientName, reportType, dimension, rsidName, botRuleName, compareVersion, trafficType, isCompare, isSegment, segmentId, segmentHash, startDate, endDate`.
 
+The two patterns are distinguished by whether `"-Compare-"` appears in `parts[2]` (production, current downloads) or only later, in `parts[4]` (legacy). This is why `run_bot_rule_compare` sanitizes bot rule names with `sanitize_bot_rule_name` (replacing `_` with `-`) before embedding them in filenames — an underscore in the rule name would otherwise split it across multiple `_`-delimited parts and misroute the parse into the legacy branch, corrupting the reconstructed `segmentId`.
+
 **`summary_total_only`**: Delegates entirely to the base `transform_report`. Used for topline metrics and other aggregate reports.
 
 ### Concatenation (`concatenate.py`)
@@ -356,7 +358,9 @@ The dimension is derived from `reportType` by stripping the `"botInvestigationMe
 - The output is written as `"\n".join([header_line] + data_lines) + "\n"`.
 - Returns the count of files concatenated (0 if none matched).
 
-The composite job runner names the concatenation output `{step_id}_concat.csv` within the CSV folder.
+The composite job runner names the concatenation output `{step_id}_concat.csv` within the CSV folder (or `{prefix}_{job_name}.csv` in the client/job output folder, when `output.job_name` is set).
+
+A `transform_concat` step with `transform.type: bot_rule_compare` can set `transform.split_by_bot_rule: true` to produce one CSV per bot rule instead of a single combined file. It auto-detects the bot rule list from the sibling `bot_rule_compare`/`report_download` step's `bot_rules` source in the same composite job (no separate list needed), then calls `concatenate_csvs` once per rule with a pattern matching that rule's sanitized name, writing `{prefix}_{job_name}_{ruleName}.csv` per rule. Step output uses `concatenated_files` (a dict of rule name → path) instead of `concatenated_file` in this mode.
 
 ---
 
@@ -569,7 +573,7 @@ The composite job YAML can set `test_mode: true` and a `test_limits` block. When
 
 For each RSID-rule pair, every report in the `bot_rule_compare` report group is visited **except** the one named in `rule.report_to_skip`. For the AllTraffic variant, `segments=[]` is passed to `build_request`, so no segment filter is applied.
 
-The filename includes the investigation name (which encodes the bot rule name and comparison version) so that each bot rule gets a distinct AllTraffic output file even though the API request bodies for the same RSID+report+date combination are identical across rules.
+The filename includes the investigation name (which encodes the bot rule name and comparison version) so that each bot rule gets a distinct AllTraffic output file even though the API request bodies for the same RSID+report+date combination are identical across rules. The bot rule name is passed through `sanitize_bot_rule_name` first, which replaces `_` with `-` — see the `bot_rule_compare` filename-parsing note under Transforms above.
 
 ### Segment variant requests
 

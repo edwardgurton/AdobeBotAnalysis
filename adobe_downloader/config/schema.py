@@ -40,7 +40,12 @@ class PostProcessing(BaseModel):
 
 
 class OutputConfig(BaseModel):
-    base_folder: str
+    # extra="allow" so unrecognized fields (e.g. a misplaced compare_list_path)
+    # surface in __pydantic_extra__ instead of being silently dropped — the CLI
+    # warns about them right after config load.
+    model_config = ConfigDict(extra="allow")
+
+    base_folder: str = "C:/Adobe_Downloads"
     job_name: str | None = None
 
 
@@ -124,6 +129,27 @@ class SegmentCreationConfig(BaseModel):
     validate_list_path: str | None = None
     segment_list_path: str | None = None
 
+    @model_validator(mode="after")
+    def _require_list_paths(self) -> "SegmentCreationConfig":
+        missing = [
+            name
+            for name, value in (
+                ("compare_list_path", self.compare_list_path),
+                ("validate_list_path", self.validate_list_path),
+                ("segment_list_path", self.segment_list_path),
+            )
+            if value is None
+        ]
+        if missing:
+            raise ValueError(
+                "segment_creation is missing required field(s): "
+                + ", ".join(missing)
+                + ". These belong under 'segment_creation:', not 'output:' "
+                "('output:' only supports base_folder/job_name) - without them, "
+                "segments are still created via the API but no local list is written."
+            )
+        return self
+
 
 class RsidUpdateConfig(BaseModel):
     investigation_threshold: int = 1000
@@ -188,9 +214,7 @@ class ReportDownloadConfig(BaseModel):
     def _check_report_spec(self) -> "ReportDownloadConfig":
         specs = [self.report_ref, self.report_group, self.report]
         if sum(s is not None for s in specs) != 1:
-            raise ValueError(
-                "Exactly one of report_ref, report_group, or report must be specified"
-            )
+            raise ValueError("Exactly one of report_ref, report_group, or report must be specified")
         return self
 
 
@@ -276,6 +300,27 @@ class CompositeJobConfig(BaseModel):
     test_mode: bool = False
     test_limits: TestLimits = Field(default_factory=TestLimits)
     output: OutputConfig | None = None
+
+    @model_validator(mode="after")
+    def _require_job_name_for_transform_concat(self) -> "CompositeJobConfig":
+        # report_download / bot_rule_compare only get a job-specific JSON subfolder
+        # when output.job_name is set (see make_output_path / run_bot_rule_compare).
+        # Without it, every such step writes into the shared per-client JSON folder,
+        # so a downstream transform_concat can silently sweep up other jobs' files too.
+        api_download_steps = {"report_download", "bot_rule_compare"}
+        step_types = {s.step for s in self.steps}
+        downloads = sorted(step_types & api_download_steps)
+        if downloads and "transform_concat" in step_types:
+            if self.output is None or not self.output.job_name:
+                raise ValueError(
+                    f"steps include {', '.join(downloads)} plus transform_concat, but "
+                    "output.job_name is not set. Without job_name, downloaded JSON files "
+                    "land in the shared '<base_folder>/<client>/JSON/' folder instead of a "
+                    "job-specific subfolder, so transform_concat can silently sweep up "
+                    "every other job's files for this client. Set output.job_name to fix "
+                    "this."
+                )
+        return self
 
 
 # ---------------------------------------------------------------------------

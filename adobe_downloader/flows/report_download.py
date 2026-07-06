@@ -54,8 +54,7 @@ def make_output_path(
     extra_part = f"_{file_name_extra}" if file_name_extra else ""
     seg_part = f"DIMSEG{segment_id}_" if segment_id else ""
     filename = (
-        f"{client}_{report_name}{extra_part}_"
-        f"{seg_part}{date_range.from_date}_{date_range.to}.json"
+        f"{client}_{report_name}{extra_part}_{seg_part}{date_range.from_date}_{date_range.to}.json"
     )
     return folder / filename
 
@@ -152,10 +151,13 @@ async def download_report(
     output_path: Path,
 ) -> dict[str, Any]:
     """Submit one ranked report request and write the JSON response to output_path."""
+    from adobe_downloader.utils.winpath import to_long_path
+
     _log.info("Downloading -> %s", output_path.name)
     data = await client.get_report(request_body)
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    output_path.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
+    long_path = to_long_path(output_path)
+    long_path.parent.mkdir(parents=True, exist_ok=True)
+    long_path.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
     row_count = len(data.get("rows", []))
     _log.info("Saved %d rows -> %s", row_count, output_path)
     return data
@@ -187,8 +189,8 @@ async def run_report_download(
     """
     from adobe_downloader.core.request_builder import build_request
     from adobe_downloader.state_manager import compute_request_key
-
     from adobe_downloader.utils.rsid_lookup import resolve_rsid_names
+    from adobe_downloader.utils.winpath import to_long_path
 
     date_intervals = list(iterate_dates(date_range, interval))
     rsid_list = resolve_rsid_names(list(iterate_rsids(rsids)))
@@ -251,9 +253,9 @@ async def run_report_download(
                     try:
                         if canonical_id is not None:
                             canonical_path = sm.get_canonical_output_path(canonical_id)
-                            if canonical_path and canonical_path.exists():
-                                out_path.parent.mkdir(parents=True, exist_ok=True)
-                                shutil.copy2(canonical_path, out_path)
+                            if canonical_path and to_long_path(canonical_path).exists():
+                                to_long_path(out_path).parent.mkdir(parents=True, exist_ok=True)
+                                shutil.copy2(to_long_path(canonical_path), to_long_path(out_path))
                                 sm.mark_complete(req_id, out_path)
                                 _log.info("COPY %s / %s -> %s", rsid, rd.name, out_path.name)
                                 result.copied += 1

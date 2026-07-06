@@ -4,6 +4,8 @@ import logging
 import re
 from pathlib import Path
 
+from adobe_downloader.utils.winpath import to_long_path
+
 _log = logging.getLogger(__name__)
 
 
@@ -23,7 +25,7 @@ def concatenate_csvs(
     """
     regex = re.compile(pattern.replace("*", ".*"))
     csv_files = sorted(
-        f for f in folder.iterdir() if regex.search(f.name) and f.suffix == ".csv"
+        f for f in to_long_path(folder).iterdir() if regex.search(f.name) and f.suffix == ".csv"
     )
 
     if not csv_files:
@@ -51,10 +53,11 @@ def concatenate_csvs(
         _log.warning("No non-empty CSV files found in %s", folder)
         return 0
 
-    output_path.parent.mkdir(parents=True, exist_ok=True)
+    long_output_path = to_long_path(output_path)
+    long_output_path.parent.mkdir(parents=True, exist_ok=True)
     content = "\n".join([",".join(header)] + data_lines)
     if not content.endswith("\n"):
         content += "\n"
-    output_path.write_text(content, encoding="utf-8")
+    long_output_path.write_text(content, encoding="utf-8")
     _log.info("Concatenated %d file(s) -> %s", len(csv_files), output_path)
     return len(csv_files)

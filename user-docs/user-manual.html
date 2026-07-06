@@ -300,6 +300,7 @@
       <li><a href="#report-definitions">Report Definitions</a></li>
       <li><a href="#segments">Segments</a></li>
       <li><a href="#test-mode">Test Mode</a></li>
+      <li><a href="#debug-mode">Debug Mode</a></li>
       <li><a href="#troubleshooting">Troubleshooting</a></li>
       <li><a href="#cli-reference">Full CLI Reference</a></li>
     </ul>
@@ -455,7 +456,7 @@ Casinoorg</code></pre>
       <p>Every request is recorded as <code>pending</code> before it runs and updated to <code>completed</code> or <code>failed</code> afterward. If the job is interrupted, re-running the same command resumes from where it left off. Completed requests are skipped. Use <code>--no-resume</code> to force a fresh start.</p>
 
       <h3>Transform types</h3>
-      <p>After downloading, JSON files are converted to CSV using a <em>transform type</em> that knows the structure of the downloaded data:</p>
+      <p>JSON files are converted to CSV using a <em>transform type</em> that knows the structure of the downloaded data. This conversion is <strong>not</strong> automatic on a standalone <code>report_download</code> job &mdash; that job type only downloads. To transform and concatenate afterward, either run <code>adobe-downloader transform</code> manually, or add a <code>transform_concat</code> step to a <a href="#flow-composite">composite job</a>.</p>
       <div class="table-wrap">
         <table>
           <thead><tr><th>type</th><th>Used for</th></tr></thead>
@@ -479,6 +480,13 @@ Casinoorg</code></pre>
     state/         SQLite state databases
     config_archive/  copies of the config file saved after each run
     job_history.jsonl  append-only run history log</code></pre>
+      <p>If <code>output.job_name</code> is set, an extra folder for that name is inserted between the client and <code>JSON</code>/<code>CSV</code>, so downloads from different investigations don't mix in the same folder:</p>
+      <pre><code>&lt;base_folder&gt;/
+  &lt;client&gt;/
+    &lt;job_name&gt;/
+      JSON/
+      CSV/</code></pre>
+      <p>See <a href="#flow-composite">Composite Jobs &rarr; Naming with job_name</a> for how this also affects the name of the final concatenated CSV.</p>
     </section>
 
     <!-- ============================================================== -->
@@ -752,23 +760,48 @@ segment_creation:
 output:
   base_folder: "/Users/edwardgurton/Documents/Work/Adobe Downloads"</code></pre>
 
-      <h3>Input CSV format</h3>
-      <p>The input CSV must have the following columns (header row required):</p>
+      <h3 id="segment-creation-csv-format">Input CSV format</h3>
+      <p>The input CSV must have the following columns, with these exact header names in the header row (parsed via <code>csv.DictReader</code>, so the names must match verbatim):</p>
       <div class="table-wrap">
         <table>
           <thead><tr><th>Column</th><th>Values</th><th>Description</th></tr></thead>
           <tbody>
-            <tr><td><code>Compare / Validate</code></td><td><code>Compare</code>, <code>Validate</code>, <code>Compare - Special</code>, <code>Validate - Special</code></td><td>Determines which output list the segment appears in.</td></tr>
-            <tr><td><code>Segment Name</code></td><td>string</td><td>Human-readable segment name (also used as description).</td></tr>
-            <tr><td><code>RSID Clean Name</code></td><td>string</td><td>Clean name of the report suite the segment is scoped to.</td></tr>
-            <tr><td><code>Dimension 1</code></td><td>friendly name</td><td>First dimension for the segment condition (e.g. <code>BrowserType</code>).</td></tr>
-            <tr><td><code>Dimension 1 Item</code></td><td>string</td><td>Value to match for dimension 1.</td></tr>
-            <tr><td><code>Dimension 2</code></td><td>friendly name or blank</td><td>Optional second dimension condition.</td></tr>
-            <tr><td><code>Dimension 2 Item</code></td><td>string or blank</td><td>Value to match for dimension 2.</td></tr>
+            <tr><td><code>CompareValidate</code></td><td><code>Compare</code>, <code>Validate</code>, <code>Compare - Special</code>, <code>Validate - Special</code></td><td>Determines which output list the segment appears in.</td></tr>
+            <tr><td><code>SegmentName</code></td><td>string</td><td>Human-readable segment name (also used to derive the bot rule name).</td></tr>
+            <tr><td><code>RSIDCleanName</code></td><td>string</td><td>Clean name of the report suite the segment is scoped to. Ignored on <code>- Special</code> rows.</td></tr>
+            <tr><td><code>Dimension1</code></td><td>friendly name</td><td>First dimension for the segment condition (e.g. <code>BrowserType</code>). On <code>- Special</code> rows this value is written through as-is to <code>reportToIgnore</code> instead of being resolved.</td></tr>
+            <tr><td><code>Dimension1Item</code></td><td>string</td><td>Value to match for dimension 1. Ignored on <code>- Special</code> rows.</td></tr>
+            <tr><td><code>Dimension2</code></td><td>friendly name or blank</td><td>Optional second dimension condition. Ignored on <code>- Special</code> rows.</td></tr>
+            <tr><td><code>Dimension2Item</code></td><td>string or blank</td><td>Required if <code>Dimension2</code> is set. Ignored on <code>- Special</code> rows.</td></tr>
           </tbody>
         </table>
       </div>
       <p>Dimensions that require a numeric lookup (such as <code>BrowserType</code>, <code>OperatingSystem</code>, <code>MobileManufacturer</code>, <code>MonitorResolution</code>) are automatically resolved using the lookup files in <code>data/lookups/</code>.</p>
+      <p><code>Dimension1</code> and <code>Dimension2</code> must be one of the following friendly names (on non-<code>Special</code> rows — any other value raises an error before segment creation):</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Friendly name(s)</th><th>Adobe variable</th><th>Needs numeric lookup?</th></tr></thead>
+          <tbody>
+            <tr><td><code>PageURL</code>, <code>Page URL</code></td><td><code>variables/evar2</code></td><td>No</td></tr>
+            <tr><td><code>Domain</code></td><td><code>variables/filtereddomain</code></td><td>No</td></tr>
+            <tr><td><code>UserAgent</code>, <code>User Agent</code></td><td><code>variables/evar23</code></td><td>No</td></tr>
+            <tr><td><code>Region</code>, <code>Regions</code></td><td><code>variables/georegion</code></td><td>Yes</td></tr>
+            <tr><td><code>OperatingSystem</code>, <code>OperatingSystems</code>, <code>Operating System</code>, <code>Operating Systems</code></td><td><code>variables/operatingsystem</code></td><td>No</td></tr>
+            <tr><td><code>MonitorResolution</code>, <code>Monitor Resolution</code></td><td><code>variables/monitorresolution</code></td><td>Yes</td></tr>
+            <tr><td><code>MobileManufacturer</code>, <code>Mobile Manufacturer</code></td><td><code>variables/mobilemanufacturer</code></td><td>No</td></tr>
+            <tr><td><code>MarketingChannel</code>, <code>Marketing Channel</code></td><td><code>variables/marketingchannel</code></td><td>Yes</td></tr>
+            <tr><td><code>BrowserType</code>, <code>Browser Type</code></td><td><code>variables/browsertype</code></td><td>Yes</td></tr>
+            <tr><td><code>ReferringDomain</code>, <code>Referring Domain</code></td><td><code>variables/referringdomain</code></td><td>No</td></tr>
+            <tr><td><code>Country</code>, <code>Countries</code></td><td><code>variables/geocountry</code></td><td>Yes</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>This whitelist is defined in <code>data/segment_creation_dimensions.yaml</code>, loaded at runtime by <code>adobe_downloader/segments/create_segment.py</code>. Add a new dimension with:</p>
+      <pre><code>adobe-downloader add-dimension --name Country --name Countries \
+  --adobe-variable variables/geocountry --requires-lookup</code></pre>
+      <p><code>--name</code> may be repeated to register aliases; <code>--requires-lookup</code> marks a dimension whose values are numeric IDs, which then needs a <code>data/lookups/&lt;cleaned-variable&gt;/lookup.txt</code> file (populate one with a <code>lookup_generation</code> job, or by hand). The command refuses to overwrite an existing name — edit <code>data/segment_creation_dimensions.yaml</code> directly to change or remove one.</p>
+      <p><code>Compare - Special</code> / <code>Validate - Special</code> rows skip the Adobe API call entirely — the placeholder segment ID <code>UPDATE-SEGMENT-ID</code> is written to the output CSV instead, for cases where the segment already exists and just needs to be added to the compare/validate list by hand.</p>
+      <p>A ready-to-copy example with both single- and dual-condition rows is checked into the repo at <code>jobs/inputs/segment_creation_lists/segmentCreationTemplate.csv</code>.</p>
 
       <h3>Output files produced</h3>
       <div class="table-wrap">
@@ -959,6 +992,35 @@ steps:
         </table>
       </div>
 
+      <h3 id="composite-job-name">Naming output with job_name</h3>
+      <p>Set <code>output.job_name</code> on the composite job to give an investigation a consistent, human-readable name across its folder structure and final output file:</p>
+      <pre><code>output:
+  base_folder: "C:/Adobe_Downloads"
+  job_name: "casinoorg_seo_homepage_bot_investigation_90d"</code></pre>
+      <p>This does two things:</p>
+      <ul>
+        <li>Every <code>report_download</code>, <code>bot_rule_compare</code>, and <code>final_bot_metrics</code> step writes JSON/CSV under a <code>&lt;job_name&gt;/</code> subfolder instead of directly under the client folder (see <a href="#concepts">Output folder layout</a>).</li>
+        <li>A <code>transform_concat</code> step's final concatenated CSV is named with a prefix from its <code>transform.type</code>, and written into that same <code>&lt;job_name&gt;/</code> folder:</li>
+      </ul>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>transform.type</th><th>Prefix</th></tr></thead>
+          <tbody>
+            <tr><td><code>bot_investigation</code></td><td><code>INVESTIGATION_</code></td></tr>
+            <tr><td><code>bot_validation</code></td><td><code>VALIDATION_</code></td></tr>
+            <tr><td><code>bot_rule_compare</code></td><td><code>COMPARE_</code></td></tr>
+            <tr><td><code>final_bot_metrics</code></td><td><code>FINALMETRICS_</code></td></tr>
+            <tr><td><code>standard</code></td><td><code>REPORT_</code></td></tr>
+            <tr><td><code>summary_total</code></td><td><code>SUMMARY_</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>For example, the config above with a <code>transform_concat</code> step of <code>type: bot_investigation</code> produces:</p>
+      <pre><code>C:/Adobe_Downloads/Legend/casinoorg_seo_homepage_bot_investigation_90d/JSON/...
+C:/Adobe_Downloads/Legend/casinoorg_seo_homepage_bot_investigation_90d/CSV/...
+C:/Adobe_Downloads/Legend/casinoorg_seo_homepage_bot_investigation_90d/INVESTIGATION_casinoorg_seo_homepage_bot_investigation_90d.csv</code></pre>
+      <p><strong>If <code>output.job_name</code> is left unset</strong>, the <code>transform_concat</code> step falls back to naming its output <code>&lt;step_id&gt;_concat.csv</code> in the CSV folder &mdash; e.g. a step with <code>id: transform</code> produces the generic <code>transform_concat.csv</code>. Always set <code>job_name</code> to get a meaningful, distinguishable output file.</p>
+
       <h3>depends_on</h3>
       <p>Use <code>depends_on: &lt;step_id&gt;</code> to ensure a step only runs after its dependency has completed successfully. If the dependency has not completed, the pipeline halts with an error.</p>
 
@@ -1013,6 +1075,7 @@ steps:
             <tr><td><code>client</code></td><td>string</td><td><span class="pill req">required</span></td><td>Client name, must match a file <code>credentials/client&lt;Name&gt;.yaml</code>.</td></tr>
             <tr><td><code>description</code></td><td>string</td><td><code>""</code></td><td>Free-text description shown in validate output and history.</td></tr>
             <tr><td><code>output.base_folder</code></td><td>string</td><td><span class="pill req">required</span></td><td>Root directory for all output. Client sub-folder is appended automatically.</td></tr>
+            <tr><td><code>output.job_name</code></td><td>string or null</td><td><code>null</code></td><td>Optional investigation name. Inserts a <code>&lt;job_name&gt;/</code> subfolder for JSON/CSV output and names a composite job's final concatenated CSV. See <a href="#composite-job-name">Naming with job_name</a>.</td></tr>
           </tbody>
         </table>
       </div>
@@ -1100,7 +1163,7 @@ steps:
         <table>
           <thead><tr><th>Field</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
           <tbody>
-            <tr><td><code>segment_creation.input_csv</code></td><td>string</td><td><span class="pill req">required</span></td><td>Path to the input CSV file listing bot rules to create as segments.</td></tr>
+            <tr><td><code>segment_creation.input_csv</code></td><td>string</td><td><span class="pill req">required</span></td><td>Path to the input CSV file listing bot rules to create as segments. See <a href="#segment-creation-csv-format">Input CSV format</a> for the required columns.</td></tr>
             <tr><td><code>segment_creation.share_with_users</code></td><td>list[string]</td><td>[]</td><td>Adobe user IDs to share created segments with.</td></tr>
             <tr><td><code>segment_creation.test_mode_row</code></td><td>int or null</td><td>null</td><td>If set, only process this 1-based row number (for testing).</td></tr>
             <tr><td><code>segment_creation.compare_list_path</code></td><td>string</td><td>null</td><td>Directory to write the Compare bot rules JSON list.</td></tr>
@@ -1109,6 +1172,7 @@ steps:
           </tbody>
         </table>
       </div>
+      <p>See <a href="#flow-segment-creation">Flow: Segment Creation</a> for the full input CSV specification.</p>
 
       <h3>lookup_generation block</h3>
       <div class="table-wrap">
@@ -1370,6 +1434,45 @@ test_limits:
     </section>
 
     <!-- ============================================================== -->
+    <section id="debug-mode">
+      <h2>Debug Mode</h2>
+
+      <p>Add <code>--debug</code> to any <code>run</code> or <code>validate-output</code> command to get full API transparency — every request sent and every error response received is printed to the console.</p>
+
+      <pre><code>adobe-downloader run --config jobs/casinoorg_seo_homepage_bot_investigation_90d_full.yaml --debug
+adobe-downloader validate-output --config jobs/... --retry --debug</code></pre>
+
+      <h3>What gets printed</h3>
+      <p>For every API call (GET and POST):</p>
+      <ul>
+        <li><strong>Method + URL</strong></li>
+        <li><strong>Request headers</strong> — the Authorization token is always masked as <code>Bearer ***</code>; all other headers are shown verbatim.</li>
+        <li><strong>Request body</strong> (POST only) — pretty-printed JSON, capped at 20 000 characters.</li>
+      </ul>
+      <p>On any HTTP error (4xx or 5xx):</p>
+      <ul>
+        <li><strong>Response status + reason phrase</strong></li>
+        <li><strong>Full response body</strong> — Adobe's error message, capped at 20 000 characters. This is the most useful piece when diagnosing 403 / 400 errors.</li>
+      </ul>
+
+      <h3>Silent file log</h3>
+      <p>The same DEBUG information is also written to the rotating log file at <code>&lt;base_folder&gt;/&lt;client&gt;/.logs/&lt;config-stem&gt;.log</code> on <em>every</em> run, regardless of whether <code>--debug</code> is passed. If a job has already failed, check the log file before re-running with <code>--debug</code>.</p>
+
+      <h3>Diagnosing 403 errors on composite jobs</h3>
+      <p>A common source of confusion: a composite job fails with a 403 error, but a standalone <code>report_download</code> job using the same parameters succeeds.</p>
+
+      <p>This happens because the composite job runner executes a <strong>pre-flight metric validation</strong> step before each <code>report_download</code> step. The preflight makes one additional probe API request per RSID (1 row, 1 day, all metrics in the report group). If any metric is not accessible for the RSID &mdash; or if the probe request itself triggers a permission error &mdash; the job stops before downloading anything.</p>
+
+      <p>Run with <code>--debug</code> to see the preflight probe body and Adobe's exact error response:</p>
+
+      <pre><code>adobe-downloader run --config jobs/casinoorg_seo_homepage_bot_investigation_90d_full.yaml --debug</code></pre>
+
+      <div class="callout warn">
+        <p><strong>Token security:</strong> Debug output includes all request headers except the Authorization token, which is always replaced with <code>Bearer ***</code>. Never share raw debug output that still contains credentials.</p>
+      </div>
+    </section>
+
+    <!-- ============================================================== -->
     <section id="troubleshooting">
       <h2>Troubleshooting</h2>
 
@@ -1442,8 +1545,8 @@ test_limits:
           <tbody>
             <tr>
               <td><code>adobe-downloader run</code></td>
-              <td><code>-c</code> config, <code>-r</code> report, <code>--no-resume</code>, <code>--test</code></td>
-              <td>Execute a job (any type). Primary command.</td>
+              <td><code>-c</code> config, <code>-r</code> report, <code>--no-resume</code>, <code>--test</code>, <code>--debug</code></td>
+              <td>Execute a job (any type). Primary command. <code>--debug</code> prints all API request headers, bodies, and error responses to the console.</td>
             </tr>
             <tr>
               <td><code>adobe-downloader validate</code></td>
@@ -1467,8 +1570,8 @@ test_limits:
             </tr>
             <tr>
               <td><code>adobe-downloader validate-output</code></td>
-              <td><code>-c</code> config, <code>--dry-run</code>, <code>--retry</code></td>
-              <td>Check all expected output files are present and non-empty for a report_download job.</td>
+              <td><code>-c</code> config, <code>--dry-run</code>, <code>--retry</code>, <code>--debug</code></td>
+              <td>Check all expected output files are present and non-empty for a report_download job. <code>--debug</code> enables full API logging when <code>--retry</code> triggers re-downloads.</td>
             </tr>
             <tr>
               <td><code>adobe-downloader transform</code></td>
@@ -1509,6 +1612,11 @@ test_limits:
               <td><code>adobe-downloader search-lookup</code></td>
               <td><code>-d</code> dimension, <code>-v</code> value</td>
               <td>Search a local lookup file for a dimension value's numeric item ID.</td>
+            </tr>
+            <tr>
+              <td><code>adobe-downloader add-dimension</code></td>
+              <td><code>-n</code> name (repeatable), <code>-a</code> adobe-variable, <code>-d</code> description, <code>--[no-]requires-lookup</code></td>
+              <td>Register a new friendly dimension name for <a href="#segment-creation-csv-format">segment_creation</a>'s <code>Dimension1</code>/<code>Dimension2</code> columns.</td>
             </tr>
           </tbody>
         </table>

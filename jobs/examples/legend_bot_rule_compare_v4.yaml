@@ -8,13 +8,14 @@ date_range:
 
 output:
   base_folder: "/Users/edwardgurton/Documents/Work/Adobe Downloads"
+  job_name: "BotRuleCompareAdHocSeoHomepageNLV4"
 
 steps:
   - step: bot_rule_compare
     id: download_compare
     rsids:
       source: file
-      file: data/rsid_lists/legend_investigation.txt
+      file: data\rsid_lists\botInvestigationMinThresholdVisits.txt
       batch_size: 12
     bot_rules:
       source: file

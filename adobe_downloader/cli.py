@@ -8,7 +8,12 @@ import click
 from pydantic import ValidationError
 
 from adobe_downloader import __version__
-from adobe_downloader.config.loader import check_referenced_files, credentials_exist, load_config
+from adobe_downloader.config.loader import (
+    check_job_name_length,
+    check_referenced_files,
+    credentials_exist,
+    load_config,
+)
 
 
 @click.group()
@@ -57,13 +62,17 @@ def validate(config: Path, check_credentials: bool) -> None:
         for err in file_errors:
             click.secho(f"  {err}", fg="yellow")
 
+    job_name_warnings = check_job_name_length(job)
+    for warning in job_name_warnings:
+        click.secho(f"  Warning: {warning}", fg="yellow")
+
     if check_credentials and not credentials_exist(job.client):
         click.secho(
             f"  Warning: no credentials file found for client '{job.client}'",
             fg="yellow",
         )
 
-    if file_errors:
+    if file_errors or job_name_warnings:
         click.secho("Validation completed with warnings.", fg="yellow")
         sys.exit(2)
 
@@ -157,6 +166,18 @@ def run(config: Path, report: str | None, no_resume: bool, test_mode: bool, debu
         click.secho(f"Failed to load config: {exc}", fg="red", bold=True)
         sys.exit(1)
 
+    output = getattr(job, "output", None)
+    extra_output_fields = getattr(output, "__pydantic_extra__", None) or {}
+    if extra_output_fields:
+        click.secho(
+            "Warning: unrecognized field(s) in 'output:' block (ignored): "
+            + ", ".join(sorted(extra_output_fields)),
+            fg="yellow",
+        )
+
+    for warning in check_job_name_length(job):
+        click.secho(f"Warning: {warning}", fg="yellow")
+
     if isinstance(job, SegmentCreationJobConfig):
         _run_segment_creation_job(job, debug=debug)
         return
@@ -245,6 +266,7 @@ def run(config: Path, report: str | None, no_resume: bool, test_mode: bool, debu
             )
 
     from adobe_downloader.utils.logging import setup_logging
+
     setup_logging(
         Path(job.output.base_folder),
         job.client,
@@ -252,7 +274,9 @@ def run(config: Path, report: str | None, no_resume: bool, test_mode: bool, debu
         debug=debug,
     )
     if debug:
-        click.secho("Debug mode enabled — API request details will be printed to console.", fg="yellow")
+        click.secho(
+            "Debug mode enabled — API request details will be printed to console.", fg="yellow"
+        )
 
     date_intervals = list(iterate_dates(job.date_range, job.interval))
     rsid_list = list(iterate_rsids(job.rsids))
@@ -374,7 +398,9 @@ def _run_composite_job(
         debug=debug,
     )
     if debug:
-        click.secho("Debug mode enabled — API request details will be printed to console.", fg="yellow")
+        click.secho(
+            "Debug mode enabled — API request details will be printed to console.", fg="yellow"
+        )
 
     click.echo(f"Job ID     : {job_id}")
     click.echo(f"Steps      : {len(job.steps)}")
@@ -478,7 +504,9 @@ def _run_rsid_update_job(job: object, *, debug: bool = False) -> None:
         debug=debug,
     )
     if debug:
-        click.secho("Debug mode enabled — API request details will be printed to console.", fg="yellow")
+        click.secho(
+            "Debug mode enabled — API request details will be printed to console.", fg="yellow"
+        )
 
     if job.date_range is None:
         click.secho("date_range is required for rsid_update jobs.", fg="red", bold=True)
@@ -542,7 +570,9 @@ def _run_segment_creation_job(job: object, *, debug: bool = False) -> None:
 
     setup_logging(None, job.client, debug=debug)
     if debug:
-        click.secho("Debug mode enabled — API request details will be printed to console.", fg="yellow")
+        click.secho(
+            "Debug mode enabled — API request details will be printed to console.", fg="yellow"
+        )
     sc = job.segment_creation
     input_csv = Path(sc.input_csv)
     if not input_csv.exists():
@@ -619,7 +649,9 @@ def _run_lookup_generation_job(job: object, *, debug: bool = False) -> None:
 
     setup_logging(None, job.client, debug=debug)
     if debug:
-        click.secho("Debug mode enabled — API request details will be printed to console.", fg="yellow")
+        click.secho(
+            "Debug mode enabled — API request details will be printed to console.", fg="yellow"
+        )
     lg = job.lookup_generation
 
     if job.date_range is None:
@@ -1182,6 +1214,7 @@ def validate_output(config: Path, retry: bool, dry_run: bool, debug: bool) -> No
         sys.exit(1)
 
     from adobe_downloader.utils.logging import setup_logging
+
     setup_logging(
         Path(job.output.base_folder),
         job.client,
@@ -1189,7 +1222,9 @@ def validate_output(config: Path, retry: bool, dry_run: bool, debug: bool) -> No
         debug=debug,
     )
     if debug:
-        click.secho("Debug mode enabled — API request details will be printed to console.", fg="yellow")
+        click.secho(
+            "Debug mode enabled — API request details will be printed to console.", fg="yellow"
+        )
 
     ac = None
     sm = None

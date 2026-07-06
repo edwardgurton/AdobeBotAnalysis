@@ -89,7 +89,7 @@ Downloads Adobe Analytics ranked or summary reports for one or more RSIDs, date 
 | `test_limits` | `TestLimits` | no | Default: `max_rsids=3, max_date_intervals=2, max_segments=5` |
 | `resume` | bool | no | Default `true` |
 | `post_processing` | `PostProcessing` | no | Default: `delete_json_after_transform=false, zip_csvs_after_concat=true` |
-| `output.base_folder` | str | yes | Root output directory |
+| `output.base_folder` | str | no | Default `C:/Adobe_Downloads` |
 | `file_name_extra` | str | no | Injected into output filenames for disambiguation |
 | `bot_rules` | `BotRulesSource` | no | Used by bot_validation/bot_rule_compare flows |
 | `optimisation` | `OptimisationConfig` | no | `shared_reports=true` shares report results across bot rules |
@@ -104,7 +104,7 @@ Standalone transform + optional concatenation of existing JSON files. No API cal
 | `client` | str | yes | |
 | `transform` | `TransformConfig` | yes | `type`, `source_pattern`, `source_folder`, `output_subfolder`, `concat` |
 | `concat` | `ConcatConfig` | no | `enabled`, `file_pattern`, `custom_headers` (dict of col-index → header name) |
-| `output.base_folder` | str | yes | |
+| `output.base_folder` | str | no | Default `C:/Adobe_Downloads` |
 | `test_mode` | bool | no | |
 
 ### `segment_creation`
@@ -121,7 +121,7 @@ Reads a bot rule CSV, creates Adobe segments via API, writes compare/validate/se
 | `segment_creation.compare_list_path` | str | no | Output path for compare list file |
 | `segment_creation.validate_list_path` | str | no | Output path for validate list file |
 | `segment_creation.segment_list_path` | str | no | Output path for segment list JSON |
-| `output.base_folder` | str | yes | |
+| `output.base_folder` | str | no | Default `C:/Adobe_Downloads` |
 | `date_range` | `DateRange` | no | |
 
 ### `lookup_generation`
@@ -137,7 +137,7 @@ Downloads a dimension report with high row limit for building local lookup table
 | `lookup_generation.segments` | list[str] | no | Optional segment IDs |
 | `lookup_generation.output_file` | str | no | Explicit output path; auto-named in `data/lookups/` if null |
 | `date_range` | `DateRange` | yes | |
-| `output.base_folder` | str | yes | |
+| `output.base_folder` | str | no | Default `C:/Adobe_Downloads` |
 
 ### `rsid_update`
 
@@ -151,7 +151,7 @@ Fetches all report suites for a client, downloads topline metrics, writes filter
 | `rsid_update.validation_threshold` | int | no | Default 1000; minimum visits for validation list |
 | `rsid_update.include_virtual` | bool | no | Default `false`; include `vrs_`-prefixed suites |
 | `date_range` | `DateRange` | yes | |
-| `output.base_folder` | str | yes | Writes RSID list files here |
+| `output.base_folder` | str | no | Default `C:/Adobe_Downloads`; writes RSID list files here |
 
 ### `composite`
 
@@ -165,7 +165,7 @@ Orchestrates multiple steps sequentially with inter-step output references. Step
 | `date_range` | `DateRange` | no | Inherited by steps unless overridden per-step |
 | `test_mode` | bool | no | Propagated to all steps |
 | `test_limits` | `TestLimits` | no | |
-| `output.base_folder` | str | yes (for state DB) | |
+| `output.base_folder` | str | no | Default `C:/Adobe_Downloads` (for state DB) |
 
 ---
 
@@ -433,6 +433,11 @@ steps:
       type: bot_rule_compare
       source_pattern: ".*V4-Compare.*\\.json$"  # filter to this run's files only
       concat: true
+      # split_by_bot_rule: true   # one CSV per bot rule instead of a single combined
+      #                           # CSV. Reuses the bot_rules source already given to
+      #                           # download_compare above — no separate list needed.
+      #                           # Output keys: concatenated_files (dict of rule name
+      #                           # -> path) instead of concatenated_file.
 ```
 
 ### `composite` — final bot metrics flow
@@ -629,7 +634,7 @@ Default metrics: 4 clickout custom metrics.
 | Step type | `id` (output key) | Outputs produced | Can `depends_on` |
 |---|---|---|---|
 | `report_download` | any string | `job_id`, `json_folder`, `downloaded`, `skipped`, `copied` | any prior step |
-| `transform_concat` | any string | `csv_folder`, `concatenated_file`, `ok`, `failed` | typically `validate_output` or `report_download` |
+| `transform_concat` | any string | `csv_folder`, `concatenated_file`, `concatenated_files`, `ok`, `failed` | typically `validate_output` or `report_download` |
 | `segment_creation` | any string | `segment_list_file`, `compare_list_file`, `validate_list_file`, `created_count` | any prior step |
 | `validate_output` | any string | `missing_count` | `report_download` step |
 | `lookup_generation` | any string | `lookup_file` | any |

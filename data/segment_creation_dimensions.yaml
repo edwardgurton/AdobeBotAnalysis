@@ -1,0 +1,75 @@
+# Dimension whitelist for the `segment_creation` job's input CSV (Dimension1/Dimension2
+# columns). `names` lists every accepted friendly name (aliases) for that dimension;
+# `adobe_variable` is the Adobe Analytics variable ID; `requires_lookup: true` means the
+# CSV value must resolve through a data/lookups/<cleaned-variable>/lookup.txt file (see
+# the lookup_generation job type) rather than being sent to the API as a literal string.
+#
+# Add a new dimension with `adobe-downloader add-dimension`, or by appending an entry below.
+dimensions:
+- names:
+  - PageURL
+  - Page URL
+  adobe_variable: variables/evar2
+  description: Page URL
+  requires_lookup: false
+- names:
+  - Domain
+  adobe_variable: variables/filtereddomain
+  description: Domain
+  requires_lookup: false
+- names:
+  - UserAgent
+  - User Agent
+  adobe_variable: variables/evar23
+  description: User Agent
+  requires_lookup: false
+- names:
+  - Region
+  - Regions
+  adobe_variable: variables/georegion
+  description: Region
+  requires_lookup: true
+- names:
+  - OperatingSystem
+  - OperatingSystems
+  - Operating System
+  - Operating Systems
+  adobe_variable: variables/operatingsystem
+  description: Operating Systems
+  requires_lookup: false
+- names:
+  - MonitorResolution
+  - Monitor Resolution
+  adobe_variable: variables/monitorresolution
+  description: Monitor Resolution
+  requires_lookup: true
+- names:
+  - MobileManufacturer
+  - Mobile Manufacturer
+  adobe_variable: variables/mobilemanufacturer
+  description: Mobile Manufacturer
+  requires_lookup: false
+- names:
+  - MarketingChannel
+  - Marketing Channel
+  adobe_variable: variables/marketingchannel
+  description: Marketing Channel
+  requires_lookup: true
+- names:
+  - BrowserType
+  - Browser Type
+  adobe_variable: variables/browsertype
+  description: Browser Type
+  requires_lookup: true
+- names:
+  - ReferringDomain
+  - Referring Domain
+  adobe_variable: variables/referringdomain
+  description: Referring Domain
+  requires_lookup: false
+- names:
+  - Country
+  - Countries
+  adobe_variable: variables/geocountry
+  description: Country
+  requires_lookup: true

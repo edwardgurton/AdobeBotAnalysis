@@ -5,3 +5,4 @@ __pycache__/
 # OAuth credentials — never commit
 credentials/
 .claude/settings.local.json
+.claude/settings.local.json

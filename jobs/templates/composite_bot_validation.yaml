@@ -8,6 +8,11 @@ date_range:
 
 output:
   base_folder: "/Users/edwardgurton/Documents/Work/Adobe Downloads"
+  # Keep job_name <= 15 chars. bot_validation filenames already embed a long
+  # per-rule identifier (botRuleName + rsidName), so a verbose job_name is what
+  # tips the combined path over Windows' 260-char MAX_PATH limit.
+  # `adobe-downloader validate`/`run` warn if this is exceeded.
+  job_name: "<job-name>"
 
 steps:
   - step: segment_creation

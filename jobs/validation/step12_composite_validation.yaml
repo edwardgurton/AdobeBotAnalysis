@@ -8,6 +8,7 @@ description: >
 
 output:
   base_folder: C:/Users/EdwardGurton/Documents/adobe_test_output/
+  job_name: "Step12CompositeValidation"
 
 steps:
   - step: report_download

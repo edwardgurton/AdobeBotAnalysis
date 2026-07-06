@@ -7,12 +7,14 @@ from pathlib import Path
 from typing import Any
 
 from adobe_downloader.config.schema import DateRange, RsidSource, SegmentSource
+from adobe_downloader.flows.bot_rule_compare import sanitize_bot_rule_name
 from adobe_downloader.flows.report_download import (
     iterate_dates,
     iterate_rsids,
     iterate_segments,
     make_output_path,
 )
+from adobe_downloader.utils.winpath import to_long_path
 
 _log = logging.getLogger(__name__)
 
@@ -67,7 +69,8 @@ def enumerate_bot_rule_compare_paths(
     for clean_name in rsid_clean_names:
         for bot_rule in bot_rules:
             investigation_name = (
-                f"{clean_name}-{bot_rule.segment_name}-Compare-V{comparison_round}"
+                f"{clean_name}-{sanitize_bot_rule_name(bot_rule.segment_name)}"
+                f"-Compare-V{comparison_round:g}"
             )
             for report_def in report_defs:
                 if report_def.name == bot_rule.report_to_skip:
@@ -104,7 +107,8 @@ def check_output_files(
     valid: list[Path] = []
     missing_or_empty: list[Path] = []
     for p in expected_paths:
-        if p.exists() and p.stat().st_size > 0:
+        long_p = to_long_path(p)
+        if long_p.exists() and long_p.stat().st_size > 0:
             valid.append(p)
         else:
             missing_or_empty.append(p)
@@ -153,7 +157,9 @@ async def run_validate_output(
 
     _log.info(
         "validate-output: %d expected, %d valid, %d missing/empty",
-        len(expected), len(valid), len(missing),
+        len(expected),
+        len(valid),
+        len(missing),
     )
     for p in missing[:10]:
         _log.warning("  missing: %s", p)
@@ -183,9 +189,7 @@ async def run_validate_output(
         )
 
         valid, missing = check_output_files(expected)
-        _log.info(
-            "post-retry: %d valid, %d still missing", len(valid), len(missing)
-        )
+        _log.info("post-retry: %d valid, %d still missing", len(valid), len(missing))
 
     return {
         "total": len(expected),

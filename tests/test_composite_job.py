@@ -696,6 +696,150 @@ class TestTransformConcatStep:
         assert "csv_folder" in result
 
 
+class TestTransformConcatSplitByBotRule:
+    async def test_split_produces_one_file_per_bot_rule(self, tmp_path: Path) -> None:
+        json_folder = tmp_path / "Legend" / "TestJob" / "JSON"
+        json_folder.mkdir(parents=True)
+
+        files = [
+            "Legend_botInvestigationMetricsByBrowser_Coverscom-RuleA-Compare-V1"
+            "-Segment_2025-01-01_2025-01-02.json",
+            "Legend_botInvestigationMetricsByBrowser_Coverscom-RuleA-Compare-V1"
+            "-AllTraffic_2025-01-01_2025-01-02.json",
+            "Legend_botInvestigationMetricsByBrowser_Coverscom-RuleB-Compare-V1"
+            "-Segment_2025-01-01_2025-01-02.json",
+            "Legend_botInvestigationMetricsByBrowser_Coverscom-RuleB-Compare-V1"
+            "-AllTraffic_2025-01-01_2025-01-02.json",
+        ]
+        for name in files:
+            (json_folder / name).write_text("{}")
+
+        step_outputs = {"download_compare": {"json_folder": str(json_folder)}}
+
+        job = CompositeJobConfig.model_validate(
+            {
+                "job_type": "composite",
+                "client": "Legend",
+                "output": {"base_folder": str(tmp_path), "job_name": "TestJob"},
+                "steps": [
+                    {
+                        "step": "bot_rule_compare",
+                        "id": "download_compare",
+                        "bot_rules": {
+                            "source": "inline",
+                            "rules": [
+                                {
+                                    "segment_id": "s1",
+                                    "segment_name": "RuleA",
+                                    "report_to_skip": "Domain",
+                                },
+                                {
+                                    "segment_id": "s2",
+                                    "segment_name": "RuleB",
+                                    "report_to_skip": "Domain",
+                                },
+                            ],
+                        },
+                    },
+                    {
+                        "step": "transform_concat",
+                        "id": "transform",
+                        "depends_on": "download_compare",
+                        "transform": {
+                            "type": "bot_rule_compare",
+                            "source_pattern": ".*Compare-V1.*\\.json$",
+                            "split_by_bot_rule": True,
+                        },
+                        "concat": {"enabled": True},
+                    },
+                ],
+            }
+        )
+        step_obj = job.steps[1]
+
+        def _fake_dispatch(
+            src: Path,
+            transform_type: str | None = None,
+            headers_dir: object = None,
+            *,
+            output_path: Path | None = None,
+        ) -> None:
+            p = output_path or src.with_suffix(".csv")
+            p.parent.mkdir(parents=True, exist_ok=True)
+            p.write_text(f"col1\n{src.stem}\n")
+
+        from adobe_downloader.flows.composite_job import _run_transform_concat_step
+
+        with patch(
+            "adobe_downloader.transforms.specialized.transform_report_dispatch",
+            side_effect=_fake_dispatch,
+        ):
+            result = await _run_transform_concat_step(step_obj, job, step_outputs)
+
+        assert set(result["concatenated_files"].keys()) == {"RuleA", "RuleB"}
+        assert result["concatenated_file"] is None
+
+        rule_a_content = Path(result["concatenated_files"]["RuleA"]).read_text()
+        assert "RuleA" in rule_a_content
+        assert "RuleB" not in rule_a_content
+
+        rule_b_content = Path(result["concatenated_files"]["RuleB"]).read_text()
+        assert "RuleB" in rule_b_content
+        assert "RuleA" not in rule_b_content
+
+    async def test_split_requires_bot_rules_source_in_job(self, tmp_path: Path) -> None:
+        json_folder = tmp_path / "Legend" / "TestJob" / "JSON"
+        json_folder.mkdir(parents=True)
+        (
+            json_folder
+            / "Legend_report_Coverscom-RuleA-Compare-V1-Segment_2025-01-01_2025-01-02.json"
+        ).write_text("{}")
+
+        step_outputs = {"dl": {"json_folder": str(json_folder)}}
+        job = CompositeJobConfig.model_validate(
+            {
+                "job_type": "composite",
+                "client": "Legend",
+                "output": {"base_folder": str(tmp_path), "job_name": "TestJob"},
+                "steps": [
+                    {
+                        "step": "transform_concat",
+                        "id": "transform",
+                        "depends_on": "dl",
+                        "transform": {
+                            "type": "bot_rule_compare",
+                            "source_pattern": ".*Compare-V1.*\\.json$",
+                            "split_by_bot_rule": True,
+                        },
+                    }
+                ],
+            }
+        )
+        step_obj = job.steps[0]
+
+        def _fake_dispatch(
+            src: Path,
+            transform_type: str | None = None,
+            headers_dir: object = None,
+            *,
+            output_path: Path | None = None,
+        ) -> None:
+            p = output_path or src.with_suffix(".csv")
+            p.parent.mkdir(parents=True, exist_ok=True)
+            p.write_text("col1\nrow\n")
+
+        from adobe_downloader.flows.composite_job import _run_transform_concat_step
+
+        with (
+            patch(
+                "adobe_downloader.transforms.specialized.transform_report_dispatch",
+                side_effect=_fake_dispatch,
+            ),
+            pytest.raises(ValueError, match="split_by_bot_rule requires"),
+        ):
+            await _run_transform_concat_step(step_obj, job, step_outputs)
+
+
 # ---------------------------------------------------------------------------
 # Async helper
 # ---------------------------------------------------------------------------

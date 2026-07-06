@@ -140,6 +140,7 @@ def test_enumerate_count_rsids_x_dates(tmp_path: Path) -> None:
 
 def _make_bot_rule(segment_id: str, segment_name: str, report_to_skip: str = "") -> Any:
     from adobe_downloader.flows.bot_rule_compare import BotRule
+
     return BotRule(segment_id=segment_id, segment_name=segment_name, report_to_skip=report_to_skip)
 
 
@@ -163,7 +164,9 @@ def test_bot_rule_compare_paths_skips_report_to_skip(tmp_path: Path) -> None:
     paths = enumerate_bot_rule_compare_paths(
         client_name="Client",
         rsid_clean_names=["SiteA"],
-        bot_rules=[_make_bot_rule("seg1", "MyRule", report_to_skip="botInvestigationMetricsByDomain")],
+        bot_rules=[
+            _make_bot_rule("seg1", "MyRule", report_to_skip="botInvestigationMetricsByDomain")
+        ],
         date_range=_date_range("2026-03-01", "2026-05-31"),
         comparison_round=1.0,
         output_base=tmp_path,
@@ -219,8 +222,8 @@ def test_bot_rule_compare_paths_investigation_name_in_filename(tmp_path: Path) -
         report_defs=[_make_report_def("botInvestigationMetricsByRegion")],
     )
     names = [p.name for p in paths]
-    assert any("SG-GeoCountry-Compare-V1.0-Segment" in n for n in names)
-    assert any("SG-GeoCountry-Compare-V1.0-AllTraffic" in n for n in names)
+    assert any("SG-GeoCountry-Compare-V1-Segment" in n for n in names)
+    assert any("SG-GeoCountry-Compare-V1-AllTraffic" in n for n in names)
 
 
 # ---------------------------------------------------------------------------
@@ -284,12 +287,8 @@ def test_reset_incomplete_for_step(tmp_path: Path) -> None:
 
     # Fail step_a requests
     with sm._connect() as conn:
-        conn.execute(
-            "UPDATE requests SET status='failed' WHERE request_key LIKE 'step_a|%'"
-        )
-        conn.execute(
-            "UPDATE requests SET status='in_progress' WHERE request_key = 'step_b|key1'"
-        )
+        conn.execute("UPDATE requests SET status='failed' WHERE request_key LIKE 'step_a|%'")
+        conn.execute("UPDATE requests SET status='in_progress' WHERE request_key = 'step_b|key1'")
 
     count = sm.reset_incomplete_for_step("step_a")
     assert count == 2
@@ -325,9 +324,7 @@ def test_reset_completed_for_path(tmp_path: Path) -> None:
     assert sm.reset_completed_for_path(out_path) is True
 
     with sm._connect() as conn:
-        row = conn.execute(
-            "SELECT status FROM requests WHERE request_id = ?", (req_id,)
-        ).fetchone()
+        row = conn.execute("SELECT status FROM requests WHERE request_id = ?", (req_id,)).fetchone()
     assert row["status"] == "pending"
 
 
@@ -371,6 +368,7 @@ async def test_run_validate_output_all_present(tmp_path: Path) -> None:
 
     # Seed the expected file on disk.
     from adobe_downloader.flows.report_download import make_output_path
+
     p = make_output_path(
         base_folder=tmp_path,
         client="Client",
@@ -385,6 +383,7 @@ async def test_run_validate_output_all_present(tmp_path: Path) -> None:
         patch("adobe_downloader.config.report_definitions.load_report_group", return_value=[rd]),
     ):
         from adobe_downloader.flows.validation import run_validate_output
+
         result = await run_validate_output(job, retry=False, dry_run=False)
 
     assert result["missing_count"] == 0
@@ -404,6 +403,7 @@ async def test_run_validate_output_missing_file_no_retry(tmp_path: Path) -> None
         patch("adobe_downloader.flows.report_download.run_report_download") as mock_dl,
     ):
         from adobe_downloader.flows.validation import run_validate_output
+
         result = await run_validate_output(job, retry=False, dry_run=False)
 
     assert result["missing_count"] == 1
@@ -428,9 +428,12 @@ async def test_run_validate_output_retry_calls_download(tmp_path: Path) -> None:
     with (
         patch("adobe_downloader.config.report_definitions.load_report_registry"),
         patch("adobe_downloader.config.report_definitions.load_report_group", return_value=[rd]),
-        patch("adobe_downloader.flows.report_download.run_report_download", new_callable=AsyncMock) as mock_dl,
+        patch(
+            "adobe_downloader.flows.report_download.run_report_download", new_callable=AsyncMock
+        ) as mock_dl,
     ):
         from adobe_downloader.flows.validation import run_validate_output
+
         await run_validate_output(job, retry=True, dry_run=False, ac=ac, sm=sm)
 
     mock_dl.assert_called_once()
@@ -445,9 +448,12 @@ async def test_run_validate_output_dry_run_no_download(tmp_path: Path) -> None:
     with (
         patch("adobe_downloader.config.report_definitions.load_report_registry"),
         patch("adobe_downloader.config.report_definitions.load_report_group", return_value=[rd]),
-        patch("adobe_downloader.flows.report_download.run_report_download", new_callable=AsyncMock) as mock_dl,
+        patch(
+            "adobe_downloader.flows.report_download.run_report_download", new_callable=AsyncMock
+        ) as mock_dl,
     ):
         from adobe_downloader.flows.validation import run_validate_output
+
         result = await run_validate_output(job, retry=True, dry_run=True)
 
     assert result["missing_count"] == 1
@@ -500,20 +506,19 @@ async def test_composite_validate_output_step_all_present(tmp_path: Path) -> Non
         sm = MagicMock()
         ac = MagicMock()
 
-        with patch("adobe_downloader.flows.composite_job._coerce_date_range") as mock_cdr, \
-             patch("adobe_downloader.flows.composite_job._resolve_output_base") as mock_ob, \
-             patch("adobe_downloader.flows.composite_job._resolve_segments", return_value=None), \
-             patch("adobe_downloader.flows.validation.enumerate_expected_paths") as mock_enum, \
-             patch("adobe_downloader.flows.validation.check_output_files") as mock_check:
-
+        with (
+            patch("adobe_downloader.flows.composite_job._coerce_date_range") as mock_cdr,
+            patch("adobe_downloader.flows.composite_job._resolve_output_base") as mock_ob,
+            patch("adobe_downloader.flows.composite_job._resolve_segments", return_value=None),
+            patch("adobe_downloader.flows.validation.enumerate_expected_paths") as mock_enum,
+            patch("adobe_downloader.flows.validation.check_output_files") as mock_check,
+        ):
             mock_cdr.return_value = _date_range("2025-01-01", "2025-02-01")
             mock_ob.return_value = str(tmp_path)
             mock_enum.return_value = [out_file]
             mock_check.return_value = ([out_file], [])
 
-            result = await _run_validate_output_step(
-                step, job, {}, sm, ac, no_resume=False
-            )
+            result = await _run_validate_output_step(step, job, {}, sm, ac, no_resume=False)
 
     assert result["missing_count"] == 0
 
@@ -526,13 +531,14 @@ async def test_composite_validate_output_step_missing_no_retry(tmp_path: Path) -
 
     missing_file = tmp_path / "C" / "JSON" / "C_rep_2025-01-01_2025-02-01.json"
 
-    with patch("adobe_downloader.flows.composite_job._resolve_report_defs") as mock_rds, \
-         patch("adobe_downloader.flows.composite_job._coerce_date_range") as mock_cdr, \
-         patch("adobe_downloader.flows.composite_job._resolve_output_base") as mock_ob, \
-         patch("adobe_downloader.flows.composite_job._resolve_segments", return_value=None), \
-         patch("adobe_downloader.flows.validation.enumerate_expected_paths") as mock_enum, \
-         patch("adobe_downloader.flows.validation.check_output_files") as mock_check:
-
+    with (
+        patch("adobe_downloader.flows.composite_job._resolve_report_defs") as mock_rds,
+        patch("adobe_downloader.flows.composite_job._coerce_date_range") as mock_cdr,
+        patch("adobe_downloader.flows.composite_job._resolve_output_base") as mock_ob,
+        patch("adobe_downloader.flows.composite_job._resolve_segments", return_value=None),
+        patch("adobe_downloader.flows.validation.enumerate_expected_paths") as mock_enum,
+        patch("adobe_downloader.flows.validation.check_output_files") as mock_check,
+    ):
         rd = _make_report_def("rep")
         mock_rds.return_value = [rd]
         mock_cdr.return_value = _date_range("2025-01-01", "2025-02-01")
@@ -596,12 +602,18 @@ async def test_composite_validate_output_bot_rule_compare_all_present(tmp_path: 
     dr = _date_range("2026-03-01", "2026-05-31")
 
     # Seed both expected files on disk
-    investigation_name = "trihybridsportsbookreviewcom-SG-GeoCountry-Compare-V1.0"
-    seg_path = make_output_path(tmp_path, "Legend", rd.name, dr,
-                                file_name_extra=f"{investigation_name}-Segment",
-                                segment_id="seg1")
-    all_path = make_output_path(tmp_path, "Legend", rd.name, dr,
-                                file_name_extra=f"{investigation_name}-AllTraffic")
+    investigation_name = "trihybridsportsbookreviewcom-SG-GeoCountry-Compare-V1"
+    seg_path = make_output_path(
+        tmp_path,
+        "Legend",
+        rd.name,
+        dr,
+        file_name_extra=f"{investigation_name}-Segment",
+        segment_id="seg1",
+    )
+    all_path = make_output_path(
+        tmp_path, "Legend", rd.name, dr, file_name_extra=f"{investigation_name}-AllTraffic"
+    )
     seg_path.parent.mkdir(parents=True, exist_ok=True)
     seg_path.write_text('{"rows": []}')
     all_path.write_text('{"rows": []}')
@@ -628,10 +640,13 @@ async def test_composite_validate_output_bot_rule_compare_all_present(tmp_path: 
     job.date_range = dr
     job.output = None
 
-    with patch("adobe_downloader.flows.composite_job._coerce_date_range", return_value=dr), \
-         patch("adobe_downloader.flows.composite_job._resolve_output_base", return_value=str(tmp_path)), \
-         patch("adobe_downloader.config.report_definitions.load_report_group", return_value=[rd]):
-
+    with (
+        patch("adobe_downloader.flows.composite_job._coerce_date_range", return_value=dr),
+        patch(
+            "adobe_downloader.flows.composite_job._resolve_output_base", return_value=str(tmp_path)
+        ),
+        patch("adobe_downloader.config.report_definitions.load_report_group", return_value=[rd]),
+    ):
         result = await _run_validate_output_step(step, job, {}, MagicMock(), MagicMock(), False)
 
     assert result["missing_count"] == 0
@@ -668,10 +683,13 @@ async def test_composite_validate_output_bot_rule_compare_reports_missing(tmp_pa
     job.date_range = dr
     job.output = None
 
-    with patch("adobe_downloader.flows.composite_job._coerce_date_range", return_value=dr), \
-         patch("adobe_downloader.flows.composite_job._resolve_output_base", return_value=str(tmp_path)), \
-         patch("adobe_downloader.config.report_definitions.load_report_group", return_value=[rd]):
-
+    with (
+        patch("adobe_downloader.flows.composite_job._coerce_date_range", return_value=dr),
+        patch(
+            "adobe_downloader.flows.composite_job._resolve_output_base", return_value=str(tmp_path)
+        ),
+        patch("adobe_downloader.config.report_definitions.load_report_group", return_value=[rd]),
+    ):
         result = await _run_validate_output_step(step, job, {}, MagicMock(), MagicMock(), False)
 
     # 1 report × 2 variants = 2 expected, all missing

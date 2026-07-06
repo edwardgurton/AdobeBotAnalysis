@@ -7,9 +7,9 @@ segment_creation:
   share_with_users:
     - "200419062"              # Adobe user ID to share with
   test_mode_row: null          # set to a row number (1-based) to test a single row
-
-output:
-  base_folder: "/Users/edwardgurton/Documents/Work/Adobe Downloads"
   compare_list_path: data/bot_compare_lists/
   validate_list_path: data/bot_rule_lists/
   segment_list_path: data/segment_lists/Legend/
+
+output:
+  base_folder: "/Users/edwardgurton/Documents/Work/Adobe Downloads"

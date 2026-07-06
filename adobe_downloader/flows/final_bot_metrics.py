@@ -19,14 +19,13 @@ from typing import Any
 from adobe_downloader.config.schema import DateRange, RsidSource, TestLimits
 from adobe_downloader.core.api_client import AdobeClient
 from adobe_downloader.flows.report_download import download_report, make_output_path
+from adobe_downloader.utils.winpath import to_long_path
 
 _log = logging.getLogger(__name__)
 
 # Reports that are downloaded once per RSID × segment.
 # All other reports in the group are downloaded once per RSID (aggregate).
-_PER_SEGMENT_REPORTS: frozenset[str] = frozenset(
-    {"LegendFinalBotMetricsUnfilteredVisitsByYear"}
-)
+_PER_SEGMENT_REPORTS: frozenset[str] = frozenset({"LegendFinalBotMetricsUnfilteredVisitsByYear"})
 
 
 # ---------------------------------------------------------------------------
@@ -242,9 +241,9 @@ async def _download_one(
     try:
         if canonical_id is not None:
             canonical_path = sm.get_canonical_output_path(canonical_id)
-            if canonical_path and canonical_path.exists():
-                out_path.parent.mkdir(parents=True, exist_ok=True)
-                shutil.copy2(canonical_path, out_path)
+            if canonical_path and to_long_path(canonical_path).exists():
+                to_long_path(out_path).parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(to_long_path(canonical_path), to_long_path(out_path))
                 sm.mark_complete(req_id, out_path)
                 _log.info("COPY %s -> %s", label, out_path.name)
                 result.downloaded += 1

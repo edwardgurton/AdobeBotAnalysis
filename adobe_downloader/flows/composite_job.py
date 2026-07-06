@@ -322,6 +322,7 @@ async def _run_transform_concat_step(
     explicit_type: str | None = transform_raw.get("type")
     source_pattern: str | None = transform_raw.get("source_pattern")
     concat_enabled: bool = concat_raw.get("enabled", True)
+    split_by_bot_rule: bool = transform_raw.get("split_by_bot_rule", False)
 
     # Resolve source folder from explicit config or previous step outputs
     source_folder_str: str | None = transform_raw.get("source_folder")
@@ -373,28 +374,82 @@ async def _run_transform_concat_step(
 
     csv_folder = csv_paths[0].parent if csv_paths else source_folder.parent / "CSV"
     concatenated_file: str | None = None
+    concatenated_files: dict[str, str] = {}
 
     if concat_enabled and csv_paths:
         file_pattern = concat_raw.get("file_pattern", "*.csv")
         job_name = job.output.job_name if job.output else None
-        if job_name:
+
+        if split_by_bot_rule:
+            from adobe_downloader.flows.bot_rule_compare import sanitize_bot_rule_name
+
+            if not job_name or job.output is None:
+                raise ValueError(
+                    f"Step {step.id!r}: split_by_bot_rule requires output.job_name to be set"
+                )
             final_folder = Path(job.output.base_folder) / job.client / job_name
             final_folder.mkdir(parents=True, exist_ok=True)
             prefix = _TRANSFORM_TYPE_PREFIXES.get(explicit_type or "", "OUTPUT")
-            concat_out = final_folder / f"{prefix}_{job_name}.csv"
+
+            for rule in _find_bot_rules_for_split(job, step_outputs, step.id):
+                rule_key = sanitize_bot_rule_name(rule.segment_name)
+                safe_name = re.sub(r'[<>:"/\\|?*]', "-", rule_key)
+                rule_out = final_folder / f"{prefix}_{job_name}_{safe_name}.csv"
+                count = concatenate_csvs(csv_folder, re.escape(rule_key), rule_out)
+                if count:
+                    concatenated_files[rule.segment_name] = str(rule_out)
+                else:
+                    _log.warning(
+                        "Step %s: no CSVs matched bot rule %r for split output",
+                        step.id,
+                        rule.segment_name,
+                    )
+            _log.info(
+                "Step %s: split concat into %d file(s) by bot rule -> %s",
+                step.id,
+                len(concatenated_files),
+                final_folder,
+            )
         else:
-            concat_out = csv_folder / f"{step.id}_concat.csv"
-        count = concatenate_csvs(csv_folder, file_pattern, concat_out)
-        if count:
-            _log.info("Step %s: concatenated %d CSVs -> %s", step.id, count, concat_out)
-            concatenated_file = str(concat_out)
+            if job_name:
+                final_folder = Path(job.output.base_folder) / job.client / job_name
+                final_folder.mkdir(parents=True, exist_ok=True)
+                prefix = _TRANSFORM_TYPE_PREFIXES.get(explicit_type or "", "OUTPUT")
+                concat_out = final_folder / f"{prefix}_{job_name}.csv"
+            else:
+                concat_out = csv_folder / f"{step.id}_concat.csv"
+            count = concatenate_csvs(csv_folder, file_pattern, concat_out)
+            if count:
+                _log.info("Step %s: concatenated %d CSVs -> %s", step.id, count, concat_out)
+                concatenated_file = str(concat_out)
 
     return {
         "csv_folder": str(csv_folder),
         "concatenated_file": concatenated_file,
+        "concatenated_files": concatenated_files,
         "ok": ok,
         "failed": failed,
     }
+
+
+def _find_bot_rules_for_split(
+    job: CompositeJobConfig, step_outputs: dict[str, dict[str, Any]], step_id: str
+) -> list[Any]:  # list[BotRule]
+    """Locate the bot_rules source from a sibling download step, for split_by_bot_rule.
+
+    Lets a transform_concat step split its output per bot rule without duplicating
+    the bot_rules file/source already given to the job's bot_rule_compare (or
+    report_download) step.
+    """
+    for s in job.steps:
+        if s.step in ("bot_rule_compare", "report_download"):
+            bot_rules_raw = s.extra_fields().get("bot_rules")
+            if bot_rules_raw:
+                return _parse_bot_rules_from_config(bot_rules_raw, step_outputs, step_id)
+    raise ValueError(
+        f"Step {step_id!r}: split_by_bot_rule requires a bot_rule_compare or "
+        "report_download step in this job with a 'bot_rules' source"
+    )
 
 
 async def _run_validate_output_step(

@@ -12,6 +12,7 @@ from adobe_downloader.transforms.base import (
     load_column_headers,
     transform_report,
 )
+from adobe_downloader.utils.winpath import to_long_path
 
 _log = logging.getLogger(__name__)
 
@@ -31,8 +32,9 @@ def _write_rows(columns: list[str], rows: list[list], output_path: Path | None) 
         writer.writerow(row)
     text = buf.getvalue()
     if output_path is not None:
-        output_path.parent.mkdir(parents=True, exist_ok=True)
-        output_path.write_text(text, encoding="utf-8")
+        long_output_path = to_long_path(output_path)
+        long_output_path.parent.mkdir(parents=True, exist_ok=True)
+        long_output_path.write_text(text, encoding="utf-8")
         _log.info("Saved CSV -> %s", output_path)
     return text
 
@@ -75,7 +77,7 @@ def transform_bot_validation(
     file_name_col = stem
 
     columns = load_column_headers(request_name, headers_dir)
-    raw = json.loads(json_path.read_text(encoding="utf-8"))
+    raw = json.loads(to_long_path(json_path).read_text(encoding="utf-8"))
 
     rows: list[list] = []
     for row in raw.get("rows", []):
@@ -108,14 +110,16 @@ def transform_final_bot_rule_metrics(
     file_name_col = stem
 
     columns = load_column_headers(report_name, headers_dir)
-    raw = json.loads(json_path.read_text(encoding="utf-8"))
+    raw = json.loads(to_long_path(json_path).read_text(encoding="utf-8"))
 
     rows: list[list] = []
     for row in raw.get("rows", []):
         item_id = row.get("itemId", "")
         value = row.get("value", "")
         data = row.get("data", [])
-        rows.append([item_id, value, *data, file_name_col, bot_rule_name, rsid_name, from_date, to_date])
+        rows.append(
+            [item_id, value, *data, file_name_col, bot_rule_name, rsid_name, from_date, to_date]
+        )
 
     _validate_rows(rows, len(columns), f"report_name={report_name!r}", json_path.name)
     return _write_rows(columns, rows, output_path)
@@ -203,20 +207,34 @@ def transform_bot_rule_compare(
             end_date = parts[6] if len(parts) > 6 else ""
 
     headers = _BOT_RULE_COMPARE_HEADERS.split(",")
-    raw = json.loads(json_path.read_text(encoding="utf-8"))
+    raw = json.loads(to_long_path(json_path).read_text(encoding="utf-8"))
 
     rows: list[list] = []
     for row in raw.get("rows", []):
         item_id = row.get("itemId", "")
         value = row.get("value", "")
         data = row.get("data", [])
-        rows.append([
-            item_id, value, *data,
-            file_name_col, client_name, report_type, dimension,
-            rsid_name, bot_rule_name, compare_version, traffic_type,
-            str(is_compare).lower(), str(is_segment).lower(),
-            segment_id, segment_hash, start_date, end_date,
-        ])
+        rows.append(
+            [
+                item_id,
+                value,
+                *data,
+                file_name_col,
+                client_name,
+                report_type,
+                dimension,
+                rsid_name,
+                bot_rule_name,
+                compare_version,
+                traffic_type,
+                str(is_compare).lower(),
+                str(is_segment).lower(),
+                segment_id,
+                segment_hash,
+                start_date,
+                end_date,
+            ]
+        )
 
     _validate_rows(rows, len(headers), f"report_type={report_type!r}", json_path.name)
     return _write_rows(headers, rows, output_path)

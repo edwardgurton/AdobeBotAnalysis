@@ -44,6 +44,17 @@ DIMENSION_MAPPING: dict[str, str] = {
 # ---------------------------------------------------------------------------
 
 
+def sanitize_bot_rule_name(name: str) -> str:
+    """Replace underscores with hyphens for safe embedding in output filenames.
+
+    transform_bot_rule_compare splits filenames on "_" to locate the client/report
+    tokens before falling back to a legacy parsing branch; an underscore inside the
+    bot rule name shifts that split and misroutes it into the legacy branch,
+    corrupting the parsed segmentId. Bot rule names may still use hyphens freely.
+    """
+    return name.replace("_", "-")
+
+
 @dataclass
 class BotRule:
     segment_id: str
@@ -167,12 +178,17 @@ async def run_bot_rule_compare(
 
         for bot_rule in bot_rules:
             investigation_name = (
-                f"{clean_name}-{bot_rule.segment_name}-Compare-V{comparison_round}"
+                f"{clean_name}-{sanitize_bot_rule_name(bot_rule.segment_name)}"
+                f"-Compare-V{comparison_round:g}"
             )
 
             for report_def in report_defs:
                 if report_def.name == bot_rule.report_to_skip:
-                    _log.debug("SKIP report %s (reportToSkip for rule %s)", report_def.name, bot_rule.segment_name)
+                    _log.debug(
+                        "SKIP report %s (reportToSkip for rule %s)",
+                        report_def.name,
+                        bot_rule.segment_name,
+                    )
                     continue
 
                 # --- Segment download (unique per rule) ---
@@ -246,6 +262,7 @@ async def _download_variant(
     """
     from adobe_downloader.core.request_builder import build_request
     from adobe_downloader.state_manager import compute_request_key
+    from adobe_downloader.utils.winpath import to_long_path
 
     out_path = make_output_path(
         base_folder=output_base,
@@ -286,9 +303,9 @@ async def _download_variant(
     try:
         if canonical_id is not None:
             canonical_path = sm.get_canonical_output_path(canonical_id)
-            if canonical_path and canonical_path.exists():
-                out_path.parent.mkdir(parents=True, exist_ok=True)
-                shutil.copy2(canonical_path, out_path)
+            if canonical_path and to_long_path(canonical_path).exists():
+                to_long_path(out_path).parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(to_long_path(canonical_path), to_long_path(out_path))
                 sm.mark_complete(req_id, out_path)
                 _log.info("COPY %s -> %s", label, out_path.name)
                 result.copied += 1

@@ -65,13 +65,15 @@ def transform_report(
 
     If output_path is provided the CSV is written there; the CSV text is always returned.
     """
+    from adobe_downloader.utils.winpath import to_long_path
+
     stem = json_path.stem
     _, report_name, from_date, to_date = _parse_filename_parts(stem)
     file_name_col = stem
 
     columns = load_column_headers(report_name, headers_dir)
 
-    raw = json.loads(json_path.read_text(encoding="utf-8"))
+    raw = json.loads(to_long_path(json_path).read_text(encoding="utf-8"))
 
     buf = io.StringIO()
     writer = csv.writer(buf, lineterminator="\n")
@@ -83,9 +85,7 @@ def transform_report(
         # Detect unauthorized/errored metric columns and record their positions so
         # we can pad None into the data array at those slots.
         columns_meta = raw.get("columns", {})
-        error_col_ids: set[str] = {
-            e["columnId"] for e in columns_meta.get("columnErrors", [])
-        }
+        error_col_ids: set[str] = {e["columnId"] for e in columns_meta.get("columnErrors", [])}
         if error_col_ids:
             successful_ids: list[str] = columns_meta.get("columnIds", [])
             all_col_ids = sorted(successful_ids + list(error_col_ids), key=lambda x: int(x))
@@ -129,8 +129,9 @@ def transform_report(
     csv_text = buf.getvalue()
 
     if output_path is not None:
-        output_path.parent.mkdir(parents=True, exist_ok=True)
-        output_path.write_text(csv_text, encoding="utf-8")
+        long_output_path = to_long_path(output_path)
+        long_output_path.parent.mkdir(parents=True, exist_ok=True)
+        long_output_path.write_text(csv_text, encoding="utf-8")
         _log.info("Saved CSV -> %s", output_path)
 
     return csv_text
