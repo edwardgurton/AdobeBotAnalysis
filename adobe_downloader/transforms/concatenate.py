@@ -32,6 +32,27 @@ def concatenate_csvs(
         _log.warning("No CSV files matched pattern %r in %s", pattern, folder)
         return 0
 
+    return concatenate_csv_files(csv_files, output_path, custom_headers)
+
+
+def concatenate_csv_files(
+    csv_files: list[Path],
+    output_path: Path,
+    custom_headers: dict[int, str] | None = None,
+) -> int:
+    """Concatenate an explicit list of CSV files (already resolved) into output_path.
+
+    Same header/custom_headers merge semantics as concatenate_csvs, but takes the
+    file list directly instead of scanning a folder by pattern — lets callers that
+    already know exactly which files belong together (e.g. per-step or per-RSID
+    output) avoid re-matching against everything else sitting in a shared folder.
+
+    Returns the number of files concatenated (0 if csv_files is empty or all blank).
+    """
+    csv_files = sorted(csv_files)
+    if not csv_files:
+        return 0
+
     header: list[str] | None = None
     data_lines: list[str] = []
 
@@ -50,7 +71,7 @@ def concatenate_csvs(
             data_lines.extend(lines[1:])
 
     if header is None:
-        _log.warning("No non-empty CSV files found in %s", folder)
+        _log.warning("No non-empty CSV files found among %d file(s)", len(csv_files))
         return 0
 
     long_output_path = to_long_path(output_path)

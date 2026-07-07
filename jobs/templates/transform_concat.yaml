@@ -14,7 +14,8 @@ concat:
   enabled: true
   file_pattern: ".*\\.csv$"
   custom_headers:
-    # 1: OverrideColumnName     # uncomment to override header by column index (1-based)
+    # 1: OverrideColumnName     # uncomment to override header by column index (0-based)
+  # file_name_extra: "<label>"   # inserted right after job_name in the output filename
 
 output:
   base_folder: "/Users/edwardgurton/Documents/Work/Adobe Downloads"

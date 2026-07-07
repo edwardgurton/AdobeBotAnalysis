@@ -8,6 +8,7 @@ For each RSID × bot rule, downloads 9 of 10 bot-investigation dimensions
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import shutil
 from dataclasses import dataclass, field
@@ -141,13 +142,14 @@ async def run_bot_rule_compare(
     step_id: str | None = None,
     test_limits: TestLimits | None = None,
     job_name: str | None = None,
+    batch_size: int = 12,
 ) -> BotRuleCompareResult:
     """Download Segment + AllTraffic comparison files for each RSID × bot rule.
 
     AllTraffic files are deduplicated via StateManager's canonical_request_id: the
     second AllTraffic request for the same RSID+report+date has an identical request
     body, so StateManager returns a canonical_id and the file is copied rather than
-    re-downloaded.
+    re-downloaded. Up to batch_size Segment/AllTraffic downloads run concurrently.
     """
     from adobe_downloader.config.report_definitions import load_report_group
     from adobe_downloader.core.request_builder import build_request
@@ -167,6 +169,8 @@ async def run_bot_rule_compare(
         rsid_clean_names = apply_rsid_limit(rsid_clean_names, test_limits)
 
     result = BotRuleCompareResult(job_id=sm.job_id, json_folder=json_folder)
+    semaphore = asyncio.Semaphore(batch_size)
+    tasks = []
 
     for clean_name in rsid_clean_names:
         rsid = rsid_map.get(clean_name)
@@ -192,43 +196,50 @@ async def run_bot_rule_compare(
                     continue
 
                 # --- Segment download (unique per rule) ---
-                await _download_variant(
-                    client=client,
-                    client_name=client_name,
-                    report_def=report_def,
-                    date_range=date_range,
-                    rsid=rsid,
-                    segments=[bot_rule.segment_id],
-                    file_name_extra=f"{investigation_name}-Segment",
-                    segment_id_for_path=bot_rule.segment_id,
-                    output_base=output_base,
-                    sm=sm,
-                    no_resume=no_resume,
-                    step_id=step_id,
-                    result=result,
-                    label=f"{clean_name}/{report_def.name}/Segment",
-                    job_name=job_name,
+                tasks.append(
+                    _download_variant(
+                        client=client,
+                        client_name=client_name,
+                        report_def=report_def,
+                        date_range=date_range,
+                        rsid=rsid,
+                        segments=[bot_rule.segment_id],
+                        file_name_extra=f"{investigation_name}-Segment",
+                        segment_id_for_path=bot_rule.segment_id,
+                        output_base=output_base,
+                        sm=sm,
+                        no_resume=no_resume,
+                        step_id=step_id,
+                        result=result,
+                        label=f"{clean_name}/{report_def.name}/Segment",
+                        job_name=job_name,
+                        semaphore=semaphore,
+                    )
                 )
 
                 # --- AllTraffic download (canonical dedup across rules) ---
-                await _download_variant(
-                    client=client,
-                    client_name=client_name,
-                    report_def=report_def,
-                    date_range=date_range,
-                    rsid=rsid,
-                    segments=[],
-                    file_name_extra=f"{investigation_name}-AllTraffic",
-                    segment_id_for_path=None,
-                    output_base=output_base,
-                    sm=sm,
-                    no_resume=no_resume,
-                    step_id=step_id,
-                    result=result,
-                    label=f"{clean_name}/{report_def.name}/AllTraffic",
-                    job_name=job_name,
+                tasks.append(
+                    _download_variant(
+                        client=client,
+                        client_name=client_name,
+                        report_def=report_def,
+                        date_range=date_range,
+                        rsid=rsid,
+                        segments=[],
+                        file_name_extra=f"{investigation_name}-AllTraffic",
+                        segment_id_for_path=None,
+                        output_base=output_base,
+                        sm=sm,
+                        no_resume=no_resume,
+                        step_id=step_id,
+                        result=result,
+                        label=f"{clean_name}/{report_def.name}/AllTraffic",
+                        job_name=job_name,
+                        semaphore=semaphore,
+                    )
                 )
 
+    await asyncio.gather(*tasks)
     return result
 
 
@@ -252,6 +263,7 @@ async def _download_variant(
     step_id: str | None,
     result: BotRuleCompareResult,
     label: str,
+    semaphore: asyncio.Semaphore,
     job_name: str | None = None,
 ) -> None:
     """Download one Segment or AllTraffic variant, updating *result* in place.
@@ -297,27 +309,31 @@ async def _download_variant(
         segments=segments,
     )
 
-    req_id, canonical_id = sm.track_request(req_key, req_body, out_path, step_id=step_id)
-    sm.mark_started(req_id)
+    # The semaphore bounds how many requests are in flight at once (batch_size);
+    # tracking happens just inside it so "tracked before it executes" stays tight even
+    # when far more items are queued than can run concurrently.
+    async with semaphore:
+        req_id, canonical_id = sm.track_request(req_key, req_body, out_path, step_id=step_id)
+        sm.mark_started(req_id)
 
-    try:
-        if canonical_id is not None:
-            canonical_path = sm.get_canonical_output_path(canonical_id)
-            if canonical_path and to_long_path(canonical_path).exists():
-                to_long_path(out_path).parent.mkdir(parents=True, exist_ok=True)
-                shutil.copy2(to_long_path(canonical_path), to_long_path(out_path))
-                sm.mark_complete(req_id, out_path)
-                _log.info("COPY %s -> %s", label, out_path.name)
-                result.copied += 1
-                return
+        try:
+            if canonical_id is not None:
+                canonical_path = sm.get_canonical_output_path(canonical_id)
+                if canonical_path and to_long_path(canonical_path).exists():
+                    to_long_path(out_path).parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copy2(to_long_path(canonical_path), to_long_path(out_path))
+                    sm.mark_complete(req_id, out_path)
+                    _log.info("COPY %s -> %s", label, out_path.name)
+                    result.copied += 1
+                    return
 
-        await download_report(client, req_body, out_path)
-        sm.mark_complete(req_id, out_path)
-        _log.info("OK   %s -> %s", label, out_path.name)
-        result.downloaded += 1
+            await download_report(client, req_body, out_path)
+            sm.mark_complete(req_id, out_path)
+            _log.info("OK   %s -> %s", label, out_path.name)
+            result.downloaded += 1
 
-    except Exception as exc:
-        sm.mark_failed(req_id, str(exc))
-        _log.error("FAIL %s: %s", label, exc)
-        result.failed += 1
-        result.errors.append(f"{label}: {exc}")
+        except Exception as exc:
+            sm.mark_failed(req_id, str(exc))
+            _log.error("FAIL %s: %s", label, exc)
+            result.failed += 1
+            result.errors.append(f"{label}: {exc}")

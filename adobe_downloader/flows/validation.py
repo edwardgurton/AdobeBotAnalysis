@@ -45,6 +45,7 @@ def enumerate_expected_paths(
                             file_name_extra=file_name_extra,
                             segment_id=seg_id,
                             job_name=job_name,
+                            rsid=rsid,
                         )
                     )
     return paths

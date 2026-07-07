@@ -618,7 +618,7 @@ output:
 rsids:
   source: file
   file: data/rsid_lists/legend_investigation.txt
-  batch_size: 12  # how many RSIDs to process in parallel
+  batch_size: 12  # max concurrent API requests for this job/step
 
 # Explicit list
 rsids:
@@ -712,6 +712,7 @@ concat:
   enabled: true
   file_pattern: ".*\.csv$"
   custom_headers: null   # override column headers by index if needed
+  # file_name_extra: "<label>"   # inserted right after job_name in the output filename
 
 output:
   base_folder: "/Users/edwardgurton/Documents/Work/Adobe Downloads"</code></pre>
@@ -727,6 +728,7 @@ output:
             <tr><td><code>concat.enabled</code></td><td>bool</td><td>Whether to run concatenation after transform.</td></tr>
             <tr><td><code>concat.file_pattern</code></td><td>string (regex)</td><td>Regular expression selecting which CSV files to include. Default: <code>.*\.csv$</code>.</td></tr>
             <tr><td><code>concat.custom_headers</code></td><td>map</td><td>Override column headers by 1-based column index. Example: <code>1: "MyColumn"</code>.</td></tr>
+            <tr><td><code>concat.file_name_extra</code></td><td>string or null</td><td>Optional label spliced into the concatenated output's filename, right after <code>job_name</code>. See <a href="#composite-job-name">Naming with job_name</a>.</td></tr>
           </tbody>
         </table>
       </div>
@@ -1021,6 +1023,18 @@ C:/Adobe_Downloads/Legend/casinoorg_seo_homepage_bot_investigation_90d/CSV/...
 C:/Adobe_Downloads/Legend/casinoorg_seo_homepage_bot_investigation_90d/INVESTIGATION_casinoorg_seo_homepage_bot_investigation_90d.csv</code></pre>
       <p><strong>If <code>output.job_name</code> is left unset</strong>, the <code>transform_concat</code> step falls back to naming its output <code>&lt;step_id&gt;_concat.csv</code> in the CSV folder &mdash; e.g. a step with <code>id: transform</code> produces the generic <code>transform_concat.csv</code>. Always set <code>job_name</code> to get a meaningful, distinguishable output file.</p>
 
+      <h4>Adding a custom label with concat.file_name_extra</h4>
+      <p>A <code>transform_concat</code> step's <code>concat:</code> block can set <code>file_name_extra</code> to splice a free-text label into the output filename, immediately after <code>job_name</code>:</p>
+      <pre><code>  - step: transform_concat
+    id: transform
+    transform:
+      type: bot_investigation
+    concat:
+      enabled: true
+      file_name_extra: "MyLabel"</code></pre>
+      <p>This turns <code>INVESTIGATION_casinoorg_seo_homepage_bot_investigation_90d.csv</code> into <code>INVESTIGATION_casinoorg_seo_homepage_bot_investigation_90d_MyLabel.csv</code>. If the step's <code>transform.split_by_bot_rule</code> is also set, the label lands between <code>job_name</code> and the per-rule name (e.g. <code>COMPARE_&lt;job_name&gt;_MyLabel_&lt;ruleName&gt;.csv</code>). It also works with the no-<code>job_name</code> fallback above, producing <code>&lt;step_id&gt;_MyLabel_concat.csv</code>.</p>
+      <p><code>file_name_extra</code> is optional &mdash; leaving it unset, blank, or whitespace-only produces the same filename as if it weren't there at all. Characters illegal in Windows filenames (<code>&lt;&gt;:"/\|?*</code>) are replaced with <code>-</code>. Like <code>job_name</code>, a long value eats into the same Windows 260-character path limit, so keep it short.</p>
+
       <h3>depends_on</h3>
       <p>Use <code>depends_on: &lt;step_id&gt;</code> to ensure a step only runs after its dependency has completed successfully. If the dependency has not completed, the pipeline halts with an error.</p>
 
@@ -1101,7 +1115,7 @@ C:/Adobe_Downloads/Legend/casinoorg_seo_homepage_bot_investigation_90d/INVESTIGA
             <tr><td><code>rsids.file</code></td><td>string</td><td></td><td>Path to RSID list file. Required when <code>source=file</code>.</td></tr>
             <tr><td><code>rsids.list</code></td><td>list[string]</td><td></td><td>Explicit RSID list. Required when <code>source=list</code>.</td></tr>
             <tr><td><code>rsids.single</code></td><td>string</td><td></td><td>Single RSID. Required when <code>source=single</code>.</td></tr>
-            <tr><td><code>rsids.batch_size</code></td><td>int</td><td>12</td><td>Number of RSIDs to process in parallel. Lower if hitting API rate limits.</td></tr>
+            <tr><td><code>rsids.batch_size</code></td><td>int</td><td>12</td><td>Max concurrent API requests in flight at once (across all RSIDs/dates/segments/reports). Lower if hitting API rate limits.</td></tr>
           </tbody>
         </table>
       </div>

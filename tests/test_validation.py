@@ -56,7 +56,7 @@ def test_enumerate_single_rsid_single_report(tmp_path: Path) -> None:
     assert len(paths) == 1
     assert paths[0].suffix == ".json"
     assert "myReport" in paths[0].name
-    assert "rsidA" not in paths[0].name  # rsid not in filename, but date is
+    assert "rsidA" in paths[0].name
 
 
 def test_enumerate_multiple_rsids(tmp_path: Path) -> None:
@@ -119,8 +119,7 @@ def test_enumerate_paths_live_under_client_json_folder(tmp_path: Path) -> None:
 
 
 def test_enumerate_count_rsids_x_dates(tmp_path: Path) -> None:
-    # RSID is NOT in the output filename, so 2 rsids × 2 months = 4 entries
-    # (each pair shares the same path; the downloader overwrites sequentially).
+    # RSID is embedded in the filename, so 2 rsids × 2 months = 4 distinct paths.
     paths = enumerate_expected_paths(
         client_name="C",
         report_defs=[_make_report_def("rep")],
@@ -130,7 +129,7 @@ def test_enumerate_count_rsids_x_dates(tmp_path: Path) -> None:
         output_base=tmp_path,
     )
     assert len(paths) == 4  # 2 rsids × 2 months × 1 report
-    assert len(set(paths)) == 2  # only 2 unique file paths (rsid not in name)
+    assert len(set(paths)) == 4  # all 4 paths are unique (rsid is in the name)
 
 
 # ---------------------------------------------------------------------------
@@ -374,6 +373,7 @@ async def test_run_validate_output_all_present(tmp_path: Path) -> None:
         client="Client",
         report_name="testReport",
         date_range=_date_range("2025-01-01", "2025-02-01"),
+        rsid="rsid1",
     )
     p.parent.mkdir(parents=True, exist_ok=True)
     p.write_text('{"rows": []}')

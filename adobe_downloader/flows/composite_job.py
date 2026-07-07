@@ -28,6 +28,13 @@ _TRANSFORM_TYPE_PREFIXES = {
     "summary_total": "SUMMARY",
 }
 
+_ILLEGAL_FILENAME_CHARS = re.compile(r'[<>:"/\\|?*]')
+
+
+def _sanitize_filename_component(value: str) -> str:
+    """Replace characters illegal in Windows filenames with '-'."""
+    return _ILLEGAL_FILENAME_CHARS.sub("-", value)
+
 
 def _state_key(step_id: str, job: CompositeJobConfig) -> str:
     """Persisted step-state key, namespaced by test_mode.
@@ -311,8 +318,9 @@ async def _run_transform_concat_step(
     job: CompositeJobConfig,
     step_outputs: dict[str, dict[str, Any]],
 ) -> dict[str, Any]:
+    from adobe_downloader.flows.report_download import iterate_rsids
     from adobe_downloader.transforms.base import make_csv_output_path, transform_report
-    from adobe_downloader.transforms.concatenate import concatenate_csvs
+    from adobe_downloader.transforms.concatenate import concatenate_csv_files
     from adobe_downloader.transforms.specialized import transform_report_dispatch
 
     extra = step.extra_fields()
@@ -323,6 +331,7 @@ async def _run_transform_concat_step(
     source_pattern: str | None = transform_raw.get("source_pattern")
     concat_enabled: bool = concat_raw.get("enabled", True)
     split_by_bot_rule: bool = transform_raw.get("split_by_bot_rule", False)
+    split_by_rsid: bool = transform_raw.get("split_by_rsid", False)
 
     # Resolve source folder from explicit config or previous step outputs
     source_folder_str: str | None = transform_raw.get("source_folder")
@@ -377,8 +386,32 @@ async def _run_transform_concat_step(
     concatenated_files: dict[str, str] = {}
 
     if concat_enabled and csv_paths:
-        file_pattern = concat_raw.get("file_pattern", "*.csv")
         job_name = job.output.job_name if job.output else None
+
+        raw_extra = concat_raw.get("file_name_extra")
+        file_name_extra: str | None = str(raw_extra).strip() if raw_extra is not None else None
+        if not file_name_extra:
+            file_name_extra = None
+        extra_part = f"_{_sanitize_filename_component(file_name_extra)}" if file_name_extra else ""
+
+        custom_headers_raw = concat_raw.get("custom_headers")
+        custom_headers: dict[int, str] | None = (
+            {int(idx): name for idx, name in custom_headers_raw.items()}
+            if custom_headers_raw
+            else None
+        )
+
+        # Concatenation only ever draws from the CSVs this step itself just
+        # transformed (csv_paths) — never a fresh scan of the whole csv_folder —
+        # so a source folder shared with a sibling step's downloads (e.g. two
+        # report_download steps writing into the same job_name/JSON folder)
+        # can't leak unrelated files into this step's output. file_pattern, if
+        # given, narrows that set further.
+        file_pattern = concat_raw.get("file_pattern")
+        eligible_csvs = csv_paths
+        if file_pattern:
+            rgx = re.compile(file_pattern.replace("*", ".*"))
+            eligible_csvs = [p for p in csv_paths if rgx.search(p.name)]
 
         if split_by_bot_rule:
             from adobe_downloader.flows.bot_rule_compare import sanitize_bot_rule_name
@@ -393,9 +426,14 @@ async def _run_transform_concat_step(
 
             for rule in _find_bot_rules_for_split(job, step_outputs, step.id):
                 rule_key = sanitize_bot_rule_name(rule.segment_name)
-                safe_name = re.sub(r'[<>:"/\\|?*]', "-", rule_key)
-                rule_out = final_folder / f"{prefix}_{job_name}_{safe_name}.csv"
-                count = concatenate_csvs(csv_folder, re.escape(rule_key), rule_out)
+                safe_name = _sanitize_filename_component(rule_key)
+                rule_out = final_folder / f"{prefix}_{job_name}{extra_part}_{safe_name}.csv"
+                matched = [p for p in eligible_csvs if rule_key in p.name]
+                count = (
+                    concatenate_csv_files(matched, rule_out, custom_headers=custom_headers)
+                    if matched
+                    else 0
+                )
                 if count:
                     concatenated_files[rule.segment_name] = str(rule_out)
                 else:
@@ -410,15 +448,57 @@ async def _run_transform_concat_step(
                 len(concatenated_files),
                 final_folder,
             )
+        elif split_by_rsid:
+            if not job_name or job.output is None:
+                raise ValueError(
+                    f"Step {step.id!r}: split_by_rsid requires output.job_name to be set"
+                )
+            dl_step = _find_report_download_step_for_split(job, step.depends_on)
+            if dl_step is None:
+                raise ValueError(
+                    f"Step {step.id!r}: split_by_rsid requires a report_download step "
+                    "reachable via depends_on/config_ref with an 'rsids' source"
+                )
+            rsids_raw = dl_step.extra_fields().get("rsids")
+            if not rsids_raw:
+                raise ValueError(
+                    f"Step {step.id!r}: split_by_rsid requires 'rsids' on the referenced "
+                    f"report_download step {dl_step.id!r}"
+                )
+            rsid_clean_names = list(iterate_rsids(RsidSource.model_validate(rsids_raw)))
+
+            final_folder = Path(job.output.base_folder) / job.client / job_name
+            final_folder.mkdir(parents=True, exist_ok=True)
+            prefix = _TRANSFORM_TYPE_PREFIXES.get(explicit_type or "", "OUTPUT")
+
+            for rsid in rsid_clean_names:
+                safe_name = _sanitize_filename_component(rsid)
+                rsid_out = final_folder / f"{prefix}_{job_name}{extra_part}_{safe_name}.csv"
+                matched = [p for p in eligible_csvs if rsid in p.name]
+                count = (
+                    concatenate_csv_files(matched, rsid_out, custom_headers=custom_headers)
+                    if matched
+                    else 0
+                )
+                if count:
+                    concatenated_files[rsid] = str(rsid_out)
+                else:
+                    _log.warning("Step %s: no CSVs matched RSID %r for split output", step.id, rsid)
+            _log.info(
+                "Step %s: split concat into %d file(s) by RSID -> %s",
+                step.id,
+                len(concatenated_files),
+                final_folder,
+            )
         else:
             if job_name:
                 final_folder = Path(job.output.base_folder) / job.client / job_name
                 final_folder.mkdir(parents=True, exist_ok=True)
                 prefix = _TRANSFORM_TYPE_PREFIXES.get(explicit_type or "", "OUTPUT")
-                concat_out = final_folder / f"{prefix}_{job_name}.csv"
+                concat_out = final_folder / f"{prefix}_{job_name}{extra_part}.csv"
             else:
-                concat_out = csv_folder / f"{step.id}_concat.csv"
-            count = concatenate_csvs(csv_folder, file_pattern, concat_out)
+                concat_out = csv_folder / f"{step.id}{extra_part}_concat.csv"
+            count = concatenate_csv_files(eligible_csvs, concat_out, custom_headers=custom_headers)
             if count:
                 _log.info("Step %s: concatenated %d CSVs -> %s", step.id, count, concat_out)
                 concatenated_file = str(concat_out)
@@ -450,6 +530,30 @@ def _find_bot_rules_for_split(
         f"Step {step_id!r}: split_by_bot_rule requires a bot_rule_compare or "
         "report_download step in this job with a 'bot_rules' source"
     )
+
+
+def _find_report_download_step_for_split(
+    job: CompositeJobConfig, step_id: str | None
+) -> CompositeStep | None:
+    """Walk depends_on/config_ref back from step_id to its originating report_download step.
+
+    Used by split_by_rsid. Unlike _find_bot_rules_for_split (which just grabs the
+    first report_download step in the job), this follows the actual dependency
+    chain — required when a job has more than one report_download step (e.g.
+    separate Daily/Totals downloads) so each transform_concat step resolves the
+    RSIDs it actually consumed, not another step's.
+    """
+    seen: set[str] = set()
+    current = step_id
+    while current and current not in seen:
+        seen.add(current)
+        ref = next((s for s in job.steps if s.id == current), None)
+        if ref is None:
+            return None
+        if ref.step == "report_download":
+            return ref
+        current = ref.extra_fields().get("config_ref") or ref.depends_on
+    return None
 
 
 async def _run_validate_output_step(
@@ -734,6 +838,7 @@ async def _run_bot_rule_compare_step(
         step_id=step.id,
         test_limits=job.test_limits if job.test_mode else None,
         job_name=job.output.job_name if job.output else None,
+        batch_size=rsids.batch_size,
     )
 
     if result.failed:

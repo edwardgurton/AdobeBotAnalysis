@@ -16,6 +16,7 @@ from adobe_downloader.flows.report_download import download_report, make_output_
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _date(from_date: str, to: str) -> DateRange:
     return DateRange.model_validate({"from": from_date, "to": to})
 
@@ -30,6 +31,7 @@ def _mock_client(response: dict[str, Any]) -> MagicMock:
 # make_output_path
 # ---------------------------------------------------------------------------
 
+
 def test_make_output_path_basic():
     path = make_output_path(
         base_folder="/data",
@@ -37,7 +39,9 @@ def test_make_output_path_basic():
         report_name="botInvestigationMetricsByBrowser",
         date_range=_date("2025-01-01", "2025-02-01"),
     )
-    assert path == Path("/data/Legend/JSON/Legend_botInvestigationMetricsByBrowser_2025-01-01_2025-02-01.json")
+    assert path == Path(
+        "/data/Legend/JSON/Legend_botInvestigationMetricsByBrowser_2025-01-01_2025-02-01.json"
+    )
 
 
 def test_make_output_path_with_file_name_extra():
@@ -48,7 +52,9 @@ def test_make_output_path_with_file_name_extra():
         date_range=_date("2025-01-01", "2025-02-01"),
         file_name_extra="rsidFoo-Totals",
     )
-    assert path == Path("/data/Legend/JSON/Legend_botInvestigationMetricsByBrowser_rsidFoo-Totals_2025-01-01_2025-02-01.json")
+    assert path == Path(
+        "/data/Legend/JSON/Legend_botInvestigationMetricsByBrowser_rsidFoo-Totals_2025-01-01_2025-02-01.json"
+    )
 
 
 def test_make_output_path_with_segment_id():
@@ -60,7 +66,10 @@ def test_make_output_path_with_segment_id():
         segment_id="seg123",
     )
     # segment_id is embedded verbatim: DIMSEG{segment_id}
-    assert path.name == "Legend_botInvestigationMetricsByBrowser_DIMSEGseg123_2025-01-01_2025-02-01.json"
+    assert (
+        path.name
+        == "Legend_botInvestigationMetricsByBrowser_DIMSEGseg123_2025-01-01_2025-02-01.json"
+    )
 
 
 def test_make_output_path_with_both_extra_and_segment():
@@ -87,9 +96,49 @@ def test_make_output_path_client_json_subfolder():
     assert path.parent == Path("/base/ClientX/JSON")
 
 
+def test_make_output_path_with_rsid():
+    path = make_output_path(
+        base_folder="/data",
+        client="Legend",
+        report_name="botInvestigationMetricsByBrowser",
+        date_range=_date("2025-01-01", "2025-02-01"),
+        rsid="Casinoorg",
+    )
+    assert path == Path(
+        "/data/Legend/JSON/Legend_botInvestigationMetricsByBrowser_Casinoorg_2025-01-01_2025-02-01.json"
+    )
+
+
+def test_make_output_path_with_rsid_and_extra_and_segment():
+    # rsid sits between report_name and file_name_extra; DIMSEG still trails.
+    path = make_output_path(
+        base_folder="/data",
+        client="Legend",
+        report_name="myReport",
+        date_range=_date("2025-03-01", "2025-04-01"),
+        rsid="Casinoorg",
+        file_name_extra="Totals",
+        segment_id="abc",
+    )
+    assert path.name == "Legend_myReport_Casinoorg_Totals_DIMSEGabc_2025-03-01_2025-04-01.json"
+
+
+def test_make_output_path_two_rsids_produce_distinct_paths():
+    kwargs = dict(
+        base_folder="/data",
+        client="Legend",
+        report_name="botInvestigationMetricsByBrowser",
+        date_range=_date("2025-01-01", "2025-02-01"),
+    )
+    path_a = make_output_path(**kwargs, rsid="Casinoorg")
+    path_b = make_output_path(**kwargs, rsid="Casinous")
+    assert path_a != path_b
+
+
 # ---------------------------------------------------------------------------
 # download_report
 # ---------------------------------------------------------------------------
+
 
 async def test_download_report_calls_get_report(tmp_path: Path):
     response = {"rows": [{"itemId": "1", "data": [100, 50]}], "totalPages": 1}
@@ -147,6 +196,7 @@ async def test_download_report_json_is_pretty_printed(tmp_path: Path):
 # ---------------------------------------------------------------------------
 # load_report_group
 # ---------------------------------------------------------------------------
+
 
 def test_load_report_group_returns_all_reports():
     defs = load_report_group("bot_investigation")

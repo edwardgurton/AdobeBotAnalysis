@@ -56,7 +56,7 @@ class RsidSource(BaseModel):
     file: str | None = None
     rsid_list: list[str] | None = Field(default=None, alias="list")
     single: str | None = None
-    batch_size: int = 12
+    batch_size: int = Field(default=12, ge=1)
 
     @model_validator(mode="after")
     def _check_source_value(self) -> "RsidSource":
@@ -110,6 +110,11 @@ class ConcatConfig(BaseModel):
     enabled: bool = True
     file_pattern: str = ".*\\.csv$"
     custom_headers: dict[int, str] | None = None
+    # NOTE: not enforced on the composite-step transform_concat path — that path
+    # reads this block as a raw dict via CompositeStep.extra_fields() rather than
+    # through this model (see composite_job.py::_run_transform_concat_step).
+    # Declared here for typing/doc parity with ReportDownloadConfig.file_name_extra.
+    file_name_extra: str | None = None
 
 
 class ReportDefinitionInline(BaseModel):

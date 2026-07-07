@@ -19,10 +19,7 @@ _BODY_LOG_LIMIT = 20_000  # characters — cap logged body size to avoid floodin
 
 def _sanitize_headers(headers: dict[str, str]) -> dict[str, str]:
     """Return a copy of *headers* with the Authorization token masked."""
-    return {
-        k: ("Bearer ***" if k == "Authorization" else v)
-        for k, v in headers.items()
-    }
+    return {k: ("Bearer ***" if k == "Authorization" else v) for k, v in headers.items()}
 
 
 class AdobeClient:
@@ -37,7 +34,7 @@ class AdobeClient:
         self._company_id: str = adobe["globalCompanyID"]
         self._token: str | None = None
         self._token_expiry: float = 0.0
-        self._http = httpx.AsyncClient(timeout=120)
+        self._http = httpx.AsyncClient(timeout=600)
         self._rate_limiter = SlidingWindowRateLimiter()
         self._retry = make_retry(self._rate_limiter)
 

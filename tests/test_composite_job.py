@@ -840,6 +840,515 @@ class TestTransformConcatSplitByBotRule:
             await _run_transform_concat_step(step_obj, job, step_outputs)
 
 
+class TestTransformConcatCustomHeaders:
+    async def test_custom_headers_applied_on_composite_path(self, tmp_path: Path) -> None:
+        json_folder = tmp_path / "Legend" / "JSON"
+        json_folder.mkdir(parents=True)
+        (
+            json_folder / "Legend_botInvestigationMetricsByBrowser_2025-01-01_2025-01-02.json"
+        ).write_text("{}")
+
+        step_outputs = {"dl_step": {"json_folder": str(json_folder)}}
+        job = CompositeJobConfig.model_validate(
+            {
+                "job_type": "composite",
+                "client": "Legend",
+                "output": {"base_folder": str(tmp_path), "job_name": "TestJob"},
+                "steps": [
+                    {
+                        "step": "transform_concat",
+                        "id": "transform",
+                        "depends_on": "dl_step",
+                        "transform": {"type": "bot_investigation"},
+                        "concat": {"enabled": True, "custom_headers": {1: "feature"}},
+                    }
+                ],
+            }
+        )
+        step_obj = job.steps[0]
+
+        def _fake_dispatch(
+            src: Path,
+            transform_type: str | None = None,
+            headers_dir: object = None,
+            *,
+            output_path: Path | None = None,
+        ) -> None:
+            p = output_path or src.with_suffix(".csv")
+            p.parent.mkdir(parents=True, exist_ok=True)
+            p.write_text("id,browser\n1,Chrome\n")
+
+        from adobe_downloader.flows.composite_job import _run_transform_concat_step
+
+        with patch(
+            "adobe_downloader.transforms.specialized.transform_report_dispatch",
+            side_effect=_fake_dispatch,
+        ):
+            result = await _run_transform_concat_step(step_obj, job, step_outputs)
+
+        content = Path(result["concatenated_file"]).read_text()
+        assert content.splitlines()[0] == "id,feature"
+
+
+class TestTransformConcatSharedFolder:
+    async def test_concat_ignores_other_steps_files_in_shared_folder(self, tmp_path: Path) -> None:
+        # Simulates two report_download steps sharing one output.job_name and
+        # therefore the same JSON/CSV folders (e.g. a Daily + a Totals download).
+        json_folder = tmp_path / "Legend" / "TestJob" / "JSON"
+        json_folder.mkdir(parents=True)
+        (
+            json_folder / "Legend_botInvestigationMetricsByBrowser_Daily_2025-01-01_2025-01-02.json"
+        ).write_text("{}")
+        (
+            json_folder
+            / "Legend_botInvestigationMetricsByBrowser_Totals_2025-01-01_2025-01-02.json"
+        ).write_text("{}")
+
+        # A CSV already sitting in the shared CSV folder from the sibling Totals step.
+        csv_folder = json_folder.parent / "CSV"
+        csv_folder.mkdir(parents=True)
+        (
+            csv_folder / "Legend_botInvestigationMetricsByBrowser_Totals_2025-01-01_2025-01-02.csv"
+        ).write_text("id,browser\nTOTALS_ROW,x\n")
+
+        step_outputs = {"dl_step": {"json_folder": str(json_folder)}}
+        job = CompositeJobConfig.model_validate(
+            {
+                "job_type": "composite",
+                "client": "Legend",
+                "output": {"base_folder": str(tmp_path), "job_name": "TestJob"},
+                "steps": [
+                    {
+                        "step": "transform_concat",
+                        "id": "transform_daily",
+                        "depends_on": "dl_step",
+                        "transform": {
+                            "type": "bot_investigation",
+                            "source_pattern": "*Daily*.json",
+                        },
+                        "concat": {"enabled": True, "file_name_extra": "Daily"},
+                    }
+                ],
+            }
+        )
+        step_obj = job.steps[0]
+
+        def _fake_dispatch(
+            src: Path,
+            transform_type: str | None = None,
+            headers_dir: object = None,
+            *,
+            output_path: Path | None = None,
+        ) -> None:
+            p = output_path or src.with_suffix(".csv")
+            p.parent.mkdir(parents=True, exist_ok=True)
+            p.write_text(f"id,browser\n{src.stem}\n")
+
+        from adobe_downloader.flows.composite_job import _run_transform_concat_step
+
+        with patch(
+            "adobe_downloader.transforms.specialized.transform_report_dispatch",
+            side_effect=_fake_dispatch,
+        ):
+            result = await _run_transform_concat_step(step_obj, job, step_outputs)
+
+        content = Path(result["concatenated_file"]).read_text()
+        assert "TOTALS_ROW" not in content
+        assert "Daily" in content
+
+
+class TestTransformConcatSplitByRsid:
+    @staticmethod
+    def _fake_dispatch(
+        src: Path,
+        transform_type: str | None = None,
+        headers_dir: object = None,
+        *,
+        output_path: Path | None = None,
+    ) -> None:
+        p = output_path or src.with_suffix(".csv")
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text(f"id,browser\n{src.stem}\n")
+
+    async def test_split_produces_one_file_per_rsid_from_correct_download_step(
+        self, tmp_path: Path
+    ) -> None:
+        json_folder = tmp_path / "Legend" / "TestJob" / "JSON"
+        json_folder.mkdir(parents=True)
+
+        files = [
+            "Legend_botInvestigationMetricsByBrowser_SiteA_Daily_2025-01-01_2025-01-02.json",
+            "Legend_botInvestigationMetricsByBrowser_SiteB_Daily_2025-01-01_2025-01-02.json",
+            "Legend_botInvestigationMetricsByBrowser_SiteC_Totals_2025-01-01_2025-01-02.json",
+        ]
+        for name in files:
+            (json_folder / name).write_text("{}")
+
+        step_outputs = {
+            "download_daily": {"json_folder": str(json_folder)},
+            "download_totals": {"json_folder": str(json_folder)},
+        }
+
+        job = CompositeJobConfig.model_validate(
+            {
+                "job_type": "composite",
+                "client": "Legend",
+                "output": {"base_folder": str(tmp_path), "job_name": "TestJob"},
+                "steps": [
+                    {
+                        "step": "report_download",
+                        "id": "download_daily",
+                        "report_group": "bot_investigation",
+                        "rsids": {"source": "list", "list": ["SiteA", "SiteB"]},
+                        "interval": "day",
+                        "file_name_extra": "Daily",
+                    },
+                    {
+                        "step": "report_download",
+                        "id": "download_totals",
+                        "report_group": "bot_investigation",
+                        "rsids": {"source": "list", "list": ["SiteC"]},
+                        "interval": "full",
+                        "file_name_extra": "Totals",
+                    },
+                    {
+                        "step": "validate_output",
+                        "id": "validate_daily",
+                        "depends_on": "download_daily",
+                        "config_ref": "download_daily",
+                    },
+                    {
+                        "step": "transform_concat",
+                        "id": "transform_daily",
+                        "depends_on": "validate_daily",
+                        "transform": {
+                            "type": "bot_investigation",
+                            "source_pattern": "*Daily*.json",
+                            "split_by_rsid": True,
+                        },
+                        "concat": {"enabled": True, "file_name_extra": "Daily"},
+                    },
+                ],
+            }
+        )
+        step_obj = next(s for s in job.steps if s.id == "transform_daily")
+
+        from adobe_downloader.flows.composite_job import _run_transform_concat_step
+
+        with patch(
+            "adobe_downloader.transforms.specialized.transform_report_dispatch",
+            side_effect=self._fake_dispatch,
+        ):
+            result = await _run_transform_concat_step(step_obj, job, step_outputs)
+
+        assert set(result["concatenated_files"].keys()) == {"SiteA", "SiteB"}
+        assert result["concatenated_file"] is None
+
+        site_a_content = Path(result["concatenated_files"]["SiteA"]).read_text()
+        assert "SiteA" in site_a_content
+        assert "SiteB" not in site_a_content
+        assert "SiteC" not in site_a_content
+
+    async def test_split_by_rsid_requires_report_download_step(self, tmp_path: Path) -> None:
+        json_folder = tmp_path / "Legend" / "TestJob" / "JSON"
+        json_folder.mkdir(parents=True)
+        (json_folder / "Legend_report_2025-01-01_2025-01-02.json").write_text("{}")
+
+        step_outputs = {"dl": {"json_folder": str(json_folder)}}
+        job = CompositeJobConfig.model_validate(
+            {
+                "job_type": "composite",
+                "client": "Legend",
+                "output": {"base_folder": str(tmp_path), "job_name": "TestJob"},
+                "steps": [
+                    {
+                        "step": "transform_concat",
+                        "id": "transform",
+                        "depends_on": "dl",
+                        "transform": {"type": "bot_investigation", "split_by_rsid": True},
+                    }
+                ],
+            }
+        )
+        step_obj = job.steps[0]
+
+        from adobe_downloader.flows.composite_job import _run_transform_concat_step
+
+        with (
+            patch(
+                "adobe_downloader.transforms.specialized.transform_report_dispatch",
+                side_effect=self._fake_dispatch,
+            ),
+            pytest.raises(ValueError, match="split_by_rsid requires"),
+        ):
+            await _run_transform_concat_step(step_obj, job, step_outputs)
+
+
+class TestTransformConcatFileNameExtra:
+    @staticmethod
+    def _fake_dispatch(
+        src: Path,
+        transform_type: str | None = None,
+        headers_dir: object = None,
+        *,
+        output_path: Path | None = None,
+    ) -> None:
+        p = output_path or src.with_suffix(".csv")
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text("col1,col2\n1,2\n")
+
+    async def test_non_split_baseline_filename_unchanged_when_unset(self, tmp_path: Path) -> None:
+        json_folder = tmp_path / "Legend" / "JSON"
+        json_folder.mkdir(parents=True)
+        (
+            json_folder / "Legend_botInvestigationMetricsByBrowser_2025-01-01_2025-01-02.json"
+        ).write_text("{}")
+
+        step_outputs = {"dl_step": {"json_folder": str(json_folder)}}
+        job = CompositeJobConfig.model_validate(
+            {
+                "job_type": "composite",
+                "client": "Legend",
+                "output": {"base_folder": str(tmp_path), "job_name": "TestJob"},
+                "steps": [
+                    {
+                        "step": "transform_concat",
+                        "id": "transform",
+                        "depends_on": "dl_step",
+                        "transform": {"type": "bot_investigation"},
+                        "concat": {"enabled": True},
+                    }
+                ],
+            }
+        )
+        step_obj = job.steps[0]
+
+        from adobe_downloader.flows.composite_job import _run_transform_concat_step
+
+        with patch(
+            "adobe_downloader.transforms.specialized.transform_report_dispatch",
+            side_effect=self._fake_dispatch,
+        ):
+            result = await _run_transform_concat_step(step_obj, job, step_outputs)
+
+        assert Path(result["concatenated_file"]).name == "INVESTIGATION_TestJob.csv"
+
+    async def test_non_split_appends_file_name_extra_after_job_name(self, tmp_path: Path) -> None:
+        json_folder = tmp_path / "Legend" / "JSON"
+        json_folder.mkdir(parents=True)
+        (
+            json_folder / "Legend_botInvestigationMetricsByBrowser_2025-01-01_2025-01-02.json"
+        ).write_text("{}")
+
+        step_outputs = {"dl_step": {"json_folder": str(json_folder)}}
+        job = CompositeJobConfig.model_validate(
+            {
+                "job_type": "composite",
+                "client": "Legend",
+                "output": {"base_folder": str(tmp_path), "job_name": "TestJob"},
+                "steps": [
+                    {
+                        "step": "transform_concat",
+                        "id": "transform",
+                        "depends_on": "dl_step",
+                        "transform": {"type": "bot_investigation"},
+                        "concat": {"enabled": True, "file_name_extra": "MyLabel"},
+                    }
+                ],
+            }
+        )
+        step_obj = job.steps[0]
+
+        from adobe_downloader.flows.composite_job import _run_transform_concat_step
+
+        with patch(
+            "adobe_downloader.transforms.specialized.transform_report_dispatch",
+            side_effect=self._fake_dispatch,
+        ):
+            result = await _run_transform_concat_step(step_obj, job, step_outputs)
+
+        assert Path(result["concatenated_file"]).name == "INVESTIGATION_TestJob_MyLabel.csv"
+
+    async def test_split_appends_file_name_extra_before_rule_name(self, tmp_path: Path) -> None:
+        json_folder = tmp_path / "Legend" / "TestJob" / "JSON"
+        json_folder.mkdir(parents=True)
+
+        files = [
+            "Legend_botInvestigationMetricsByBrowser_Coverscom-RuleA-Compare-V1"
+            "-Segment_2025-01-01_2025-01-02.json",
+            "Legend_botInvestigationMetricsByBrowser_Coverscom-RuleB-Compare-V1"
+            "-Segment_2025-01-01_2025-01-02.json",
+        ]
+        for name in files:
+            (json_folder / name).write_text("{}")
+
+        step_outputs = {"download_compare": {"json_folder": str(json_folder)}}
+        job = CompositeJobConfig.model_validate(
+            {
+                "job_type": "composite",
+                "client": "Legend",
+                "output": {"base_folder": str(tmp_path), "job_name": "TestJob"},
+                "steps": [
+                    {
+                        "step": "bot_rule_compare",
+                        "id": "download_compare",
+                        "bot_rules": {
+                            "source": "inline",
+                            "rules": [
+                                {
+                                    "segment_id": "s1",
+                                    "segment_name": "RuleA",
+                                    "report_to_skip": "Domain",
+                                },
+                                {
+                                    "segment_id": "s2",
+                                    "segment_name": "RuleB",
+                                    "report_to_skip": "Domain",
+                                },
+                            ],
+                        },
+                    },
+                    {
+                        "step": "transform_concat",
+                        "id": "transform",
+                        "depends_on": "download_compare",
+                        "transform": {
+                            "type": "bot_rule_compare",
+                            "source_pattern": ".*Compare-V1.*\\.json$",
+                            "split_by_bot_rule": True,
+                        },
+                        "concat": {"enabled": True, "file_name_extra": "V4"},
+                    },
+                ],
+            }
+        )
+        step_obj = job.steps[1]
+
+        from adobe_downloader.flows.composite_job import _run_transform_concat_step
+
+        with patch(
+            "adobe_downloader.transforms.specialized.transform_report_dispatch",
+            side_effect=self._fake_dispatch,
+        ):
+            result = await _run_transform_concat_step(step_obj, job, step_outputs)
+
+        assert Path(result["concatenated_files"]["RuleA"]).name == "COMPARE_TestJob_V4_RuleA.csv"
+        assert Path(result["concatenated_files"]["RuleB"]).name == "COMPARE_TestJob_V4_RuleB.csv"
+
+    async def test_fallback_no_job_name_appends_file_name_extra(self, tmp_path: Path) -> None:
+        json_folder = tmp_path / "Legend" / "JSON"
+        json_folder.mkdir(parents=True)
+        (json_folder / "Legend_report_2025-01-01_2025-01-02.json").write_text("{}")
+
+        step_outputs = {"dl_step": {"json_folder": str(json_folder)}}
+        job = CompositeJobConfig.model_validate(
+            {
+                "job_type": "composite",
+                "client": "Legend",
+                "output": {"base_folder": str(tmp_path)},
+                "steps": [
+                    {
+                        "step": "transform_concat",
+                        "id": "transform",
+                        "depends_on": "dl_step",
+                        "transform": {"type": "standard"},
+                        "concat": {"enabled": True, "file_name_extra": "MyLabel"},
+                    }
+                ],
+            }
+        )
+        step_obj = job.steps[0]
+
+        from adobe_downloader.flows.composite_job import _run_transform_concat_step
+
+        with patch(
+            "adobe_downloader.transforms.specialized.transform_report_dispatch",
+            side_effect=self._fake_dispatch,
+        ):
+            result = await _run_transform_concat_step(step_obj, job, step_outputs)
+
+        assert Path(result["concatenated_file"]).name == "transform_MyLabel_concat.csv"
+
+    async def test_file_name_extra_sanitizes_illegal_windows_chars(self, tmp_path: Path) -> None:
+        json_folder = tmp_path / "Legend" / "JSON"
+        json_folder.mkdir(parents=True)
+        (
+            json_folder / "Legend_botInvestigationMetricsByBrowser_2025-01-01_2025-01-02.json"
+        ).write_text("{}")
+
+        step_outputs = {"dl_step": {"json_folder": str(json_folder)}}
+        job = CompositeJobConfig.model_validate(
+            {
+                "job_type": "composite",
+                "client": "Legend",
+                "output": {"base_folder": str(tmp_path), "job_name": "TestJob"},
+                "steps": [
+                    {
+                        "step": "transform_concat",
+                        "id": "transform",
+                        "depends_on": "dl_step",
+                        "transform": {"type": "bot_investigation"},
+                        "concat": {"enabled": True, "file_name_extra": "A/B:C*D"},
+                    }
+                ],
+            }
+        )
+        step_obj = job.steps[0]
+
+        from adobe_downloader.flows.composite_job import _run_transform_concat_step
+
+        with patch(
+            "adobe_downloader.transforms.specialized.transform_report_dispatch",
+            side_effect=self._fake_dispatch,
+        ):
+            result = await _run_transform_concat_step(step_obj, job, step_outputs)
+
+        assert Path(result["concatenated_file"]).name == "INVESTIGATION_TestJob_A-B-C-D.csv"
+
+    @pytest.mark.parametrize("file_name_extra_value", ["", "   ", None])
+    async def test_file_name_extra_blank_and_whitespace_treated_as_unset(
+        self, tmp_path: Path, file_name_extra_value: str | None
+    ) -> None:
+        json_folder = tmp_path / "Legend" / "JSON"
+        json_folder.mkdir(parents=True)
+        (
+            json_folder / "Legend_botInvestigationMetricsByBrowser_2025-01-01_2025-01-02.json"
+        ).write_text("{}")
+
+        concat_block: dict[str, Any] = {"enabled": True}
+        if file_name_extra_value is not None:
+            concat_block["file_name_extra"] = file_name_extra_value
+
+        step_outputs = {"dl_step": {"json_folder": str(json_folder)}}
+        job = CompositeJobConfig.model_validate(
+            {
+                "job_type": "composite",
+                "client": "Legend",
+                "output": {"base_folder": str(tmp_path), "job_name": "TestJob"},
+                "steps": [
+                    {
+                        "step": "transform_concat",
+                        "id": "transform",
+                        "depends_on": "dl_step",
+                        "transform": {"type": "bot_investigation"},
+                        "concat": concat_block,
+                    }
+                ],
+            }
+        )
+        step_obj = job.steps[0]
+
+        from adobe_downloader.flows.composite_job import _run_transform_concat_step
+
+        with patch(
+            "adobe_downloader.transforms.specialized.transform_report_dispatch",
+            side_effect=self._fake_dispatch,
+        ):
+            result = await _run_transform_concat_step(step_obj, job, step_outputs)
+
+        assert Path(result["concatenated_file"]).name == "INVESTIGATION_TestJob.csv"
+
+
 # ---------------------------------------------------------------------------
 # Async helper
 # ---------------------------------------------------------------------------

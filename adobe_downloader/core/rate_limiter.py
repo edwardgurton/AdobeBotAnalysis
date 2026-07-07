@@ -88,7 +88,7 @@ class SlidingWindowRateLimiter:
         await self.acquire()
         try:
             log.debug("Rate limiter: executing request %s", request_id)
-            return await asyncio.wait_for(coro_func(*args, **kwargs), timeout=120)
+            return await asyncio.wait_for(coro_func(*args, **kwargs), timeout=600)
         finally:
             self.release()
 

@@ -287,11 +287,14 @@ Each yielded `DateRange` is a Pydantic model with `from_date` and `to` as ISO st
 ### Output file naming
 
 ```
-{base}/{client}/JSON/{client}_{report_name}{_extra}_{DIMSEG{seg_id}_}{from}_{to}.json
+{base}/{client}/JSON/{client}_{report_name}_{rsid}{_extra}_{DIMSEG{seg_id}_}{from}_{to}.json
 ```
 
+- `{rsid}` is the RSID's clean name (e.g. `Casinoorg`), not the resolved Adobe report suite ID — `run_report_download` maps the resolved RSID back to the clean name it was read from before calling `make_output_path`. Absent if `rsid` is `None` (e.g. flows that already fold RSID into `file_name_extra`, such as `bot_rule_compare`/`final_bot_metrics`).
 - `_extra` is the `file_name_extra` parameter (underscore-prefixed, absent if `None`).
 - `DIMSEG{seg_id}_` is only included when a segment ID is being used as a filename discriminator (i.e. `seg_id` from `iterate_segments` is non-None).
+
+Every RSID now produces a distinct path per (report, date), so `enumerate_expected_paths` also takes `rsid` and can no longer report a false PASS when one RSID's file overwrote another's.
 
 ### Canonical deduplication
 
@@ -349,18 +352,28 @@ The two patterns are distinguished by whether `"-Compare-"` appears in `parts[2]
 
 ### Concatenation (`concatenate.py`)
 
-`concatenate_csvs(folder, pattern, output_path, custom_headers)` merges multiple CSVs into one file.
+`concatenate_csvs(folder, pattern, output_path, custom_headers)` scans a folder by pattern and merges the matching CSVs into one file. `concatenate_csv_files(csv_files, output_path, custom_headers)` does the same merge over an explicit, already-resolved list of files instead of scanning a folder — `concatenate_csvs` is now a thin wrapper around it.
 
 - `pattern` uses `*` as a wildcard, converted to `.*` for `re.search`. Files are sorted alphabetically before processing.
-- The header row is taken from the **first** matching file. All subsequent files have their header row dropped (`lines[1:]`).
+- The header row is taken from the **first** file. All subsequent files have their header row dropped (`lines[1:]`).
 - `custom_headers` is a `dict[int, str]` mapping 0-based column index to a replacement name. Applied to the header list before writing.
 - Empty files and blank lines within files are skipped.
 - The output is written as `"\n".join([header_line] + data_lines) + "\n"`.
-- Returns the count of files concatenated (0 if none matched).
+- Returns the count of files concatenated (0 if none matched / the list is empty).
 
-The composite job runner names the concatenation output `{step_id}_concat.csv` within the CSV folder (or `{prefix}_{job_name}.csv` in the client/job output folder, when `output.job_name` is set).
+The composite job runner's `transform_concat` step always concatenates via `concatenate_csv_files`, passing exactly the CSVs it just transformed in that step (`csv_paths`) — never a fresh scan of the whole CSV folder. This matters because two `report_download` steps in the same job that share `output.job_name` also share one JSON/CSV folder; without this, a `transform_concat` step's default `*.csv` pattern would sweep up CSVs produced by a sibling step too. `concat.file_pattern`, if set, narrows `csv_paths` further (as a regex/glob, same as `concatenate_csvs`'s `pattern`) but is no longer the sole gate. `concat.custom_headers` is passed straight through in every mode (non-split, `split_by_bot_rule`, `split_by_rsid`). The composite step names the concatenation output `{step_id}_concat.csv` within the CSV folder (or `{prefix}_{job_name}.csv` in the client/job output folder, when `output.job_name` is set).
 
-A `transform_concat` step with `transform.type: bot_rule_compare` can set `transform.split_by_bot_rule: true` to produce one CSV per bot rule instead of a single combined file. It auto-detects the bot rule list from the sibling `bot_rule_compare`/`report_download` step's `bot_rules` source in the same composite job (no separate list needed), then calls `concatenate_csvs` once per rule with a pattern matching that rule's sanitized name, writing `{prefix}_{job_name}_{ruleName}.csv` per rule. Step output uses `concatenated_files` (a dict of rule name → path) instead of `concatenated_file` in this mode.
+A `transform_concat` step with `transform.type: bot_rule_compare` can set `transform.split_by_bot_rule: true` to produce one CSV per bot rule instead of a single combined file. It auto-detects the bot rule list from the sibling `bot_rule_compare`/`report_download` step's `bot_rules` source in the same composite job (no separate list needed), then calls `concatenate_csv_files` once per rule with the subset of `csv_paths` whose name contains that rule's sanitized name, writing `{prefix}_{job_name}_{ruleName}.csv` per rule. Step output uses `concatenated_files` (a dict of rule name → path) instead of `concatenated_file` in this mode.
+
+Any `transform_concat` step can instead set `transform.split_by_rsid: true` to produce one CSV per RSID. It resolves the RSID list by walking `depends_on`/`config_ref` back from this step to the specific `report_download` step that actually fed it (not just the first `report_download` step in the job — needed when a job has more than one, e.g. separate Daily/Totals downloads), reads that step's `rsids` source, then calls `concatenate_csv_files` once per RSID with the subset of `csv_paths` whose name contains that RSID's clean name, writing `{prefix}_{job_name}_{rsid}.csv` per RSID. `split_by_rsid` and `split_by_bot_rule` are mutually exclusive (the code checks `split_by_bot_rule` first). Step output uses `concatenated_files` (a dict of RSID → path) in this mode too.
+
+A step's `concat:` block can also set `file_name_extra` — a free-text label spliced into the output filename immediately after `job_name`, before the rule/RSID name (if `split_by_bot_rule`/`split_by_rsid` is set):
+
+- Non-split: `{prefix}_{job_name}_{file_name_extra}.csv` (vs. `{prefix}_{job_name}.csv` when unset)
+- Split by bot rule/RSID: `{prefix}_{job_name}_{file_name_extra}_{ruleName|rsid}.csv` (vs. `{prefix}_{job_name}_{ruleName|rsid}.csv` when unset)
+- No `job_name` set (fallback path): `{step_id}_{file_name_extra}_concat.csv` (vs. `{step_id}_concat.csv` when unset)
+
+`file_name_extra` is optional — omitting it, or leaving it blank/whitespace-only, produces the same filenames as before this field existed. Any character illegal in Windows filenames (`<>:"/\|?*`) is replaced with `-`. Like `job_name`, a long value adds to the same Windows 260-character `MAX_PATH` budget, so keep it short. As with the other `concat:` sub-fields, this is read as a raw key on the composite-step path and is not schema-validated there — a typo in the key name is silently ignored rather than rejected.
 
 ---
 

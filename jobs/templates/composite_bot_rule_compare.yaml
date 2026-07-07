@@ -53,3 +53,10 @@ steps:
       #                           # the rule) instead of a single combined CSV.
       #                           # Reuses the bot_rules source from download_compare
       #                           # above — no separate list needed.
+    # concat:
+    #   enabled: true
+    #   file_name_extra: "<version-label>"   # inserted right after job_name in the
+    #                                         # output filename, before the per-rule
+    #                                         # name when split_by_bot_rule is on:
+    #                                         #   COMPARE_<job-name>_<version-label>_<rule>.csv
+    #                                         # Omit to keep today's plain naming.

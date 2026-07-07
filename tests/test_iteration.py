@@ -150,6 +150,16 @@ def test_iterate_rsids_file_strips_blank_lines(tmp_path: Path):
     assert result == ["rsidX", "rsidY"]
 
 
+def test_iterate_rsids_file_skips_comment_lines(tmp_path: Path):
+    rsid_file = tmp_path / "rsids.txt"
+    rsid_file.write_text(
+        "# Minimum threshold = 1000\n  # indented comment\nrsidX\nrsidY\n",
+        encoding="utf-8",
+    )
+    result = list(iterate_rsids(_rsid_source("file", file=str(rsid_file))))
+    assert result == ["rsidX", "rsidY"]
+
+
 # ---------------------------------------------------------------------------
 # load_segment_list
 # ---------------------------------------------------------------------------
@@ -158,10 +168,12 @@ def test_iterate_rsids_file_strips_blank_lines(tmp_path: Path):
 def test_load_segment_list_returns_ids(tmp_path: Path):
     seg_file = tmp_path / "segments.json"
     seg_file.write_text(
-        json.dumps([
-            {"id": "seg_001", "name": "United States"},
-            {"id": "seg_002", "name": "Canada"},
-        ]),
+        json.dumps(
+            [
+                {"id": "seg_001", "name": "United States"},
+                {"id": "seg_002", "name": "Canada"},
+            ]
+        ),
         encoding="utf-8",
     )
     result = load_segment_list(seg_file)
@@ -193,11 +205,13 @@ def test_iterate_segments_inline_all_ids_together():
 def test_iterate_segments_segment_list_file(tmp_path: Path):
     seg_file = tmp_path / "segs.json"
     seg_file.write_text(
-        json.dumps([
-            {"id": "seg_001", "name": "US"},
-            {"id": "seg_002", "name": "CA"},
-            {"id": "seg_003", "name": "MX"},
-        ]),
+        json.dumps(
+            [
+                {"id": "seg_001", "name": "US"},
+                {"id": "seg_002", "name": "CA"},
+                {"id": "seg_003", "name": "MX"},
+            ]
+        ),
         encoding="utf-8",
     )
     cfg = _seg_source("segment_list_file", file=str(seg_file))

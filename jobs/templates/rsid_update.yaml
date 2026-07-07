@@ -2,6 +2,10 @@ job_type: rsid_update
 client: Legend
 description: "Fetch all report suites and generate filtered investigation/validation RSID lists"
 
+date_range:
+  from: "2026-04-01"
+  to: "2026-06-30"
+
 rsid_update:
   investigation_threshold: 1000   # minimum visits to include in investigation list
   validation_threshold: 1000      # minimum visits to include in validation list

@@ -223,7 +223,7 @@ transform:
 concat:
   enabled: true
   file_pattern: ".*\\.csv$"
-  custom_headers:                 # optional: override specific column names by 1-based index
+  custom_headers:                 # optional: override specific column names by 0-based index
     # 1: NewHeaderName
 
 output:
@@ -438,6 +438,12 @@ steps:
       #                           # download_compare above — no separate list needed.
       #                           # Output keys: concatenated_files (dict of rule name
       #                           # -> path) instead of concatenated_file.
+      # split_by_rsid: true       # one CSV per RSID instead of a single combined CSV,
+      #                           # RSID clean name included in the filename. Resolves
+      #                           # the RSID list by walking depends_on/config_ref back
+      #                           # to this step's originating report_download step —
+      #                           # mutually exclusive with split_by_bot_rule. Output
+      #                           # keys: concatenated_files (dict of RSID -> path).
 ```
 
 ### `composite` — final bot metrics flow
@@ -841,7 +847,7 @@ post_processing:
 ```yaml
 concat:
   custom_headers:
-    3: "BotRuleName"   # override column index 3 (1-based) with this header string
+    3: "BotRuleName"   # override column index 3 (0-based) with this header string
 ```
 
 ---

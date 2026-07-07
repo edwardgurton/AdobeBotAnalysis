@@ -11,7 +11,7 @@ from adobe_downloader.transforms.base import (
     transform_report,
     _parse_filename_parts,
 )
-from adobe_downloader.transforms.concatenate import concatenate_csvs
+from adobe_downloader.transforms.concatenate import concatenate_csv_files, concatenate_csvs
 
 _FIXTURES = Path(__file__).parent / "fixtures" / "transforms"
 _HEADERS_DIR = Path(__file__).parent.parent / "data" / "report_headers"
@@ -76,8 +76,10 @@ def test_load_column_headers_missing(tmp_path: Path) -> None:
 
 
 def test_transform_report_dimensional_matches_fixture() -> None:
-    json_path = _FIXTURES / "base" / (
-        "Legend_botInvestigationMetricsByBrowser_trillioncoverscom_2026-01-01_2026-01-31.json"
+    json_path = (
+        _FIXTURES
+        / "base"
+        / ("Legend_botInvestigationMetricsByBrowser_trillioncoverscom_2026-01-01_2026-01-31.json")
     )
     expected = (_FIXTURES / "base" / "expected.csv").read_text(encoding="utf-8")
 
@@ -86,8 +88,10 @@ def test_transform_report_dimensional_matches_fixture() -> None:
 
 
 def test_transform_report_dimensional_writes_file(tmp_path: Path) -> None:
-    json_path = _FIXTURES / "base" / (
-        "Legend_botInvestigationMetricsByBrowser_trillioncoverscom_2026-01-01_2026-01-31.json"
+    json_path = (
+        _FIXTURES
+        / "base"
+        / ("Legend_botInvestigationMetricsByBrowser_trillioncoverscom_2026-01-01_2026-01-31.json")
     )
     out = tmp_path / "out.csv"
     transform_report(json_path, _HEADERS_DIR, output_path=out)
@@ -98,8 +102,10 @@ def test_transform_report_dimensional_writes_file(tmp_path: Path) -> None:
 
 
 def test_transform_report_dimensional_row_count() -> None:
-    json_path = _FIXTURES / "base" / (
-        "Legend_botInvestigationMetricsByBrowser_trillioncoverscom_2026-01-01_2026-01-31.json"
+    json_path = (
+        _FIXTURES
+        / "base"
+        / ("Legend_botInvestigationMetricsByBrowser_trillioncoverscom_2026-01-01_2026-01-31.json")
     )
     csv_text = transform_report(json_path, _HEADERS_DIR)
     lines = [ln for ln in csv_text.splitlines() if ln.strip()]
@@ -107,8 +113,10 @@ def test_transform_report_dimensional_row_count() -> None:
 
 
 def test_transform_report_dimensional_metadata_columns() -> None:
-    json_path = _FIXTURES / "base" / (
-        "Legend_botInvestigationMetricsByBrowser_trillioncoverscom_2026-01-01_2026-01-31.json"
+    json_path = (
+        _FIXTURES
+        / "base"
+        / ("Legend_botInvestigationMetricsByBrowser_trillioncoverscom_2026-01-01_2026-01-31.json")
     )
     csv_text = transform_report(json_path, _HEADERS_DIR)
     rows = csv_text.splitlines()
@@ -135,8 +143,10 @@ def test_transform_report_no_rows_returns_header_only(tmp_path: Path) -> None:
 
 
 def test_transform_report_summary_matches_fixture() -> None:
-    json_path = _FIXTURES / "summary_total_only" / (
-        "Legend_toplineMetricsForRsidValidation_trillioncoverscom_2026-01-01_2026-01-31.json"
+    json_path = (
+        _FIXTURES
+        / "summary_total_only"
+        / ("Legend_toplineMetricsForRsidValidation_trillioncoverscom_2026-01-01_2026-01-31.json")
     )
     expected = (_FIXTURES / "summary_total_only" / "expected.csv").read_text(encoding="utf-8")
     result = transform_report(json_path, _HEADERS_DIR)
@@ -144,8 +154,10 @@ def test_transform_report_summary_matches_fixture() -> None:
 
 
 def test_transform_report_summary_single_row() -> None:
-    json_path = _FIXTURES / "summary_total_only" / (
-        "Legend_toplineMetricsForRsidValidation_trillioncoverscom_2026-01-01_2026-01-31.json"
+    json_path = (
+        _FIXTURES
+        / "summary_total_only"
+        / ("Legend_toplineMetricsForRsidValidation_trillioncoverscom_2026-01-01_2026-01-31.json")
     )
     csv_text = transform_report(json_path, _HEADERS_DIR)
     lines = [ln for ln in csv_text.splitlines() if ln.strip()]
@@ -153,8 +165,10 @@ def test_transform_report_summary_single_row() -> None:
 
 
 def test_transform_report_summary_values() -> None:
-    json_path = _FIXTURES / "summary_total_only" / (
-        "Legend_toplineMetricsForRsidValidation_trillioncoverscom_2026-01-01_2026-01-31.json"
+    json_path = (
+        _FIXTURES
+        / "summary_total_only"
+        / ("Legend_toplineMetricsForRsidValidation_trillioncoverscom_2026-01-01_2026-01-31.json")
     )
     csv_text = transform_report(json_path, _HEADERS_DIR)
     data_row = csv_text.splitlines()[1].split(",")
@@ -263,3 +277,43 @@ def test_concatenate_csvs_deduplicates_header(tmp_path: Path) -> None:
     concatenate_csvs(folder, "*.csv", out)
     content = out.read_text(encoding="utf-8")
     assert content.count("col1,col2") == 1
+
+
+# ---------------------------------------------------------------------------
+# concatenate_csv_files
+# ---------------------------------------------------------------------------
+
+
+def test_concatenate_csv_files_uses_only_given_files(tmp_path: Path) -> None:
+    folder = tmp_path / "csv"
+    a = folder / "a.csv"
+    b = folder / "b.csv"
+    _write_csv(a, "col1,col2\n1,2\n")
+    _write_csv(b, "col1,col2\n3,4\n")
+    # A third file in the same folder that must NOT be picked up, since the
+    # caller passes an explicit file list rather than a folder scan.
+    _write_csv(folder / "ignored.csv", "col1,col2\nSHOULD_NOT_APPEAR,x\n")
+
+    out = tmp_path / "out.csv"
+    count = concatenate_csv_files([a, b], out)
+    assert count == 2
+    content = out.read_text(encoding="utf-8")
+    assert "SHOULD_NOT_APPEAR" not in content
+    assert content.count("col1,col2") == 1
+
+
+def test_concatenate_csv_files_custom_headers(tmp_path: Path) -> None:
+    folder = tmp_path / "csv"
+    a = folder / "a.csv"
+    _write_csv(a, "old_name,col2\n1,2\n")
+    out = tmp_path / "out.csv"
+    concatenate_csv_files([a], out, custom_headers={0: "new_name"})
+    header = out.read_text(encoding="utf-8").splitlines()[0]
+    assert header == "new_name,col2"
+
+
+def test_concatenate_csv_files_empty_list_returns_zero(tmp_path: Path) -> None:
+    out = tmp_path / "out.csv"
+    count = concatenate_csv_files([], out)
+    assert count == 0
+    assert not out.exists()
