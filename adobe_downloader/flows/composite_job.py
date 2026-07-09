@@ -189,8 +189,12 @@ async def _run_report_download_step(
     extra = step.extra_fields()
     client_name = job.client
 
-    # Resolve date_range: step override > job level
+    # Resolve date_range: step override > job level > report_group fallback
     date_range = _coerce_date_range(extra.get("date_range") or job.date_range)
+    if date_range is None:
+        from adobe_downloader.utils.date_defaults import default_date_range
+
+        date_range = default_date_range(report_group=extra.get("report_group"))
     if date_range is None:
         raise ValueError(f"Step {step.id!r}: date_range is required for report_download")
 
@@ -592,6 +596,13 @@ async def _run_validate_output_step(
 
     date_range = _coerce_date_range(ref_extra.get("date_range") or job.date_range)
     if date_range is None:
+        from adobe_downloader.utils.date_defaults import default_date_range
+
+        date_range = default_date_range(
+            report_group=ref_extra.get("report_group"),
+            step_type=ref_step.step,
+        )
+    if date_range is None:
         raise ValueError(f"Step {step.id!r}: date_range required for validation enumeration")
 
     output_base = Path(_resolve_output_base(ref_extra, job))
@@ -798,6 +809,10 @@ async def _run_bot_rule_compare_step(
     extra = step.extra_fields()
 
     date_range = _coerce_date_range(extra.get("date_range") or job.date_range)
+    if date_range is None:
+        from adobe_downloader.utils.date_defaults import default_date_range
+
+        date_range = default_date_range(step_type="bot_rule_compare")
     if date_range is None:
         raise ValueError(f"Step {step.id!r}: date_range is required for bot_rule_compare")
 

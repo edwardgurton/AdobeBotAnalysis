@@ -209,8 +209,18 @@ def run(config: Path, report: str | None, no_resume: bool, test_mode: bool, debu
     effective_test_mode = test_mode or job.test_mode
 
     if job.date_range is None:
-        click.secho("date_range is required for report_download jobs.", fg="red", bold=True)
-        sys.exit(1)
+        from adobe_downloader.utils.date_defaults import default_date_range
+
+        fallback = default_date_range(report_group=job.report_group)
+        if fallback is None:
+            click.secho("date_range is required for report_download jobs.", fg="red", bold=True)
+            sys.exit(1)
+        job = job.model_copy(update={"date_range": fallback})
+        click.secho(
+            f"No date_range configured; defaulting to {fallback.from_date} -> {fallback.to}.",
+            fg="yellow",
+        )
+    assert job.date_range is not None
 
     # Resolve report definitions
     if job.report_ref:
@@ -1210,8 +1220,17 @@ def validate_output(config: Path, retry: bool, dry_run: bool, debug: bool) -> No
         sys.exit(1)
 
     if job.date_range is None:
-        click.secho("Config has no date_range — cannot enumerate expected files.", fg="red")
-        sys.exit(1)
+        from adobe_downloader.utils.date_defaults import default_date_range
+
+        fallback = default_date_range(report_group=job.report_group)
+        if fallback is None:
+            click.secho("Config has no date_range — cannot enumerate expected files.", fg="red")
+            sys.exit(1)
+        job = job.model_copy(update={"date_range": fallback})
+        click.secho(
+            f"No date_range configured; defaulting to {fallback.from_date} -> {fallback.to}.",
+            fg="yellow",
+        )
 
     from adobe_downloader.utils.logging import setup_logging
 
