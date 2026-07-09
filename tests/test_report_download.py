@@ -8,9 +8,8 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 
 from adobe_downloader.config.report_definitions import load_report_group, load_report_registry
-from adobe_downloader.config.schema import DateRange
+from adobe_downloader.config.schema import DateRange, RsidSource, SegmentSource
 from adobe_downloader.flows.report_download import download_report, make_output_path
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -224,3 +223,116 @@ def test_load_report_group_consistent_with_registry():
     defs = load_report_group("bot_investigation")
     for d in defs:
         assert d.name in registry
+
+
+# ---------------------------------------------------------------------------
+# run_report_download — per-segment filename embedding
+# ---------------------------------------------------------------------------
+
+
+def _make_sm() -> MagicMock:
+    sm = MagicMock()
+    sm.job_id = "test-job"
+    sm.is_complete.return_value = False
+    sm.track_request.return_value = ("req-id", None)
+    return sm
+
+
+async def test_run_report_download_embeds_sanitized_name_by_default(tmp_path: Path) -> None:
+    """Per-segment filenames default to RULE{name}, not DIMSEG{id}."""
+    from adobe_downloader.flows.report_download import run_report_download
+
+    seg_file = tmp_path / "segs.json"
+    seg_file.write_text(json.dumps([{"id": "s3938_abc", "name": "US_Mobile"}]), encoding="utf-8")
+
+    report_def = load_report_registry()["botInvestigationMetricsByBrowser"]
+    rsids = RsidSource.model_validate({"source": "single", "single": "rsid1"})
+    segments = SegmentSource.model_validate({"source": "segment_list_file", "file": str(seg_file)})
+    sm = _make_sm()
+    ac = _mock_client({"rows": []})
+
+    await run_report_download(
+        client=ac,
+        client_name="TestClient",
+        report_defs=[report_def],
+        rsids=rsids,
+        date_range=_date("2025-01-01", "2025-02-01"),
+        interval="full",
+        output_base=str(tmp_path),
+        sm=sm,
+        segments=segments,
+    )
+
+    out_path = sm.track_request.call_args_list[0][0][2]
+    assert "RULEUS-Mobile" in out_path.name
+    assert "DIMSEG" not in out_path.name
+    assert "s3938_abc" not in out_path.name
+
+
+async def test_run_report_download_includes_segment_id_when_opted_in(tmp_path: Path) -> None:
+    from adobe_downloader.flows.report_download import run_report_download
+
+    seg_file = tmp_path / "segs.json"
+    seg_file.write_text(json.dumps([{"id": "s3938_abc", "name": "US_Mobile"}]), encoding="utf-8")
+
+    report_def = load_report_registry()["botInvestigationMetricsByBrowser"]
+    rsids = RsidSource.model_validate({"source": "single", "single": "rsid1"})
+    segments = SegmentSource.model_validate({"source": "segment_list_file", "file": str(seg_file)})
+    sm = _make_sm()
+    ac = _mock_client({"rows": []})
+
+    await run_report_download(
+        client=ac,
+        client_name="TestClient",
+        report_defs=[report_def],
+        rsids=rsids,
+        date_range=_date("2025-01-01", "2025-02-01"),
+        interval="full",
+        output_base=str(tmp_path),
+        sm=sm,
+        segments=segments,
+        include_segment_id_in_filename=True,
+    )
+
+    out_path = sm.track_request.call_args_list[0][0][2]
+    assert "DIMSEGs3938_abc" in out_path.name
+    assert "RULEUS-Mobile" in out_path.name
+
+
+async def test_run_report_download_two_segments_produce_distinct_output_paths(
+    tmp_path: Path,
+) -> None:
+    """Regression guard: two segments must never resolve to the same output path."""
+    from adobe_downloader.flows.report_download import run_report_download
+
+    seg_file = tmp_path / "segs.json"
+    seg_file.write_text(
+        json.dumps(
+            [
+                {"id": "s3938_aaa", "name": "US_Mobile"},
+                {"id": "s3938_bbb", "name": "CA_Desktop"},
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    report_def = load_report_registry()["botInvestigationMetricsByBrowser"]
+    rsids = RsidSource.model_validate({"source": "single", "single": "rsid1"})
+    segments = SegmentSource.model_validate({"source": "segment_list_file", "file": str(seg_file)})
+    sm = _make_sm()
+    ac = _mock_client({"rows": []})
+
+    await run_report_download(
+        client=ac,
+        client_name="TestClient",
+        report_defs=[report_def],
+        rsids=rsids,
+        date_range=_date("2025-01-01", "2025-02-01"),
+        interval="full",
+        output_base=str(tmp_path),
+        sm=sm,
+        segments=segments,
+    )
+
+    out_paths = {call[0][2] for call in sm.track_request.call_args_list}
+    assert len(out_paths) == 2

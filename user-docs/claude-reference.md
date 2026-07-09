@@ -91,6 +91,7 @@ Downloads Adobe Analytics ranked or summary reports for one or more RSIDs, date 
 | `post_processing` | `PostProcessing` | no | Default: `delete_json_after_transform=false, zip_csvs_after_concat=true` |
 | `output.base_folder` | str | no | Default `C:/Adobe_Downloads` |
 | `file_name_extra` | str | no | Injected into output filenames for disambiguation |
+| `include_segment_id_in_filename` | bool | no | Default `false`. When `segments.source: segment_list_file`, each segment's downloaded filename embeds its sanitized *name* (`RULE{name}`) by default, not the raw ID — set this `true` to also embed the raw ID via `DIMSEG{id}` |
 | `bot_rules` | `BotRulesSource` | no | Used by bot_validation/bot_rule_compare flows |
 | `optimisation` | `OptimisationConfig` | no | `shared_reports=true` shares report results across bot rules |
 
@@ -392,7 +393,20 @@ steps:
     transform:
       type: bot_validation
       concat: true
+      split_by_bot_rule: true      # one CSV per validation segment/bot rule, named
+                                    # with its sanitized rule name, instead of a
+                                    # single combined CSV. Reuses the bot_rules
+                                    # source already given to download_validation
+                                    # above — no separate list needed. Output keys:
+                                    # concatenated_files (dict of rule name -> path)
+                                    # instead of concatenated_file. Set to false (or
+                                    # omit) for the old single-combined-CSV behavior.
 ```
+
+Each validation segment's downloaded filename embeds its sanitized rule name by
+default (e.g. `..._RULEUS-Mobile-Bots_...`), not the raw Adobe segment ID — see
+`include_segment_id_in_filename` above and Output file naming in
+`technical-reference.md` for the full convention.
 
 ### `composite` — bot rule compare flow
 
@@ -488,7 +502,7 @@ steps:
 |---|---|---|
 | `standard` | `fileName`, `fromDate`, `toDate` (dimensional) or just these for summary | Generic reports with no special filename-derived metadata |
 | `bot_investigation` | Same as `standard`; delegates to `transform_report` | `bot_investigation` and `bot_investigation_unfiltered` group reports |
-| `bot_validation` | `fileName`, `requestName`, `botRuleName`, `rsidName` | `bot_validation` group reports; extracts `requestName`, `botRuleName`, `rsidName` from filename parts |
+| `bot_validation` | `fileName`, `requestName`, `botRuleName`, `rsidName` | `bot_validation` group reports; extracts `requestName` and, from a `RULE{name}`-anchored filename part (the default for `segment_list_file`-sourced downloads), the real per-rule `botRuleName` and `rsidName`. Falls back to the legacy fixed-position parse (`botRuleName` = static batch label) when no `RULE` anchor is present |
 | `bot_rule_compare` | `fileName`, `clientName`, `reportType`, `dimension`, `rsidName`, `botRuleName`, `compareVersion`, `trafficType`, `isCompare`, `isSegment`, `segmentId`, `segmentHash`, `startDate`, `endDate` | `bot_rule_compare` group; hardcoded headers; fully parses complex filename encoding |
 | `final_bot_metrics` | `fileName`, `botRuleName`, `rsidCleanName`, `fromDate`, `toDate` | `final_bot_metrics` group; extracts `botRuleName` from `parts[4]`, `rsidName` from `parts[3]` |
 | `summary_total` | `fileName`, `fromDate`, `toDate` (from `summaryData.totals`) | No-dimension/totals-only reports; reads `summaryData.totals` instead of `rows` |
@@ -694,7 +708,7 @@ In composite jobs, `rsids.source: step_output` with `step_id` and `output_key` (
 | `source` value | Required fields | Description |
 |---|---|---|
 | `inline` | `ids` (list[str]) | Segment IDs given directly in YAML; each download gets all segments |
-| `segment_list_file` | `file` (str path) | JSON file listing segment IDs; loaded at run time |
+| `segment_list_file` | `file` (str path) | JSON file listing `{id, name}` pairs; loaded at run time, one download per entry. Every entry needs a non-blank, unique (after sanitizing) `name` — loading fails fast otherwise, since two segments' downloads would otherwise silently overwrite the same output file |
 | `step_output` | `step_id`, `output_key` | Resolves a file path from a prior composite step's outputs; at runtime converts to `segment_list_file` |
 | `latest_segment_list` | _(none)_ | Picks the most recently modified segment list file from the configured directory |
 
@@ -824,6 +838,21 @@ Used by `source_pattern` in `transform_concat` to filter only that run's files:
 transform:
   source_pattern: ".*V4-Compare.*\\.json$"
 ```
+
+### Per-segment `RULE{name}` anchor (segment_list_file downloads)
+
+When `segments.source: segment_list_file`, each segment's own sanitized name is
+merged into its filename automatically — no config needed:
+
+```yaml
+# results in filenames like:
+# Legend_botFilterExcludeMetricsByMonth_<rsid>_RULEUS-Mobile-Bots_<from>_<to>.json
+# or, combined with a job-level file_name_extra:
+# Legend_botFilterExcludeMetricsByMonth_<rsid>_V4-Compare-RULEUS-Mobile-Bots_<from>_<to>.json
+```
+
+The raw segment ID (`DIMSEG{id}`) is opt-in only — set `include_segment_id_in_filename: true`
+if you also need it embedded. See Output file naming in `technical-reference.md`.
 
 ### `delete_json_after_transform`
 

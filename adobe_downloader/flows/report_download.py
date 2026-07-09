@@ -12,6 +12,7 @@ from typing import Any
 
 from adobe_downloader.config.schema import DateRange, RsidSource, SegmentSource, TestLimits
 from adobe_downloader.core.api_client import AdobeClient
+from adobe_downloader.utils.filenames import sanitize_segment_name_for_filename
 
 _log = logging.getLogger(__name__)
 
@@ -25,6 +26,23 @@ class ReportDownloadResult:
     copied: int = 0
     failed: int = 0
     errors: list[str] = field(default_factory=list)
+
+
+@dataclass(frozen=True)
+class SegmentIteration:
+    """One iteration of the segments dimension of a report_download loop.
+
+    ids: segment IDs to apply as the request's segment filter.
+    id: the real Adobe segment ID, embedded in the output filename via the
+        DIMSEG token only when a step explicitly opts in
+        (include_segment_id_in_filename=True).
+    name: sanitized human-readable name (segment_list_file source only),
+        embedded in the output filename by default via resolve_segment_file_name_extra.
+    """
+
+    ids: list[str]
+    id: str | None = None
+    name: str | None = None
 
 
 # ---------------------------------------------------------------------------
@@ -114,16 +132,39 @@ def iterate_rsids(rsids_cfg: RsidSource) -> Iterator[str]:
         yield from lines
 
 
-def load_segment_list(file_path: str | Path) -> list[str]:
-    """Return segment IDs from a segment list JSON file (list of {id, name} objects)."""
+def load_segment_list(file_path: str | Path) -> list[tuple[str, str]]:
+    """Return (id, name) pairs from a segment list JSON file (list of {id, name} objects).
+
+    Raises ValueError eagerly if any entry's name is blank, or if two entries'
+    sanitized names collide — either would otherwise make two segments' downloads
+    silently overwrite the same output file on disk.
+    """
     data = json.loads(Path(file_path).read_text(encoding="utf-8"))
-    return [entry["id"] for entry in data]
+    entries = [(entry["id"], entry.get("name", "")) for entry in data]
+
+    seen_by_sanitized: dict[str, str] = {}
+    for seg_id, name in entries:
+        if not name.strip():
+            raise ValueError(
+                f"{file_path}: segment {seg_id!r} has a blank/missing name — every entry "
+                "needs a name so downloaded files for different segments don't collide"
+            )
+        sanitized = sanitize_segment_name_for_filename(name)
+        if sanitized in seen_by_sanitized:
+            raise ValueError(
+                f"{file_path}: segments {seen_by_sanitized[sanitized]!r} and {seg_id!r} both "
+                f"sanitize to filename component {sanitized!r} — rename one so their "
+                "downloaded files don't overwrite each other"
+            )
+        seen_by_sanitized[sanitized] = seg_id
+
+    return entries
 
 
 def iterate_segments(
     segments_cfg: SegmentSource | None,
-) -> Iterator[tuple[str | None, list[str]]]:
-    """Yield (segment_id_for_filename, segment_ids_for_request) pairs.
+) -> Iterator[SegmentIteration]:
+    """Yield one SegmentIteration per iteration of the segments dimension.
 
     None segments_cfg  → one iteration with no segment filter.
     source="inline"    → one iteration, all IDs passed together (no filename suffix).
@@ -131,17 +172,34 @@ def iterate_segments(
     source="step_output" / "latest_segment_list" → resolved at composite job level.
     """
     if segments_cfg is None:
-        yield None, []
+        yield SegmentIteration(ids=[])
     elif segments_cfg.source == "inline":
-        yield None, segments_cfg.ids or []
+        yield SegmentIteration(ids=segments_cfg.ids or [])
     elif segments_cfg.source == "segment_list_file":
         assert segments_cfg.file is not None
-        for seg_id in load_segment_list(segments_cfg.file):
-            yield seg_id, [seg_id]
+        for seg_id, name in load_segment_list(segments_cfg.file):
+            yield SegmentIteration(
+                ids=[seg_id], id=seg_id, name=sanitize_segment_name_for_filename(name)
+            )
     else:
         raise NotImplementedError(
             f"Segment source {segments_cfg.source!r} must be resolved by the composite job runner"
         )
+
+
+def resolve_segment_file_name_extra(
+    file_name_extra: str | None, segment: SegmentIteration
+) -> str | None:
+    """Merge a job-level file_name_extra with a per-segment RULE{name} anchor.
+
+    RULE anchors the sanitized segment/bot-rule name so downstream transforms can
+    locate it regardless of what else appears in the filename (mirrors the
+    DIMSEG{id} anchor convention used for the opt-in raw-ID token).
+    """
+    if segment.name is None:
+        return file_name_extra
+    rule_token = f"RULE{segment.name}"
+    return f"{file_name_extra}-{rule_token}" if file_name_extra else rule_token
 
 
 # ---------------------------------------------------------------------------
@@ -178,6 +236,7 @@ async def run_report_download(
     sm: Any,  # StateManager — avoid circular import
     segments: SegmentSource | None = None,
     file_name_extra: str | None = None,
+    include_segment_id_in_filename: bool = False,
     no_resume: bool = False,
     step_id: str | None = None,
     test_limits: TestLimits | None = None,
@@ -190,6 +249,10 @@ async def run_report_download(
     When step_id is supplied, request keys are namespaced to that step (composite jobs).
     When test_limits is supplied, each dimension is capped before iteration begins.
     on_progress(status, rsid, report_name) is called after each request.
+
+    By default, a segment_list_file's per-segment name (not the raw segment ID) is
+    what disambiguates otherwise-identical filenames across segments — pass
+    include_segment_id_in_filename=True to also embed the raw ID via DIMSEG.
     """
     from adobe_downloader.core.request_builder import build_request
     from adobe_downloader.state_manager import compute_request_key
@@ -220,14 +283,14 @@ async def run_report_download(
     semaphore = asyncio.Semaphore(rsids.batch_size)
 
     async def _process_one(
-        rsid: str, date_interval: DateRange, seg_id: str | None, seg_ids: list[str], rd: Any
+        rsid: str, date_interval: DateRange, segment: SegmentIteration, rd: Any
     ) -> None:
         req_key = compute_request_key(
             rsid,
             rd.name,
             date_interval.from_date,
             date_interval.to,
-            seg_ids,
+            segment.ids,
         )
 
         if not no_resume and sm.is_complete(req_key, step_id=step_id):
@@ -241,15 +304,15 @@ async def run_report_download(
             report_def=rd,
             date_range=date_interval,
             rsid=rsid,
-            segments=seg_ids,
+            segments=segment.ids,
         )
         out_path = make_output_path(
             base_folder=output_base,
             client=client_name,
             report_name=rd.name,
             date_range=date_interval,
-            file_name_extra=file_name_extra,
-            segment_id=seg_id,
+            file_name_extra=resolve_segment_file_name_extra(file_name_extra, segment),
+            segment_id=segment.id if include_segment_id_in_filename else None,
             job_name=job_name,
             rsid=clean_name_by_rsid.get(rsid, rsid),
         )
@@ -291,10 +354,10 @@ async def run_report_download(
 
     await asyncio.gather(
         *(
-            _process_one(rsid, date_interval, seg_id, seg_ids, rd)
+            _process_one(rsid, date_interval, segment, rd)
             for rsid in rsid_list
             for date_interval in date_intervals
-            for seg_id, seg_ids in all_segments
+            for segment in all_segments
             for rd in report_defs
         )
     )

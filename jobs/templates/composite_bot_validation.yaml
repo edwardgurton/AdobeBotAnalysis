@@ -56,3 +56,6 @@ steps:
     transform:
       type: bot_validation
       concat: true
+      # One concatenated CSV per validation segment/bot rule, named with the
+      # sanitized rule name — set to false for a single combined CSV instead.
+      split_by_bot_rule: true

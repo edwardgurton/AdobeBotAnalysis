@@ -66,15 +66,29 @@ def transform_bot_validation(
 ) -> str:
     """Bot validation transform.
 
-    Appends requestName (parts[1]), botRuleName (parts[2]), rsidName (parts[3]).
-    Filename pattern: {client}_{requestName}_{botRuleName}_{rsidName}_{from}_{to}
+    Appends requestName, botRuleName, rsidName.
+
+    Default filename pattern (one file per validation segment, per-rule name
+    anchored so it's locatable regardless of what else appears in the filename):
+      {client}_{requestName}_{rsidName}_[{extra}-]RULE{botRuleName}_{from}_{to}
+
+    Legacy pattern (no per-segment split — a single static batch label instead
+    of a real per-rule name):
+      {client}_{requestName}_{botRuleName}_{rsidName}_{from}_{to}
     """
     stem = json_path.stem
     parts = stem.split("_")
     request_name = parts[1]
-    bot_rule_name = parts[2]
-    rsid_name = parts[3]
     file_name_col = stem
+
+    rule_idx = next((i for i, p in enumerate(parts) if p.startswith("RULE") or "-RULE" in p), None)
+    if rule_idx is not None:
+        token = parts[rule_idx]
+        bot_rule_name = token[token.find("RULE") + len("RULE") :]
+        rsid_name = parts[2]
+    else:
+        bot_rule_name = parts[2]
+        rsid_name = parts[3]
 
     columns = load_column_headers(request_name, headers_dir)
     raw = json.loads(to_long_path(json_path).read_text(encoding="utf-8"))

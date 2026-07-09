@@ -682,6 +682,7 @@ post_processing:
       <pre><code>&lt;client&gt;_&lt;reportName&gt;[_&lt;extra&gt;][_DIMSEG&lt;segmentId&gt;_]_&lt;fromDate&gt;_&lt;toDate&gt;.json</code></pre>
       <p>Use <code>file_name_extra</code> to add a label to the filename (useful for distinguishing parallel runs):</p>
       <pre><code>file_name_extra: "Coverscom-FullRun"</code></pre>
+      <p>When <code>segments.source: segment_list_file</code> is used, each segment's own sanitized name is merged into its filename automatically, as a <code>RULE&lt;name&gt;</code> anchor &mdash; e.g. <code>Legend_botFilterExcludeMetricsByMonth_Casinoorg_RULEUS-Mobile-Bots_2026-01-01_2026-01-31.json</code>. The raw segment ID (<code>DIMSEG&lt;segmentId&gt;</code>) is <em>not</em> included by default &mdash; set <code>include_segment_id_in_filename: true</code> if you also need it embedded.</p>
     </section>
 
     <!-- ============================================================== -->

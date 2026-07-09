@@ -15,7 +15,6 @@ from adobe_downloader.flows.validation import (
     enumerate_expected_paths,
 )
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
@@ -91,7 +90,9 @@ def test_enumerate_with_segment_list(tmp_path: Path) -> None:
     import json
 
     seg_file = tmp_path / "segs.json"
-    seg_file.write_text(json.dumps([{"id": "seg1"}, {"id": "seg2"}]))
+    seg_file.write_text(
+        json.dumps([{"id": "seg1", "name": "Seg1"}, {"id": "seg2", "name": "Seg2"}])
+    )
 
     paths = enumerate_expected_paths(
         client_name="C",

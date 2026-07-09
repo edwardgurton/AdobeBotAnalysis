@@ -7,12 +7,12 @@ import pytest
 
 from adobe_downloader.config.schema import DateRange, RsidSource, SegmentSource
 from adobe_downloader.flows.report_download import (
+    SegmentIteration,
     iterate_dates,
     iterate_rsids,
     iterate_segments,
     load_segment_list,
 )
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -165,7 +165,7 @@ def test_iterate_rsids_file_skips_comment_lines(tmp_path: Path):
 # ---------------------------------------------------------------------------
 
 
-def test_load_segment_list_returns_ids(tmp_path: Path):
+def test_load_segment_list_returns_id_name_pairs(tmp_path: Path):
     seg_file = tmp_path / "segments.json"
     seg_file.write_text(
         json.dumps(
@@ -177,13 +177,45 @@ def test_load_segment_list_returns_ids(tmp_path: Path):
         encoding="utf-8",
     )
     result = load_segment_list(seg_file)
-    assert result == ["seg_001", "seg_002"]
+    assert result == [("seg_001", "United States"), ("seg_002", "Canada")]
 
 
 def test_load_segment_list_empty_file(tmp_path: Path):
     seg_file = tmp_path / "empty.json"
     seg_file.write_text("[]", encoding="utf-8")
     assert load_segment_list(seg_file) == []
+
+
+def test_load_segment_list_blank_name_raises(tmp_path: Path):
+    seg_file = tmp_path / "segments.json"
+    seg_file.write_text(
+        json.dumps([{"id": "seg_001", "name": "  "}]),
+        encoding="utf-8",
+    )
+    with pytest.raises(ValueError, match="blank/missing name"):
+        load_segment_list(seg_file)
+
+
+def test_load_segment_list_missing_name_key_raises(tmp_path: Path):
+    seg_file = tmp_path / "segments.json"
+    seg_file.write_text(json.dumps([{"id": "seg_001"}]), encoding="utf-8")
+    with pytest.raises(ValueError, match="blank/missing name"):
+        load_segment_list(seg_file)
+
+
+def test_load_segment_list_colliding_sanitized_names_raises(tmp_path: Path):
+    seg_file = tmp_path / "segments.json"
+    seg_file.write_text(
+        json.dumps(
+            [
+                {"id": "seg_001", "name": "US_Mobile"},
+                {"id": "seg_002", "name": "US-Mobile"},
+            ]
+        ),
+        encoding="utf-8",
+    )
+    with pytest.raises(ValueError, match="both sanitize to filename component"):
+        load_segment_list(seg_file)
 
 
 # ---------------------------------------------------------------------------
@@ -193,13 +225,13 @@ def test_load_segment_list_empty_file(tmp_path: Path):
 
 def test_iterate_segments_none_yields_one_empty():
     result = list(iterate_segments(None))
-    assert result == [(None, [])]
+    assert result == [SegmentIteration(ids=[])]
 
 
 def test_iterate_segments_inline_all_ids_together():
     cfg = _seg_source("inline", ids=["s1", "s2"])
     result = list(iterate_segments(cfg))
-    assert result == [(None, ["s1", "s2"])]
+    assert result == [SegmentIteration(ids=["s1", "s2"])]
 
 
 def test_iterate_segments_segment_list_file(tmp_path: Path):
@@ -217,13 +249,51 @@ def test_iterate_segments_segment_list_file(tmp_path: Path):
     cfg = _seg_source("segment_list_file", file=str(seg_file))
     result = list(iterate_segments(cfg))
     assert result == [
-        ("seg_001", ["seg_001"]),
-        ("seg_002", ["seg_002"]),
-        ("seg_003", ["seg_003"]),
+        SegmentIteration(ids=["seg_001"], id="seg_001", name="US"),
+        SegmentIteration(ids=["seg_002"], id="seg_002", name="CA"),
+        SegmentIteration(ids=["seg_003"], id="seg_003", name="MX"),
     ]
+
+
+def test_iterate_segments_segment_list_file_sanitizes_names(tmp_path: Path):
+    seg_file = tmp_path / "segs.json"
+    seg_file.write_text(
+        json.dumps([{"id": "seg_001", "name": "US_Mobile:Bots"}]),
+        encoding="utf-8",
+    )
+    cfg = _seg_source("segment_list_file", file=str(seg_file))
+    result = list(iterate_segments(cfg))
+    assert result == [SegmentIteration(ids=["seg_001"], id="seg_001", name="US-Mobile-Bots")]
 
 
 def test_iterate_segments_step_output_raises():
     cfg = _seg_source("step_output", step_id="some_step", output_key="segment_list_file")
     with pytest.raises(NotImplementedError):
         list(iterate_segments(cfg))
+
+
+# ---------------------------------------------------------------------------
+# resolve_segment_file_name_extra
+# ---------------------------------------------------------------------------
+
+
+def test_resolve_segment_file_name_extra_no_name_returns_unchanged():
+    from adobe_downloader.flows.report_download import resolve_segment_file_name_extra
+
+    segment = SegmentIteration(ids=["s1"])
+    assert resolve_segment_file_name_extra("Totals", segment) == "Totals"
+    assert resolve_segment_file_name_extra(None, segment) is None
+
+
+def test_resolve_segment_file_name_extra_name_only():
+    from adobe_downloader.flows.report_download import resolve_segment_file_name_extra
+
+    segment = SegmentIteration(ids=["s1"], id="s1", name="US-Mobile")
+    assert resolve_segment_file_name_extra(None, segment) == "RULEUS-Mobile"
+
+
+def test_resolve_segment_file_name_extra_merges_with_job_level_extra():
+    from adobe_downloader.flows.report_download import resolve_segment_file_name_extra
+
+    segment = SegmentIteration(ids=["s1"], id="s1", name="US-Mobile")
+    assert resolve_segment_file_name_extra("Apr25Batch", segment) == "Apr25Batch-RULEUS-Mobile"

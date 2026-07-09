@@ -323,6 +323,7 @@ def run(config: Path, report: str | None, no_resume: bool, test_mode: bool, debu
                 sm=sm,
                 segments=job.segments,
                 file_name_extra=job.file_name_extra,
+                include_segment_id_in_filename=job.include_segment_id_in_filename,
                 no_resume=no_resume,
                 test_limits=job.test_limits if effective_test_mode else None,
                 on_progress=lambda status, rsid, name: click.secho(

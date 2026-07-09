@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -13,14 +12,10 @@ from adobe_downloader.config.schema import (
     CompositeJobConfig,
     CompositeStep,
     DateRange,
-    OutputConfig,
-    RsidSource,
-    SegmentSource,
 )
 from adobe_downloader.flows.composite_job import (
     _coerce_date_range,
     _resolve_output_base,
-    _resolve_report_defs,
     _resolve_segments,
     _state_key,
     run_composite_job,
@@ -31,7 +26,6 @@ from adobe_downloader.state_manager import (
     compute_job_id,
     state_db_path,
 )
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -838,6 +832,166 @@ class TestTransformConcatSplitByBotRule:
             pytest.raises(ValueError, match="split_by_bot_rule requires"),
         ):
             await _run_transform_concat_step(step_obj, job, step_outputs)
+
+    async def test_split_anchors_match_to_avoid_prefix_collision(self, tmp_path: Path) -> None:
+        """ "RuleA" must not match inside "RuleA2"'s filename (substring-match regression)."""
+        json_folder = tmp_path / "Legend" / "TestJob" / "JSON"
+        json_folder.mkdir(parents=True)
+
+        files = [
+            "Legend_botInvestigationMetricsByBrowser_Coverscom-RuleA-Compare-V1"
+            "-Segment_2025-01-01_2025-01-02.json",
+            "Legend_botInvestigationMetricsByBrowser_Coverscom-RuleA2-Compare-V1"
+            "-Segment_2025-01-01_2025-01-02.json",
+        ]
+        for name in files:
+            (json_folder / name).write_text("{}")
+
+        step_outputs = {"download_compare": {"json_folder": str(json_folder)}}
+        job = CompositeJobConfig.model_validate(
+            {
+                "job_type": "composite",
+                "client": "Legend",
+                "output": {"base_folder": str(tmp_path), "job_name": "TestJob"},
+                "steps": [
+                    {
+                        "step": "bot_rule_compare",
+                        "id": "download_compare",
+                        "bot_rules": {
+                            "source": "inline",
+                            "rules": [
+                                {
+                                    "segment_id": "s1",
+                                    "segment_name": "RuleA",
+                                    "report_to_skip": "Domain",
+                                },
+                                {
+                                    "segment_id": "s2",
+                                    "segment_name": "RuleA2",
+                                    "report_to_skip": "Domain",
+                                },
+                            ],
+                        },
+                    },
+                    {
+                        "step": "transform_concat",
+                        "id": "transform",
+                        "depends_on": "download_compare",
+                        "transform": {
+                            "type": "bot_rule_compare",
+                            "source_pattern": ".*Compare-V1.*\\.json$",
+                            "split_by_bot_rule": True,
+                        },
+                        "concat": {"enabled": True},
+                    },
+                ],
+            }
+        )
+        step_obj = job.steps[1]
+
+        def _fake_dispatch(
+            src: Path,
+            transform_type: str | None = None,
+            headers_dir: object = None,
+            *,
+            output_path: Path | None = None,
+        ) -> None:
+            p = output_path or src.with_suffix(".csv")
+            p.parent.mkdir(parents=True, exist_ok=True)
+            p.write_text(f"col1\n{src.stem}\n")
+
+        from adobe_downloader.flows.composite_job import _run_transform_concat_step
+
+        with patch(
+            "adobe_downloader.transforms.specialized.transform_report_dispatch",
+            side_effect=_fake_dispatch,
+        ):
+            result = await _run_transform_concat_step(step_obj, job, step_outputs)
+
+        rule_a_content = Path(result["concatenated_files"]["RuleA"]).read_text()
+        assert "RuleA2" not in rule_a_content
+
+        rule_a2_content = Path(result["concatenated_files"]["RuleA2"]).read_text()
+        assert "RuleA2" in rule_a2_content
+
+    async def test_split_matches_report_download_rule_anchor_scheme(self, tmp_path: Path) -> None:
+        """split_by_bot_rule also matches bot_validation-style RULE{name}-anchored files."""
+        json_folder = tmp_path / "Legend" / "TestJob" / "JSON"
+        json_folder.mkdir(parents=True)
+
+        files = [
+            "Legend_botFilterExcludeMetricsByMonth_trillioncoverscom_RULEUS-Mobile-Bots"
+            "_2025-01-01_2025-01-02.json",
+            "Legend_botFilterExcludeMetricsByMonth_trillioncoverscom_RULECA-Desktop-Bots"
+            "_2025-01-01_2025-01-02.json",
+        ]
+        for name in files:
+            (json_folder / name).write_text("{}")
+
+        step_outputs = {"download_validation": {"json_folder": str(json_folder)}}
+        job = CompositeJobConfig.model_validate(
+            {
+                "job_type": "composite",
+                "client": "Legend",
+                "output": {"base_folder": str(tmp_path), "job_name": "TestJob"},
+                "steps": [
+                    {
+                        "step": "report_download",
+                        "id": "download_validation",
+                        "report_group": "bot_validation",
+                        "rsids": {"source": "single", "single": "rsid1"},
+                        "bot_rules": {
+                            "source": "inline",
+                            "rules": [
+                                {
+                                    "segment_id": "s1",
+                                    "segment_name": "US_Mobile_Bots",
+                                    "report_to_skip": "Domain",
+                                },
+                                {
+                                    "segment_id": "s2",
+                                    "segment_name": "CA_Desktop_Bots",
+                                    "report_to_skip": "Domain",
+                                },
+                            ],
+                        },
+                    },
+                    {
+                        "step": "transform_concat",
+                        "id": "transform",
+                        "depends_on": "download_validation",
+                        "transform": {"type": "bot_validation", "split_by_bot_rule": True},
+                        "concat": {"enabled": True},
+                    },
+                ],
+            }
+        )
+        step_obj = job.steps[1]
+
+        def _fake_dispatch(
+            src: Path,
+            transform_type: str | None = None,
+            headers_dir: object = None,
+            *,
+            output_path: Path | None = None,
+        ) -> None:
+            p = output_path or src.with_suffix(".csv")
+            p.parent.mkdir(parents=True, exist_ok=True)
+            p.write_text(f"col1\n{src.stem}\n")
+
+        from adobe_downloader.flows.composite_job import _run_transform_concat_step
+
+        with patch(
+            "adobe_downloader.transforms.specialized.transform_report_dispatch",
+            side_effect=_fake_dispatch,
+        ):
+            result = await _run_transform_concat_step(step_obj, job, step_outputs)
+
+        assert set(result["concatenated_files"].keys()) == {"US_Mobile_Bots", "CA_Desktop_Bots"}
+
+        us_content = Path(result["concatenated_files"]["US_Mobile_Bots"]).read_text()
+        assert "RULEUS-Mobile-Bots" in us_content
+        assert "CA-Desktop-Bots" not in us_content
 
 
 class TestTransformConcatCustomHeaders:

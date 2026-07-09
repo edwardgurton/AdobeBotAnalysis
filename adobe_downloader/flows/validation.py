@@ -7,13 +7,14 @@ from pathlib import Path
 from typing import Any
 
 from adobe_downloader.config.schema import DateRange, RsidSource, SegmentSource
-from adobe_downloader.flows.bot_rule_compare import sanitize_bot_rule_name
 from adobe_downloader.flows.report_download import (
     iterate_dates,
     iterate_rsids,
     iterate_segments,
     make_output_path,
+    resolve_segment_file_name_extra,
 )
+from adobe_downloader.utils.filenames import sanitize_bot_rule_name
 from adobe_downloader.utils.winpath import to_long_path
 
 _log = logging.getLogger(__name__)
@@ -28,13 +29,14 @@ def enumerate_expected_paths(
     output_base: Path,
     segments: SegmentSource | None = None,
     file_name_extra: str | None = None,
+    include_segment_id_in_filename: bool = False,
     job_name: str | None = None,
 ) -> list[Path]:
     """Return every JSON output path that a report_download run would produce."""
     paths: list[Path] = []
     for rsid in iterate_rsids(rsids):
         for dr in iterate_dates(date_range, interval):
-            for seg_id, _ in iterate_segments(segments):
+            for segment in iterate_segments(segments):
                 for rd in report_defs:
                     paths.append(
                         make_output_path(
@@ -42,8 +44,10 @@ def enumerate_expected_paths(
                             client=client_name,
                             report_name=rd.name,
                             date_range=dr,
-                            file_name_extra=file_name_extra,
-                            segment_id=seg_id,
+                            file_name_extra=resolve_segment_file_name_extra(
+                                file_name_extra, segment
+                            ),
+                            segment_id=segment.id if include_segment_id_in_filename else None,
                             job_name=job_name,
                             rsid=rsid,
                         )
@@ -152,6 +156,7 @@ async def run_validate_output(
         output_base=output_base,
         segments=job.segments,
         file_name_extra=job.file_name_extra,
+        include_segment_id_in_filename=job.include_segment_id_in_filename,
     )
 
     valid, missing = check_output_files(expected)
@@ -187,6 +192,7 @@ async def run_validate_output(
             sm=sm,
             segments=job.segments,
             file_name_extra=job.file_name_extra,
+            include_segment_id_in_filename=job.include_segment_id_in_filename,
         )
 
         valid, missing = check_output_files(expected)

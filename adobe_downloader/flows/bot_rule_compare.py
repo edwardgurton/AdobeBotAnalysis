@@ -18,6 +18,7 @@ from typing import Any
 from adobe_downloader.config.schema import DateRange, TestLimits
 from adobe_downloader.core.api_client import AdobeClient
 from adobe_downloader.flows.report_download import download_report, make_output_path
+from adobe_downloader.utils.filenames import sanitize_bot_rule_name
 
 _log = logging.getLogger(__name__)
 
@@ -43,17 +44,6 @@ DIMENSION_MAPPING: dict[str, str] = {
 # ---------------------------------------------------------------------------
 # Data structures
 # ---------------------------------------------------------------------------
-
-
-def sanitize_bot_rule_name(name: str) -> str:
-    """Replace underscores with hyphens for safe embedding in output filenames.
-
-    transform_bot_rule_compare splits filenames on "_" to locate the client/report
-    tokens before falling back to a legacy parsing branch; an underscore inside the
-    bot rule name shifts that split and misroutes it into the legacy branch,
-    corrupting the parsed segmentId. Bot rule names may still use hyphens freely.
-    """
-    return name.replace("_", "-")
 
 
 @dataclass
@@ -152,8 +142,6 @@ async def run_bot_rule_compare(
     re-downloaded. Up to batch_size Segment/AllTraffic downloads run concurrently.
     """
     from adobe_downloader.config.report_definitions import load_report_group
-    from adobe_downloader.core.request_builder import build_request
-    from adobe_downloader.state_manager import compute_request_key
     from adobe_downloader.utils.rsid_lookup import load_rsid_lookup
 
     rsid_map = load_rsid_lookup(rsid_lookup_file)

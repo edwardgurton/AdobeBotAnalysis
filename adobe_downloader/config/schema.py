@@ -212,6 +212,7 @@ class ReportDownloadConfig(BaseModel):
     post_processing: PostProcessing = Field(default_factory=PostProcessing)
     output: OutputConfig
     file_name_extra: str | None = None
+    include_segment_id_in_filename: bool = False
     bot_rules: BotRulesSource | None = None
     optimisation: OptimisationConfig | None = None
 

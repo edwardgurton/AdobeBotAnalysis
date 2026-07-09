@@ -69,7 +69,14 @@ if report_part.startswith("botFilter"):
 
 **Signal:** `parts[1]` begins with `botFilter`.
 
-Example: `Legend_`**`botFilterExcludeMetricsByMonth`**`_Apr25ValidatedList_rsid_2026-01-01_2026-01-31.json`
+Example (legacy — single static batch label, no per-segment split):
+`Legend_`**`botFilterExcludeMetricsByMonth`**`_Apr25ValidatedList_rsid_2026-01-01_2026-01-31.json`
+
+Example (default for `segment_list_file`-sourced downloads — per-segment `RULE{name}`
+anchor elsewhere in the filename; this detection rule only looks at `parts[1]`, so it's
+unaffected either way): `Legend_`**`botFilterExcludeMetricsByMonth`**`_rsid_RULEUS-Mobile-Bots_2026-01-01_2026-01-31.json`.
+See "Specialised Transforms" in `technical-reference.md` for how `transform_bot_validation`
+parses the `RULE` anchor into a real per-rule `botRuleName`.
 
 ### 4. `bot_investigation`
 

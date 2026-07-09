@@ -4,8 +4,9 @@ from __future__ import annotations
 
 import logging
 import re
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 from adobe_downloader.config.schema import (
     CompositeJobConfig,
@@ -13,6 +14,13 @@ from adobe_downloader.config.schema import (
     DateRange,
     RsidSource,
     SegmentSource,
+)
+from adobe_downloader.utils.filenames import (
+    sanitize_bot_rule_name,
+    sanitize_segment_name_for_filename,
+)
+from adobe_downloader.utils.filenames import (
+    sanitize_windows_filename_component as _sanitize_filename_component,
 )
 
 _log = logging.getLogger(__name__)
@@ -28,12 +36,33 @@ _TRANSFORM_TYPE_PREFIXES = {
     "summary_total": "SUMMARY",
 }
 
-_ILLEGAL_FILENAME_CHARS = re.compile(r'[<>:"/\\|?*]')
+
+def _boundary_matches(csvs: list[Path], token: str) -> list[Path]:
+    """Substring-match token in filenames, anchored so it can't match inside a longer token.
+
+    A plain `token in name` check would let "RuleA" match inside "RuleA2" — anchoring
+    on non-alphanumeric boundaries (or string start/end) prevents that.
+    """
+    if not token:
+        return []
+    pattern = re.compile(rf"(?<![A-Za-z0-9]){re.escape(token)}(?![A-Za-z0-9])")
+    return [p for p in csvs if pattern.search(p.name)]
 
 
-def _sanitize_filename_component(value: str) -> str:
-    """Replace characters illegal in Windows filenames with '-'."""
-    return _ILLEGAL_FILENAME_CHARS.sub("-", value)
+def _match_csvs_for_bot_rule(csvs: list[Path], rule: Any) -> list[Path]:
+    """Match CSVs for one bot rule.
+
+    Tries the report_download RULE{name} anchor scheme first (the default for
+    segment_list_file-driven downloads, e.g. bot_validation); falls back to
+    bot_rule_compare's legacy scheme (sanitized name only, no anchor) so this
+    keeps working unchanged for that flow's existing filenames.
+    """
+    anchored = _boundary_matches(
+        csvs, f"RULE{sanitize_segment_name_for_filename(rule.segment_name)}"
+    )
+    if anchored:
+        return anchored
+    return _boundary_matches(csvs, sanitize_bot_rule_name(rule.segment_name))
 
 
 def _state_key(step_id: str, job: CompositeJobConfig) -> str:
@@ -94,7 +123,7 @@ async def run_composite_job(
                     step_outputs[step_id] = stored
                 _log.info("SKIP step %s (already done)", step_id)
                 if on_progress:
-                    on_progress(step_id, f"SKIP (already completed)")
+                    on_progress(step_id, "SKIP (already completed)")
                 continue
 
             _log.info("START step %s [%s]", step_id, step.step)
@@ -183,7 +212,6 @@ async def _run_report_download_step(
     ac: Any,
     no_resume: bool,
 ) -> dict[str, Any]:
-    from adobe_downloader.config.report_definitions import load_report_group, load_report_registry
     from adobe_downloader.flows.report_download import run_report_download
 
     extra = step.extra_fields()
@@ -200,6 +228,7 @@ async def _run_report_download_step(
 
     interval: str = extra.get("interval", "full")
     file_name_extra: str | None = extra.get("file_name_extra")
+    include_segment_id_in_filename: bool = extra.get("include_segment_id_in_filename", False)
 
     # Resolve output base folder
     output_base = _resolve_output_base(extra, job)
@@ -237,6 +266,7 @@ async def _run_report_download_step(
         sm=sm,
         segments=segments,
         file_name_extra=file_name_extra,
+        include_segment_id_in_filename=include_segment_id_in_filename,
         no_resume=no_resume,
         step_id=step.id,
         test_limits=job.test_limits if job.test_mode else None,
@@ -323,7 +353,7 @@ async def _run_transform_concat_step(
     step_outputs: dict[str, dict[str, Any]],
 ) -> dict[str, Any]:
     from adobe_downloader.flows.report_download import iterate_rsids
-    from adobe_downloader.transforms.base import make_csv_output_path, transform_report
+    from adobe_downloader.transforms.base import make_csv_output_path
     from adobe_downloader.transforms.concatenate import concatenate_csv_files
     from adobe_downloader.transforms.specialized import transform_report_dispatch
 
@@ -418,8 +448,6 @@ async def _run_transform_concat_step(
             eligible_csvs = [p for p in csv_paths if rgx.search(p.name)]
 
         if split_by_bot_rule:
-            from adobe_downloader.flows.bot_rule_compare import sanitize_bot_rule_name
-
             if not job_name or job.output is None:
                 raise ValueError(
                     f"Step {step.id!r}: split_by_bot_rule requires output.job_name to be set"
@@ -429,10 +457,9 @@ async def _run_transform_concat_step(
             prefix = _TRANSFORM_TYPE_PREFIXES.get(explicit_type or "", "OUTPUT")
 
             for rule in _find_bot_rules_for_split(job, step_outputs, step.id):
-                rule_key = sanitize_bot_rule_name(rule.segment_name)
-                safe_name = _sanitize_filename_component(rule_key)
+                safe_name = sanitize_segment_name_for_filename(rule.segment_name)
                 rule_out = final_folder / f"{prefix}_{job_name}{extra_part}_{safe_name}.csv"
-                matched = [p for p in eligible_csvs if rule_key in p.name]
+                matched = _match_csvs_for_bot_rule(eligible_csvs, rule)
                 count = (
                     concatenate_csv_files(matched, rule_out, custom_headers=custom_headers)
                     if matched
@@ -656,6 +683,7 @@ async def _run_validate_output_step(
     # --- report_download: standard enumeration with optional retry ---
     interval: str = ref_extra.get("interval", "full")
     file_name_extra: str | None = ref_extra.get("file_name_extra")
+    include_segment_id_in_filename: bool = ref_extra.get("include_segment_id_in_filename", False)
 
     rsids_raw = ref_extra.get("rsids")
     if rsids_raw is None:
@@ -674,6 +702,7 @@ async def _run_validate_output_step(
         output_base=output_base,
         segments=segments,
         file_name_extra=file_name_extra,
+        include_segment_id_in_filename=include_segment_id_in_filename,
         job_name=job.output.job_name if job.output else None,
     )
 
@@ -712,6 +741,7 @@ async def _run_validate_output_step(
             sm=sm,
             segments=segments,
             file_name_extra=file_name_extra,
+            include_segment_id_in_filename=include_segment_id_in_filename,
             no_resume=False,
             step_id=config_ref,
             test_limits=job.test_limits if job.test_mode else None,

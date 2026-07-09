@@ -86,8 +86,10 @@ def test_bot_investigation_matches_fixture() -> None:
 
 
 def test_bot_investigation_row_count() -> None:
-    json_path = _FIXTURES / "bot_investigation" / (
-        "Legend_botInvestigationMetricsByBrowser_trillioncoverscom_2026-01-01_2026-01-31.json"
+    json_path = (
+        _FIXTURES
+        / "bot_investigation"
+        / ("Legend_botInvestigationMetricsByBrowser_trillioncoverscom_2026-01-01_2026-01-31.json")
     )
     csv_text = transform_bot_investigation(json_path, _HEADERS_DIR)
     lines = [ln for ln in csv_text.splitlines() if ln.strip()]
@@ -111,19 +113,59 @@ def test_bot_validation_matches_fixture() -> None:
 
 
 def test_bot_validation_metadata_columns() -> None:
-    json_path = _FIXTURES / "bot_validation" / (
-        "Legend_botFilterExcludeMetricsByMonth_Apr25ValidatedList_trillioncoverscom"
-        "_2026-01-01_2026-01-31.json"
+    json_path = (
+        _FIXTURES
+        / "bot_validation"
+        / (
+            "Legend_botFilterExcludeMetricsByMonth_Apr25ValidatedList_trillioncoverscom"
+            "_2026-01-01_2026-01-31.json"
+        )
     )
     csv_text = transform_bot_validation(json_path, _HEADERS_DIR)
     row = csv_text.splitlines()[1].split(",")
-    assert row[-1] == "trillioncoverscom"   # rsidName
+    assert row[-1] == "trillioncoverscom"  # rsidName
     assert row[-2] == "Apr25ValidatedList"  # botRuleName
     assert row[-3] == "botFilterExcludeMetricsByMonth"  # requestName
 
 
+def test_bot_validation_rule_anchor_extracts_real_bot_rule_name() -> None:
+    json_path = (
+        _FIXTURES
+        / "bot_validation"
+        / (
+            "Legend_botFilterExcludeMetricsByMonth_trillioncoverscom_RULEUS-Mobile-Bots"
+            "_2026-01-01_2026-01-31.json"
+        )
+    )
+    csv_text = transform_bot_validation(json_path, _HEADERS_DIR)
+    row = csv_text.splitlines()[1].split(",")
+    assert row[-1] == "trillioncoverscom"  # rsidName
+    assert row[-2] == "US-Mobile-Bots"  # botRuleName -- real per-rule name, not a batch label
+    assert row[-3] == "botFilterExcludeMetricsByMonth"  # requestName
+
+
+def test_bot_validation_rule_anchor_with_job_level_extra_prefix(tmp_path: Path) -> None:
+    import json as _json
+
+    # RULE anchor stays locatable even merged with a job-level batch label via
+    # resolve_segment_file_name_extra, e.g. "Apr25Batch-RULEUS-Mobile-Bots".
+    p = tmp_path / (
+        "Legend_botFilterExcludeMetricsByMonth_trillioncoverscom_Apr25Batch-RULEUS-Mobile-Bots"
+        "_2026-01-01_2026-01-31.json"
+    )
+    p.write_text(
+        _json.dumps({"rows": [{"itemId": "1", "value": "v", "data": [1, 2, 3, 4, 5, 6, 7, 8]}]}),
+        encoding="utf-8",
+    )
+    csv_text = transform_bot_validation(p, _HEADERS_DIR)
+    row = csv_text.splitlines()[1].split(",")
+    assert row[-1] == "trillioncoverscom"
+    assert row[-2] == "US-Mobile-Bots"
+
+
 def test_bot_validation_no_rows_header_only(tmp_path: Path) -> None:
     import json as _json
+
     p = tmp_path / "Legend_botFilterExcludeMetricsByMonth_Rule_rsid_2026-01-01_2026-01-31.json"
     p.write_text(_json.dumps({"rows": []}), encoding="utf-8")
     csv_text = transform_bot_validation(p, _HEADERS_DIR)
@@ -148,15 +190,19 @@ def test_final_bot_rule_metrics_matches_fixture() -> None:
 
 
 def test_final_bot_rule_metrics_metadata_columns() -> None:
-    json_path = _FIXTURES / "final_bot_rule_metrics" / (
-        "Legend_LegendFinalBotMetricsCurrentIncludeByYear_FinalBotMetrics"
-        "_trillioncoverscom_Apr25ValidatedList_2025-12-01_2026-01-01.json"
+    json_path = (
+        _FIXTURES
+        / "final_bot_rule_metrics"
+        / (
+            "Legend_LegendFinalBotMetricsCurrentIncludeByYear_FinalBotMetrics"
+            "_trillioncoverscom_Apr25ValidatedList_2025-12-01_2026-01-01.json"
+        )
     )
     csv_text = transform_final_bot_rule_metrics(json_path, _HEADERS_DIR)
     row = csv_text.splitlines()[1].split(",")
-    assert row[-1] == "2026-01-01"          # toDate
-    assert row[-2] == "2025-12-01"          # fromDate
-    assert row[-3] == "trillioncoverscom"   # rsidName
+    assert row[-1] == "2026-01-01"  # toDate
+    assert row[-2] == "2025-12-01"  # fromDate
+    assert row[-3] == "trillioncoverscom"  # rsidName
     assert row[-4] == "Apr25ValidatedList"  # botRuleName
 
 
@@ -177,29 +223,37 @@ def test_bot_rule_compare_matches_fixture() -> None:
 
 
 def test_bot_rule_compare_metadata_columns() -> None:
-    json_path = _FIXTURES / "bot_rule_compare" / (
-        "Legend_botInvestigationMetricsByBrowserType_Casinoorg_FebMay25"
-        "_UserAgent-Compare-V1-AllTraffic_2026-01-01_2026-01-31.json"
+    json_path = (
+        _FIXTURES
+        / "bot_rule_compare"
+        / (
+            "Legend_botInvestigationMetricsByBrowserType_Casinoorg_FebMay25"
+            "_UserAgent-Compare-V1-AllTraffic_2026-01-01_2026-01-31.json"
+        )
     )
     csv_text = transform_bot_rule_compare(json_path, _HEADERS_DIR)
     header = csv_text.splitlines()[0].split(",")
     row = csv_text.splitlines()[1].split(",")
     assert header[9] == "fileName"
     assert header[13] == "rsidName"
-    assert row[13] == "Casinoorg"    # rsidName
-    assert row[14] == "UserAgent"    # botRuleName
-    assert row[15] == "V1"           # compareVersion
-    assert row[16] == "AllTraffic"   # trafficType
-    assert row[17] == "true"         # isCompare
-    assert row[18] == "false"        # isSegment
-    assert row[19] == ""             # segmentId (empty for AllTraffic)
-    assert row[20] == ""             # segmentHash (empty for AllTraffic)
+    assert row[13] == "Casinoorg"  # rsidName
+    assert row[14] == "UserAgent"  # botRuleName
+    assert row[15] == "V1"  # compareVersion
+    assert row[16] == "AllTraffic"  # trafficType
+    assert row[17] == "true"  # isCompare
+    assert row[18] == "false"  # isSegment
+    assert row[19] == ""  # segmentId (empty for AllTraffic)
+    assert row[20] == ""  # segmentHash (empty for AllTraffic)
 
 
 def test_bot_rule_compare_row_count() -> None:
-    json_path = _FIXTURES / "bot_rule_compare" / (
-        "Legend_botInvestigationMetricsByBrowserType_Casinoorg_FebMay25"
-        "_UserAgent-Compare-V1-AllTraffic_2026-01-01_2026-01-31.json"
+    json_path = (
+        _FIXTURES
+        / "bot_rule_compare"
+        / (
+            "Legend_botInvestigationMetricsByBrowserType_Casinoorg_FebMay25"
+            "_UserAgent-Compare-V1-AllTraffic_2026-01-01_2026-01-31.json"
+        )
     )
     csv_text = transform_bot_rule_compare(json_path, _HEADERS_DIR)
     lines = [ln for ln in csv_text.splitlines() if ln.strip()]
@@ -207,42 +261,50 @@ def test_bot_rule_compare_row_count() -> None:
 
 
 def test_bot_rule_compare_production_alltraffic_metadata() -> None:
-    json_path = _FIXTURES / "bot_rule_compare" / (
-        "Legend_botInvestigationMetricsByBrowser"
-        "_SportsBookReviewcom-SG-GeoCountry-Compare-V1-AllTraffic_2026-03-01_2026-05-31.json"
+    json_path = (
+        _FIXTURES
+        / "bot_rule_compare"
+        / (
+            "Legend_botInvestigationMetricsByBrowser"
+            "_SportsBookReviewcom-SG-GeoCountry-Compare-V1-AllTraffic_2026-03-01_2026-05-31.json"
+        )
     )
     csv_text = transform_bot_rule_compare(json_path, _HEADERS_DIR)
     row = csv_text.splitlines()[1].split(",")
     assert row[13] == "SportsBookReviewcom"  # rsidName
-    assert row[14] == "SG-GeoCountry"        # botRuleName
-    assert row[15] == "V1"                   # compareVersion
-    assert row[16] == "AllTraffic"           # trafficType
-    assert row[17] == "true"                 # isCompare
-    assert row[18] == "false"                # isSegment
-    assert row[19] == ""                     # segmentId (empty for AllTraffic)
-    assert row[20] == ""                     # segmentHash (empty for AllTraffic)
-    assert row[21] == "2026-03-01"           # startDate
-    assert row[22] == "2026-05-31"           # endDate
+    assert row[14] == "SG-GeoCountry"  # botRuleName
+    assert row[15] == "V1"  # compareVersion
+    assert row[16] == "AllTraffic"  # trafficType
+    assert row[17] == "true"  # isCompare
+    assert row[18] == "false"  # isSegment
+    assert row[19] == ""  # segmentId (empty for AllTraffic)
+    assert row[20] == ""  # segmentHash (empty for AllTraffic)
+    assert row[21] == "2026-03-01"  # startDate
+    assert row[22] == "2026-05-31"  # endDate
 
 
 def test_bot_rule_compare_production_segment_metadata() -> None:
-    json_path = _FIXTURES / "bot_rule_compare" / (
-        "Legend_botInvestigationMetricsByBrowser"
-        "_SBRcom-SGGeo-Compare-V1-Segment"
-        "_DIMSEGs3938_67efce1e3c0b4a6a3f4e8c9a_2026-03-01_2026-05-31.json"
+    json_path = (
+        _FIXTURES
+        / "bot_rule_compare"
+        / (
+            "Legend_botInvestigationMetricsByBrowser"
+            "_SBRcom-SGGeo-Compare-V1-Segment"
+            "_DIMSEGs3938_67efce1e3c0b4a6a3f4e8c9a_2026-03-01_2026-05-31.json"
+        )
     )
     csv_text = transform_bot_rule_compare(json_path, _HEADERS_DIR)
     row = csv_text.splitlines()[1].split(",")
-    assert row[13] == "SBRcom"                           # rsidName
-    assert row[14] == "SGGeo"                            # botRuleName
-    assert row[15] == "V1"                               # compareVersion
-    assert row[16] == "Segment"                          # trafficType
-    assert row[17] == "false"                            # isCompare
-    assert row[18] == "true"                             # isSegment
+    assert row[13] == "SBRcom"  # rsidName
+    assert row[14] == "SGGeo"  # botRuleName
+    assert row[15] == "V1"  # compareVersion
+    assert row[16] == "Segment"  # trafficType
+    assert row[17] == "false"  # isCompare
+    assert row[18] == "true"  # isSegment
     assert row[19] == "s3938_67efce1e3c0b4a6a3f4e8c9a"  # segmentId reconstructed
-    assert row[20] == "67efce1e3c0b4a6a3f4e8c9a"        # segmentHash
-    assert row[21] == "2026-03-01"                       # startDate
-    assert row[22] == "2026-05-31"                       # endDate
+    assert row[20] == "67efce1e3c0b4a6a3f4e8c9a"  # segmentHash
+    assert row[21] == "2026-03-01"  # startDate
+    assert row[22] == "2026-05-31"  # endDate
 
 
 # ---------------------------------------------------------------------------
@@ -266,17 +328,23 @@ def test_summary_total_only_matches_fixture() -> None:
 
 
 def test_dispatch_auto_detect_bot_investigation() -> None:
-    json_path = _FIXTURES / "bot_investigation" / (
-        "Legend_botInvestigationMetricsByBrowser_trillioncoverscom_2026-01-01_2026-01-31.json"
+    json_path = (
+        _FIXTURES
+        / "bot_investigation"
+        / ("Legend_botInvestigationMetricsByBrowser_trillioncoverscom_2026-01-01_2026-01-31.json")
     )
     expected = (_FIXTURES / "bot_investigation" / "expected.csv").read_text(encoding="utf-8")
     assert transform_report_dispatch(json_path, headers_dir=_HEADERS_DIR) == expected
 
 
 def test_dispatch_explicit_type_bot_validation() -> None:
-    json_path = _FIXTURES / "bot_validation" / (
-        "Legend_botFilterExcludeMetricsByMonth_Apr25ValidatedList_trillioncoverscom"
-        "_2026-01-01_2026-01-31.json"
+    json_path = (
+        _FIXTURES
+        / "bot_validation"
+        / (
+            "Legend_botFilterExcludeMetricsByMonth_Apr25ValidatedList_trillioncoverscom"
+            "_2026-01-01_2026-01-31.json"
+        )
     )
     expected = (_FIXTURES / "bot_validation" / "expected.csv").read_text(encoding="utf-8")
     result = transform_report_dispatch(json_path, "bot_validation", _HEADERS_DIR)
@@ -290,8 +358,10 @@ def test_dispatch_unknown_type_raises() -> None:
 
 
 def test_dispatch_writes_file(tmp_path: Path) -> None:
-    json_path = _FIXTURES / "bot_investigation" / (
-        "Legend_botInvestigationMetricsByBrowser_trillioncoverscom_2026-01-01_2026-01-31.json"
+    json_path = (
+        _FIXTURES
+        / "bot_investigation"
+        / ("Legend_botInvestigationMetricsByBrowser_trillioncoverscom_2026-01-01_2026-01-31.json")
     )
     out = tmp_path / "out.csv"
     transform_report_dispatch(json_path, "bot_investigation", _HEADERS_DIR, output_path=out)
