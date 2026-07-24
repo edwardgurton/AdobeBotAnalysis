@@ -93,7 +93,6 @@ Downloads Adobe Analytics ranked or summary reports for one or more RSIDs, date 
 | `file_name_extra` | str | no | Injected into output filenames for disambiguation |
 | `include_segment_id_in_filename` | bool | no | Default `false`. When `segments.source: segment_list_file`, each segment's downloaded filename embeds its sanitized *name* (`RULE{name}`) by default, not the raw ID — set this `true` to also embed the raw ID via `DIMSEG{id}` |
 | `bot_rules` | `BotRulesSource` | no | Used by bot_validation/bot_rule_compare flows |
-| `optimisation` | `OptimisationConfig` | no | `shared_reports=true` shares report results across bot rules |
 
 ### `transform_concat`
 
@@ -366,20 +365,14 @@ steps:
       source: file
       file: data/rsid_lists/botValidationRsidList.txt
       batch_size: 12
-    bot_rules:
-      source: step_output          # validate list CSV from segment_creation step
-      step_id: create_segments
-      output_key: validate_list_file
-    segments:
-      source: step_output
-      step_id: create_segments
-      output_key: segment_list_file
+    bot_rules:                     # drives both the per-rule download filter/filename
+      source: step_output          # anchor and (below) the split-by-rule labeling —
+      step_id: create_segments     # no separate segments: needed. validate list CSV
+      output_key: validate_list_file  # from segment_creation step
     interval: month
-    optimisation:
-      shared_reports: true         # botFilterExclude/Include run once, shared across bot rules
-      shared_report_names:
-        - botFilterExcludeMetricsByMonth
-        - botFilterIncludeMetricsByMonth
+    # botFilterExclude/IncludeMetricsByMonth are marked shared: true in
+    # report_definitions/bot_validation.yaml, so they ignore the per-rule segment
+    # and are downloaded once, then copied for every rule — no config needed here.
 
   - step: validate_output
     id: validate
@@ -566,16 +559,18 @@ Same 13 report shapes as above, no default segments (all traffic).
 Default segments: Master Bot Exclusion Development (`s3938_66fe79408ff02713f66ed76b`). Default row_limit: 5000.
 Default metrics: event3, Clickouts CM, Engagement Rate CM, Engaged Visits CM, itemtimespent, pageviews.
 
-| Report name | Dimension | Segments (override) | Row limit |
-|---|---|---|---|
-| `botFilterExcludeMetricsByMonth` | `variables/daterangemonth` | Exclude filter (default) | 5000 |
-| `botFilterExcludexBotRuleMetricsByMonth` | `variables/daterangemonth` | Exclude filter (default) | 5000 |
-| `botFilterIncludeMetricsByMonth` | `variables/daterangemonth` | Include filter override | 5000 |
-| `botFilterIncludexBotRuleMetricsByMonth` | `variables/daterangemonth` | Include filter override | 5000 |
-| `botFilterExcludexBotRuleXSuspiciousMarketingChannelsMetricsByMonth` | `variables/daterangemonth` | Exclude + Suspicious MC | 5000 |
-| `botFilterExcludexBotRuleXDesktopMetricsByMonth` | `variables/daterangemonth` | Exclude + Desktop | 5000 |
-| `botFilterExcludexBotRuleMetricsByPageUrl` | `variables/evar2` | Exclude filter (default) | 10 |
-| `JustSegmentMetricsByMonth` | `variables/daterangemonth` | None (empty override) | 5000 |
+When a report_download step iterates a per-rule segment (`bot_rules`, or `segments: {source: segment_list_file}`), that segment is applied to every report in the group *except* those marked `shared: true` below — those ignore it and use only their own `segments` (default or override). `shared: true` reports are downloaded once and copied for every rule via the state manager's canonical-request dedup, matching the legacy JS's `SHARED_REPORTS` behaviour.
+
+| Report name | Dimension | Segments (base) | Bot rule segment applied? | Row limit |
+|---|---|---|---|---|
+| `botFilterExcludeMetricsByMonth` | `variables/daterangemonth` | Exclude filter (default) | No (`shared: true`) | 5000 |
+| `botFilterExcludexBotRuleMetricsByMonth` | `variables/daterangemonth` | Exclude filter (default) | Yes | 5000 |
+| `botFilterIncludeMetricsByMonth` | `variables/daterangemonth` | Include filter override | No (`shared: true`) | 5000 |
+| `botFilterIncludexBotRuleMetricsByMonth` | `variables/daterangemonth` | Include filter override | Yes | 5000 |
+| `botFilterExcludexBotRuleXSuspiciousMarketingChannelsMetricsByMonth` | `variables/daterangemonth` | Exclude + Suspicious MC | Yes | 5000 |
+| `botFilterExcludexBotRuleXDesktopMetricsByMonth` | `variables/daterangemonth` | Exclude + Desktop | Yes | 5000 |
+| `botFilterExcludexBotRuleMetricsByPageUrl` | `variables/evar2` | Exclude filter (default) | Yes | 10 |
+| `JustSegmentMetricsByMonth` | `variables/daterangemonth` | None (empty override) | Yes (only segment applied) | 5000 |
 
 ### Group: `bot_rule_compare` (transform: `bot_rule_compare`)
 
@@ -662,7 +657,8 @@ Default metrics: 4 clickout custom metrics.
 | `bot_rule_compare` | any string | `job_id`, `json_folder`, `downloaded`, `skipped`, `copied` | any prior step |
 | `final_bot_metrics` | any string | `job_id`, `json_folder`, `downloaded`, `skipped` | any prior step |
 | `rsid_update` | any string | `investigation_list`, `validation_list` | any |
-| `generate_country_matrix` | — | Not implemented; raises `NotImplementedError` | — |
+| `generate_country_matrix` | any string | `matrix_file`, `pair_count`, `segments_created` | any prior step |
+| `country_investigation` | any string | `job_id`, `json_folder`, `downloaded`, `skipped`, `copied` | any prior step |
 
 **`validate_output` step fields:**
 - `config_ref` (required): id of the `report_download` step whose expected outputs to check
@@ -686,6 +682,24 @@ Default metrics: 4 clickout custom metrics.
 - `rsid_lookup_file`: optional explicit path
 - `job_name`: string (default: step id)
 - `interval`: `"full"` | `"month"` | `"day"` (default `"full"`)
+
+**`generate_country_matrix` step fields:**
+- `rsids` (required): `RsidSource` — RSIDs to check for qualifying countries
+- `visit_threshold` (required, int): countries must exceed this visits total to qualify (strictly greater than)
+- `country_segment_lookup`: path (default `data/country_segment_lookup.json`) — reused/appended, keyed by numeric `DimValueId`, so a country segment created for one RSID is reused for every other RSID that also qualifies for it
+- `share_with_users`: list of Adobe user IDs to share newly-created segments with
+- `rsid_lookup_file`: optional explicit path; falls back to latest file in `data/report_suite_lists/`
+- Downloads `SegmentsBuilderCountry50` (from the `segment_builder` report group) once per RSID; output written to `{output_base}/{client}/country_matrix/{step_id}_matrix.json`
+
+**`country_investigation` step fields:**
+- `matrix` (required): `MatrixSource` (`source: step_output` with `step_id`+`output_key`, or `source: file` with `file`) — the (rsid, country, segment) pairs to download
+- `report_group`: string (default `"bot_investigation"`) — full report group downloaded per pair, not the 9-dimension `bot_rule_compare` comparison set
+- `interval`: `"full"` | `"month"` | `"day"` (default `"full"`)
+- `investigation_label`: string (default `"FullRun"`) — embedded in the filename as `{rsid}-{country}-{investigation_label}`
+- `file_name_extra`: optional suffix appended after `investigation_label` (e.g. `"Daily"` / `"Totals"`, mirroring `report_download`'s two-download Daily/Totals pattern)
+- `rsid_lookup_file`: optional explicit path; falls back to latest file in `data/report_suite_lists/`
+- Downloads one pair at a time (not a cross product of every RSID against every country) — each RSID only gets the countries its own matrix row qualifies it for
+- `transform_concat`'s `split_by_rsid_country: true` produces one CSV per (rsid, country) pair, reading the same `matrix` from the referenced `country_investigation` step; omit it to concatenate every pair into one file (e.g. for Totals, to compare a feature across every RSID×country combo — RSID and country stay identifiable via the `fileName` column)
 
 ---
 
@@ -728,8 +742,8 @@ In composite jobs, `rsids.source: step_output` with `step_id` and `output_key` (
 | `data/lookups/<variableName>/lookup.txt` | `lookup_generation` job | `segment_creation` (dimension ID resolution) | Two-column `value\tnumericId` |
 | `data/segment_lists/Legend/<name>.json` | `segment_creation` job | `report_download` / `final_bot_metrics` as `segments.file` | JSON list of segment IDs |
 | `data/saved_segments/<segmentId>.json` | `get-segment` CLI | Reference / debugging | Adobe API segment definition JSON |
-| `data/country_segment_lookup.json` | Migrated from legacy JS | `generate_country_matrix` step (not yet implemented) | Country → segment ID mapping |
-| `data/rsid_country_thresholds/` | Manual | Country investigation flows | Per-RSID country visit thresholds |
+| `data/country_segment_lookup.json` | Migrated from legacy JS; extended by `generate_country_matrix` | `generate_country_matrix` step (reused across RSIDs by `DimValueId`) | List of `{SegmentId, SegmentName, DimValueId, DimValueName}` |
+| `data/rsid_country_thresholds/botInvestigationRsidCountriesMinThreshold.json` | Migrated from legacy JS (`BotInvestigationGenerateCountrySegments.js` output) | `country_investigation` step's `matrix:` (`source: file`), or `generate_country_matrix`'s regenerated matrix_file | List of `{rsidCleanName, geocountry, segmentId, visits}` — `load_matrix_file()` accepts this legacy key naming directly, no conversion needed |
 | `data/user_lists/` | Manual | `segment_creation` (`share_with_users`) | Adobe user ID lists |
 
 ---

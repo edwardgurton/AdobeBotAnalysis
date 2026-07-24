@@ -1,6 +1,6 @@
 job_type: composite
 client: Legend
-description: "RSID×country full bot investigation: build matrix, download, validate, transform"
+description: "Full Legend bot investigation pipeline (RSID×country) — matrix + download + validate + transform"
 
 date_range:
   from: "2026-04-01"
@@ -8,25 +8,27 @@ date_range:
 
 output:
   base_folder: "C:/Adobe_Downloads"
-  job_name: "<job-name>"
+  job_name: "BotInvCountry26Q2V1"
 
 steps:
-  # Runs SegmentsBuilderCountry50 (visits by country) for every RSID in scope,
-  # keeps (rsid, country) pairs whose visits exceed visit_threshold, and
-  # reuses/creates a `variables/geocountry` segment per qualifying country —
-  # reused across RSIDs from data/country_segment_lookup.json where possible.
+  # Visits-by-country for every RSID in scope (SegmentsBuilderCountry50), kept
+  # where visits > visit_threshold. Reuses a country segment from
+  # data/country_segment_lookup.json when one already exists for that country,
+  # otherwise creates it via the API and appends it to the lookup so later
+  # jobs (any RSID) reuse it too instead of creating a duplicate.
   - step: generate_country_matrix
     id: matrix
     rsids:
       source: file
-      file: data/rsid_lists/botInvestigationMinThresholdVisits.txt
+      file: data\rsid_lists\botInvestigationMinThresholdVisits.txt
+      batch_size: 12
     visit_threshold: 100000
     share_with_users:
-      - "200419062" # Adobe user ID to share newly-created segments with
+      - "200419062"
 
-  # One full report_group download per (rsid, country) pair — not a cross
-  # product of every RSID against every country. Files are named
-  # {rsid}-{country}-{investigation_label}[-{file_name_extra}].
+  # One full bot_investigation download per (rsid, country) pair — e.g.
+  # CasinoOrg-UnitedKingdom, CasinoOrg-UnitedStates — not a cross product of
+  # every RSID against every country.
   - step: country_investigation
     id: download_investigation_daily
     matrix:
@@ -34,7 +36,7 @@ steps:
       step_id: matrix
       output_key: matrix_file
     interval: day
-    investigation_label: "FullRun-V1"
+    investigation_label: "FullRun-FY26Q2V1"
     file_name_extra: "Daily"
 
   - step: country_investigation
@@ -44,7 +46,7 @@ steps:
       step_id: matrix
       output_key: matrix_file
     interval: full
-    investigation_label: "FullRun-V1"
+    investigation_label: "FullRun-FY26Q2V1"
     file_name_extra: "Totals"
 
   - step: validate_output
@@ -59,7 +61,7 @@ steps:
     config_ref: download_investigation_totals
     retry: true
 
-  # split_by_rsid_country produces one CSV per (rsid, country) pair.
+  # One CSV per RSID×country pair (CasinoOrg-UnitedKingdom.csv, CasinoOrg-UnitedStates.csv, ...)
   - step: transform_concat
     id: transform_daily
     depends_on: validate_daily
@@ -73,8 +75,9 @@ steps:
         1: "feature"
 
   # Totals stay as one file across every RSID×country combo — used to compare
-  # a feature (e.g. browsers) across all sites/countries at once. RSID and
-  # country are still identifiable per row via the fileName column.
+  # a feature (e.g. browsers) across all sites, same as the plain per-RSID
+  # investigation. RSID and country are still identifiable per row via the
+  # fileName column.
   - step: transform_concat
     id: transform_day_totals
     depends_on: validate_totals

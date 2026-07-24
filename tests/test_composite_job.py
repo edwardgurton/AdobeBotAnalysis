@@ -17,6 +17,7 @@ from adobe_downloader.flows.composite_job import (
     _coerce_date_range,
     _resolve_output_base,
     _resolve_segments,
+    _segment_iterations_from_bot_rules,
     _state_key,
     run_composite_job,
 )
@@ -197,6 +198,50 @@ class TestResolveSegments:
 
 
 # ---------------------------------------------------------------------------
+# _segment_iterations_from_bot_rules helper
+# ---------------------------------------------------------------------------
+
+
+class TestSegmentIterationsFromBotRules:
+    def test_one_iteration_per_rule(self) -> None:
+        from adobe_downloader.flows.bot_rule_compare import BotRule
+
+        bot_rules = [
+            BotRule(segment_id="seg1", segment_name="Rule One", report_to_skip=None),
+            BotRule(
+                segment_id="seg2",
+                segment_name="Rule Two",
+                report_to_skip="botInvestigationMetricsByDomain",
+            ),
+        ]
+        iterations = _segment_iterations_from_bot_rules(bot_rules)
+
+        assert len(iterations) == 2
+        assert iterations[0].ids == ["seg1"]
+        assert iterations[0].id == "seg1"
+        assert iterations[0].name == "Rule One"
+        assert iterations[1].ids == ["seg2"]
+        assert iterations[1].name == "Rule Two"
+
+    def test_blank_name_raises(self) -> None:
+        from adobe_downloader.flows.bot_rule_compare import BotRule
+
+        bot_rules = [BotRule(segment_id="seg1", segment_name="   ", report_to_skip=None)]
+        with pytest.raises(ValueError, match="blank/missing name"):
+            _segment_iterations_from_bot_rules(bot_rules)
+
+    def test_colliding_sanitized_names_raise(self) -> None:
+        from adobe_downloader.flows.bot_rule_compare import BotRule
+
+        bot_rules = [
+            BotRule(segment_id="seg1", segment_name="Rule/One", report_to_skip=None),
+            BotRule(segment_id="seg2", segment_name="Rule-One", report_to_skip=None),
+        ]
+        with pytest.raises(ValueError, match="both sanitize to filename component"):
+            _segment_iterations_from_bot_rules(bot_rules)
+
+
+# ---------------------------------------------------------------------------
 # _coerce_date_range helper
 # ---------------------------------------------------------------------------
 
@@ -314,6 +359,69 @@ class TestRunCompositeJob:
         assert "dl_step" in step_outputs
         assert step_outputs["dl_step"]["downloaded"] == 2
         assert sm.is_step_complete("dl_step") is True
+
+    async def test_bot_rules_without_segments_drives_segment_filter(
+        self, tmp_path: Path, _fake_report_defs: list[Any]
+    ) -> None:
+        """A report_download step with bot_rules but no segments: block should
+        still filter/anchor its downloads per rule — bot_validation's whole point
+        in dropping the separate segments: field."""
+        job = CompositeJobConfig.model_validate(
+            {
+                "job_type": "composite",
+                "client": "Legend",
+                "output": {"base_folder": str(tmp_path)},
+                "date_range": {"from": "2025-01-01", "to": "2025-01-02"},
+                "steps": [
+                    {
+                        "step": "report_download",
+                        "id": "dl_step",
+                        "report_group": "bot_validation",
+                        "rsids": {"source": "single", "single": "rsid1"},
+                        "bot_rules": {
+                            "source": "inline",
+                            "rules": [
+                                {"segment_id": "seg1", "segment_name": "Rule One"},
+                            ],
+                        },
+                    }
+                ],
+            }
+        )
+        config_path = tmp_path / "job.yaml"
+        config_path.write_text("job_type: composite\nclient: Legend\n")
+        config_hash = compute_config_hash(config_path)
+        job_id = compute_job_id(config_path, config_hash)
+        db_path = state_db_path(tmp_path, "Legend", job_id)
+        sm = StateManager(db_path, job_id, config_path, config_hash)
+        ac = MagicMock()
+
+        from adobe_downloader.flows.report_download import ReportDownloadResult
+
+        fake_result = ReportDownloadResult(
+            job_id=sm.job_id, json_folder=tmp_path / "Legend" / "JSON"
+        )
+        captured_kwargs: dict[str, Any] = {}
+
+        async def _fake_run_rd(*a: Any, **kw: Any) -> Any:
+            captured_kwargs.update(kw)
+            return fake_result
+
+        with (
+            patch(
+                "adobe_downloader.flows.composite_job._resolve_report_defs",
+                return_value=_fake_report_defs,
+            ),
+            patch("adobe_downloader.flows.report_download.run_report_download", _fake_run_rd),
+        ):
+            await run_composite_job(job, config_path, sm, ac)
+
+        assert captured_kwargs["segments"] is None
+        iterations = captured_kwargs["segment_iterations"]
+        assert iterations is not None
+        assert len(iterations) == 1
+        assert iterations[0].ids == ["seg1"]
+        assert iterations[0].name == "Rule One"
 
     async def test_resume_skips_completed_step(
         self, tmp_path: Path, _fake_report_defs: list[Any]
@@ -1236,6 +1344,217 @@ class TestTransformConcatSplitByRsid:
             pytest.raises(ValueError, match="split_by_rsid requires"),
         ):
             await _run_transform_concat_step(step_obj, job, step_outputs)
+
+
+class TestTransformConcatSplitByRsidCountry:
+    @staticmethod
+    def _fake_dispatch(
+        src: Path,
+        transform_type: str | None = None,
+        headers_dir: object = None,
+        *,
+        output_path: Path | None = None,
+    ) -> None:
+        p = output_path or src.with_suffix(".csv")
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text(f"id,browser\n{src.stem}\n")
+
+    async def test_split_produces_one_file_per_rsid_country_pair(self, tmp_path: Path) -> None:
+        from adobe_downloader.flows.country_matrix import RsidCountryPair, write_matrix_file
+
+        json_folder = tmp_path / "Legend" / "TestJob" / "JSON"
+        json_folder.mkdir(parents=True)
+
+        files = [
+            "Legend_botInvestigationMetricsByBrowser_SiteA-United-Kingdom-FullRun-V1-Daily_"
+            "DIMSEGseg-uk_2025-01-01_2025-01-02.json",
+            "Legend_botInvestigationMetricsByBrowser_SiteB-France-FullRun-V1-Daily_"
+            "DIMSEGseg-fr_2025-01-01_2025-01-02.json",
+        ]
+        for name in files:
+            (json_folder / name).write_text("{}")
+
+        matrix_file = tmp_path / "matrix.json"
+        write_matrix_file(
+            matrix_file,
+            [
+                RsidCountryPair("SiteA", "United Kingdom", "seg-uk", 500),
+                RsidCountryPair("SiteB", "France", "seg-fr", 300),
+            ],
+        )
+
+        step_outputs = {"download_daily": {"json_folder": str(json_folder)}}
+
+        job = CompositeJobConfig.model_validate(
+            {
+                "job_type": "composite",
+                "client": "Legend",
+                "output": {"base_folder": str(tmp_path), "job_name": "TestJob"},
+                "steps": [
+                    {
+                        "step": "country_investigation",
+                        "id": "download_daily",
+                        "matrix": {"source": "file", "file": str(matrix_file)},
+                        "interval": "day",
+                        "file_name_extra": "Daily",
+                    },
+                    {
+                        "step": "transform_concat",
+                        "id": "transform_daily",
+                        "depends_on": "download_daily",
+                        "transform": {
+                            "type": "bot_investigation",
+                            "source_pattern": "*Daily*.json",
+                            "split_by_rsid_country": True,
+                        },
+                        "concat": {"enabled": True, "file_name_extra": "Daily"},
+                    },
+                ],
+            }
+        )
+        step_obj = next(s for s in job.steps if s.id == "transform_daily")
+
+        from adobe_downloader.flows.composite_job import _run_transform_concat_step
+
+        with patch(
+            "adobe_downloader.transforms.specialized.transform_report_dispatch",
+            side_effect=self._fake_dispatch,
+        ):
+            result = await _run_transform_concat_step(step_obj, job, step_outputs)
+
+        assert set(result["concatenated_files"].keys()) == {
+            "SiteA-United Kingdom",
+            "SiteB-France",
+        }
+
+        site_a_content = Path(result["concatenated_files"]["SiteA-United Kingdom"]).read_text()
+        assert "SiteA-United-Kingdom" in site_a_content
+        assert "SiteB-France" not in site_a_content
+
+    async def test_split_by_rsid_country_requires_country_investigation_step(
+        self, tmp_path: Path
+    ) -> None:
+        json_folder = tmp_path / "Legend" / "TestJob" / "JSON"
+        json_folder.mkdir(parents=True)
+        (json_folder / "Legend_report_2025-01-01_2025-01-02.json").write_text("{}")
+
+        step_outputs = {"dl": {"json_folder": str(json_folder)}}
+        job = CompositeJobConfig.model_validate(
+            {
+                "job_type": "composite",
+                "client": "Legend",
+                "output": {"base_folder": str(tmp_path), "job_name": "TestJob"},
+                "steps": [
+                    {
+                        "step": "transform_concat",
+                        "id": "transform",
+                        "depends_on": "dl",
+                        "transform": {"type": "bot_investigation", "split_by_rsid_country": True},
+                    }
+                ],
+            }
+        )
+        step_obj = job.steps[0]
+
+        from adobe_downloader.flows.composite_job import _run_transform_concat_step
+
+        with (
+            patch(
+                "adobe_downloader.transforms.specialized.transform_report_dispatch",
+                side_effect=self._fake_dispatch,
+            ),
+            pytest.raises(ValueError, match="split_by_rsid_country requires"),
+        ):
+            await _run_transform_concat_step(step_obj, job, step_outputs)
+
+
+class TestGenerateCountryMatrixAndCountryInvestigationSteps:
+    async def test_matrix_step_output_flows_into_country_investigation_step(
+        self, tmp_path: Path
+    ) -> None:
+        from adobe_downloader.flows.country_investigation import CountryInvestigationResult
+        from adobe_downloader.flows.country_matrix import CountryMatrixResult, RsidCountryPair
+
+        rsid_file = tmp_path / "rsids.txt"
+        rsid_file.write_text("rsid1:CasinoOrg")
+
+        job = _composite_job(
+            client="Legend",
+            output={"base_folder": str(tmp_path), "job_name": "TestJob"},
+            date_range={"from": "2026-01-01", "to": "2026-03-31"},
+            steps=[
+                {
+                    "step": "generate_country_matrix",
+                    "id": "matrix",
+                    "rsids": {"source": "list", "list": ["CasinoOrg"]},
+                    "visit_threshold": 100000,
+                    "rsid_lookup_file": str(rsid_file),
+                },
+                {
+                    "step": "country_investigation",
+                    "id": "download",
+                    "depends_on": "matrix",
+                    "matrix": {
+                        "source": "step_output",
+                        "step_id": "matrix",
+                        "output_key": "matrix_file",
+                    },
+                    "interval": "full",
+                    "investigation_label": "FullRun-V1",
+                    "rsid_lookup_file": str(rsid_file),
+                },
+            ],
+        )
+        config_path = tmp_path / "job.yaml"
+        config_path.write_text("job_type: composite\nclient: Legend\n")
+        config_hash = compute_config_hash(config_path)
+        job_id = compute_job_id(config_path, config_hash)
+        db_path = state_db_path(tmp_path, "Legend", job_id)
+        sm = StateManager(db_path, job_id, config_path, config_hash)
+        ac = MagicMock()
+
+        matrix_path = tmp_path / "matrix.json"
+        matrix_result = CountryMatrixResult(
+            job_id=sm.job_id,
+            matrix_file=matrix_path,
+            pairs=[RsidCountryPair("CasinoOrg", "United Kingdom", "seg_uk", 500000)],
+            segments_created=1,
+        )
+        investigation_result = CountryInvestigationResult(
+            job_id=sm.job_id,
+            json_folder=tmp_path / "Legend" / "TestJob" / "JSON",
+            downloaded=1,
+        )
+
+        captured_kwargs: dict[str, Any] = {}
+
+        async def _fake_matrix(*a: Any, **kw: Any) -> Any:
+            return matrix_result
+
+        async def _fake_investigation(*a: Any, **kw: Any) -> Any:
+            captured_kwargs.update(kw)
+            return investigation_result
+
+        with (
+            patch(
+                "adobe_downloader.flows.country_matrix.run_generate_country_matrix",
+                _fake_matrix,
+            ),
+            patch(
+                "adobe_downloader.flows.country_investigation.run_country_investigation",
+                _fake_investigation,
+            ),
+        ):
+            step_outputs = await run_composite_job(job, config_path, sm, ac)
+
+        assert step_outputs["matrix"]["matrix_file"] == str(matrix_path)
+        assert step_outputs["matrix"]["pair_count"] == 1
+        assert step_outputs["matrix"]["segments_created"] == 1
+
+        # The country_investigation step must resolve matrix.step_output to the
+        # exact path generate_country_matrix produced.
+        assert captured_kwargs["matrix_file"] == matrix_path
+        assert step_outputs["download"]["downloaded"] == 1
 
 
 class TestTransformConcatFileNameExtra:

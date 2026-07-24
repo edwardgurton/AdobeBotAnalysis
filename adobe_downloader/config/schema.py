@@ -5,7 +5,6 @@ from typing import Annotated, Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-
 # ---------------------------------------------------------------------------
 # Shared sub-models
 # ---------------------------------------------------------------------------
@@ -124,6 +123,12 @@ class ReportDefinitionInline(BaseModel):
     segments: list[str] = []
     metrics: list[str]
     csv_headers: list[str]
+    # Shared reports (e.g. bot_validation's botFilterExclude/IncludeMetricsByMonth)
+    # ignore whatever per-iteration segment a caller is looping over (a bot rule, a
+    # segment_list_file entry) — only report_def.segments applies. This lets one real
+    # download serve every iteration via the state manager's canonical-request dedup,
+    # instead of downloading the same shared totals once per rule.
+    shared: bool = False
 
 
 class SegmentCreationConfig(BaseModel):
@@ -177,9 +182,24 @@ class BotRulesSource(BaseModel):
     rules: list[str] | None = None
 
 
-class OptimisationConfig(BaseModel):
-    shared_reports: bool = False
-    shared_report_names: list[str] = []
+class MatrixSource(BaseModel):
+    """Where a country_investigation step's RSID×country matrix comes from."""
+
+    source: Literal["step_output", "file"]
+    step_id: str | None = None
+    output_key: str | None = None
+    file: str | None = None
+
+    @model_validator(mode="after")
+    def _check_source_value(self) -> "MatrixSource":
+        if self.source == "step_output":
+            if not self.step_id:
+                raise ValueError("matrix.step_id is required when source='step_output'")
+            if not self.output_key:
+                raise ValueError("matrix.output_key is required when source='step_output'")
+        if self.source == "file" and not self.file:
+            raise ValueError("matrix.file is required when source='file'")
+        return self
 
 
 class DimToSegmentsConfig(BaseModel):
@@ -214,7 +234,6 @@ class ReportDownloadConfig(BaseModel):
     file_name_extra: str | None = None
     include_segment_id_in_filename: bool = False
     bot_rules: BotRulesSource | None = None
-    optimisation: OptimisationConfig | None = None
 
     @model_validator(mode="after")
     def _check_report_spec(self) -> "ReportDownloadConfig":
@@ -288,10 +307,10 @@ class CompositeStep(BaseModel):
         "lookup_generation",
         "bot_rule_compare",
         "final_bot_metrics",
+        "country_investigation",
     ]
     id: str
     depends_on: str | None = None
-    optimisation: OptimisationConfig | None = None
 
     def extra_fields(self) -> dict[str, Any]:
         return self.__pydantic_extra__ or {}
@@ -313,7 +332,7 @@ class CompositeJobConfig(BaseModel):
         # when output.job_name is set (see make_output_path / run_bot_rule_compare).
         # Without it, every such step writes into the shared per-client JSON folder,
         # so a downstream transform_concat can silently sweep up other jobs' files too.
-        api_download_steps = {"report_download", "bot_rule_compare"}
+        api_download_steps = {"report_download", "bot_rule_compare", "country_investigation"}
         step_types = {s.step for s in self.steps}
         downloads = sorted(step_types & api_download_steps)
         if downloads and "transform_concat" in step_types:

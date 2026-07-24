@@ -8,6 +8,7 @@ from typing import Any
 
 from adobe_downloader.config.schema import DateRange, RsidSource, SegmentSource
 from adobe_downloader.flows.report_download import (
+    SegmentIteration,
     iterate_dates,
     iterate_rsids,
     iterate_segments,
@@ -28,15 +29,23 @@ def enumerate_expected_paths(
     interval: str,
     output_base: Path,
     segments: SegmentSource | None = None,
+    segment_iterations: list[SegmentIteration] | None = None,
     file_name_extra: str | None = None,
     include_segment_id_in_filename: bool = False,
     job_name: str | None = None,
 ) -> list[Path]:
-    """Return every JSON output path that a report_download run would produce."""
+    """Return every JSON output path that a report_download run would produce.
+
+    segment_iterations, when given, is used verbatim instead of resolving `segments`
+    — mirrors run_report_download's parameter of the same name.
+    """
     paths: list[Path] = []
+    all_segments = (
+        segment_iterations if segment_iterations is not None else list(iterate_segments(segments))
+    )
     for rsid in iterate_rsids(rsids):
         for dr in iterate_dates(date_range, interval):
-            for segment in iterate_segments(segments):
+            for segment in all_segments:
                 for rd in report_defs:
                     paths.append(
                         make_output_path(
@@ -99,6 +108,42 @@ def enumerate_bot_rule_compare_paths(
                         date_range=date_range,
                         file_name_extra=f"{investigation_name}-AllTraffic",
                         segment_id=None,
+                        job_name=job_name,
+                    )
+                )
+    return paths
+
+
+def enumerate_country_investigation_paths(
+    client_name: str,
+    matrix_file: Path,
+    report_defs: list[Any],
+    date_range: DateRange,
+    interval: str,
+    investigation_label: str,
+    output_base: Path,
+    file_name_extra: str | None = None,
+    job_name: str | None = None,
+) -> list[Path]:
+    """Return every JSON output path a country_investigation run would produce."""
+    from adobe_downloader.flows.country_investigation import combo_label
+    from adobe_downloader.flows.country_matrix import load_matrix_file
+
+    paths: list[Path] = []
+    pairs = load_matrix_file(matrix_file)
+    for pair in pairs:
+        label = combo_label(pair.rsid_clean_name, pair.country, investigation_label)
+        extra = f"{label}-{file_name_extra}" if file_name_extra else label
+        for dr in iterate_dates(date_range, interval):
+            for report_def in report_defs:
+                paths.append(
+                    make_output_path(
+                        base_folder=output_base,
+                        client=client_name,
+                        report_name=report_def.name,
+                        date_range=dr,
+                        file_name_extra=extra,
+                        segment_id=pair.segment_id,
                         job_name=job_name,
                     )
                 )

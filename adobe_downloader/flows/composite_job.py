@@ -12,6 +12,7 @@ from adobe_downloader.config.schema import (
     CompositeJobConfig,
     CompositeStep,
     DateRange,
+    MatrixSource,
     RsidSource,
     SegmentSource,
 )
@@ -195,7 +196,9 @@ async def _dispatch_step(
     if step_type == "rsid_update":
         return await _run_rsid_update_step(step, job, step_outputs, ac)
     if step_type == "generate_country_matrix":
-        raise NotImplementedError("generate_country_matrix step type is not yet implemented")
+        return await _run_generate_country_matrix_step(step, job, step_outputs, sm, ac, no_resume)
+    if step_type == "country_investigation":
+        return await _run_country_investigation_step(step, job, step_outputs, sm, ac, no_resume)
     raise ValueError(f"Unknown step type: {step_type!r}")
 
 
@@ -239,8 +242,14 @@ async def _run_report_download_step(
         raise ValueError(f"Step {step.id!r}: rsids is required for report_download")
     rsids = RsidSource.model_validate(rsids_raw)
 
-    # Resolve segments (handle step_output references)
+    # Resolve segments (handle step_output references). If no segments: block is
+    # given but bot_rules: is, derive the per-rule filter/filename anchor from it
+    # directly — bot_validation steps then only need the one field.
     segments = _resolve_segments(extra.get("segments"), step_outputs)
+    segment_iterations = None
+    if segments is None and extra.get("bot_rules"):
+        bot_rules = _parse_bot_rules_from_config(extra["bot_rules"], step_outputs, step.id)
+        segment_iterations = _segment_iterations_from_bot_rules(bot_rules)
 
     # Resolve report definitions
     report_defs = _resolve_report_defs(extra)
@@ -265,6 +274,7 @@ async def _run_report_download_step(
         output_base=output_base,
         sm=sm,
         segments=segments,
+        segment_iterations=segment_iterations,
         file_name_extra=file_name_extra,
         include_segment_id_in_filename=include_segment_id_in_filename,
         no_resume=no_resume,
@@ -366,6 +376,7 @@ async def _run_transform_concat_step(
     concat_enabled: bool = concat_raw.get("enabled", True)
     split_by_bot_rule: bool = transform_raw.get("split_by_bot_rule", False)
     split_by_rsid: bool = transform_raw.get("split_by_rsid", False)
+    split_by_rsid_country: bool = transform_raw.get("split_by_rsid_country", False)
 
     # Resolve source folder from explicit config or previous step outputs
     source_folder_str: str | None = transform_raw.get("source_folder")
@@ -521,6 +532,46 @@ async def _run_transform_concat_step(
                 len(concatenated_files),
                 final_folder,
             )
+        elif split_by_rsid_country:
+            if not job_name or job.output is None:
+                raise ValueError(
+                    f"Step {step.id!r}: split_by_rsid_country requires output.job_name to be set"
+                )
+            from adobe_downloader.flows.country_investigation import combo_label
+
+            pairs = _find_country_matrix_pairs_for_split(
+                job, step_outputs, step.depends_on, step.id
+            )
+
+            final_folder = Path(job.output.base_folder) / job.client / job_name
+            final_folder.mkdir(parents=True, exist_ok=True)
+            prefix = _TRANSFORM_TYPE_PREFIXES.get(explicit_type or "", "OUTPUT")
+
+            for pair in pairs:
+                key = f"{pair.rsid_clean_name}-{pair.country}"
+                safe_name = _sanitize_filename_component(
+                    combo_label(pair.rsid_clean_name, pair.country, "")
+                ).rstrip("-")
+                combo_out = final_folder / f"{prefix}_{job_name}{extra_part}_{safe_name}.csv"
+                token = combo_label(pair.rsid_clean_name, pair.country, "").rstrip("-")
+                matched = _boundary_matches(eligible_csvs, token)
+                count = (
+                    concatenate_csv_files(matched, combo_out, custom_headers=custom_headers)
+                    if matched
+                    else 0
+                )
+                if count:
+                    concatenated_files[key] = str(combo_out)
+                else:
+                    _log.warning(
+                        "Step %s: no CSVs matched RSID×country %r for split output", step.id, key
+                    )
+            _log.info(
+                "Step %s: split concat into %d file(s) by RSID×country -> %s",
+                step.id,
+                len(concatenated_files),
+                final_folder,
+            )
         else:
             if job_name:
                 final_folder = Path(job.output.base_folder) / job.client / job_name
@@ -587,6 +638,48 @@ def _find_report_download_step_for_split(
     return None
 
 
+def _find_country_investigation_step_for_split(
+    job: CompositeJobConfig, step_id: str | None
+) -> CompositeStep | None:
+    """Same lookup as _find_report_download_step_for_split, for country_investigation steps."""
+    seen: set[str] = set()
+    current = step_id
+    while current and current not in seen:
+        seen.add(current)
+        ref = next((s for s in job.steps if s.id == current), None)
+        if ref is None:
+            return None
+        if ref.step == "country_investigation":
+            return ref
+        current = ref.extra_fields().get("config_ref") or ref.depends_on
+    return None
+
+
+def _find_country_matrix_pairs_for_split(
+    job: CompositeJobConfig,
+    step_outputs: dict[str, dict[str, Any]],
+    step_id: str | None,
+    caller_step_id: str,
+) -> list[Any]:  # list[RsidCountryPair]
+    """Resolve the matrix behind a sibling country_investigation step, for split_by_rsid_country."""
+    from adobe_downloader.flows.country_matrix import load_matrix_file
+
+    dl_step = _find_country_investigation_step_for_split(job, step_id)
+    if dl_step is None:
+        raise ValueError(
+            f"Step {caller_step_id!r}: split_by_rsid_country requires a country_investigation "
+            "step reachable via depends_on/config_ref"
+        )
+    matrix_raw = dl_step.extra_fields().get("matrix")
+    if not matrix_raw:
+        raise ValueError(
+            f"Step {caller_step_id!r}: split_by_rsid_country requires 'matrix' on the "
+            f"referenced country_investigation step {dl_step.id!r}"
+        )
+    matrix_file = _resolve_matrix_file(matrix_raw, step_outputs, caller_step_id)
+    return load_matrix_file(matrix_file)
+
+
 async def _run_validate_output_step(
     step: CompositeStep,
     job: CompositeJobConfig,
@@ -605,6 +698,7 @@ async def _run_validate_output_step(
     from adobe_downloader.flows.validation import (
         check_output_files,
         enumerate_bot_rule_compare_paths,
+        enumerate_country_investigation_paths,
         enumerate_expected_paths,
     )
 
@@ -680,6 +774,85 @@ async def _run_validate_output_step(
             )
         return {"missing_count": missing_count}
 
+    # --- country_investigation: enumerate one path per matrix pair × report × interval ---
+    if ref_step.step == "country_investigation":
+        from adobe_downloader.config.report_definitions import load_report_group
+
+        matrix_raw = ref_extra.get("matrix")
+        if not matrix_raw:
+            raise ValueError(f"Step {step.id!r}: matrix required on referenced step {config_ref!r}")
+        matrix_file = _resolve_matrix_file(matrix_raw, step_outputs, step.id)
+
+        ci_interval = ref_extra.get("interval", "full")
+        ci_investigation_label = ref_extra.get("investigation_label", "FullRun")
+        ci_file_name_extra = ref_extra.get("file_name_extra")
+
+        expected = enumerate_country_investigation_paths(
+            client_name=job.client,
+            matrix_file=matrix_file,
+            report_defs=report_defs,
+            date_range=date_range,
+            interval=ci_interval,
+            investigation_label=ci_investigation_label,
+            output_base=output_base,
+            file_name_extra=ci_file_name_extra,
+            job_name=job.output.job_name if job.output else None,
+        )
+
+        valid, missing = check_output_files(expected)
+        missing_count = len(missing)
+        _log.info(
+            "Step %s: %d expected, %d valid, %d missing/empty",
+            step.id,
+            len(expected),
+            len(valid),
+            missing_count,
+        )
+        for p in missing[:5]:
+            _log.warning("  missing: %s", p)
+
+        if missing_count and retry:
+            _log.info(
+                "Step %s: retry=True — resetting and re-downloading %d file(s)",
+                step.id,
+                missing_count,
+            )
+            for p in missing:
+                sm.reset_completed_for_path(p)
+            sm.reset_incomplete_for_step(config_ref)
+
+            from adobe_downloader.flows.country_investigation import run_country_investigation
+
+            retry_result = await run_country_investigation(
+                client=ac,
+                client_name=job.client,
+                matrix_file=matrix_file,
+                rsid_lookup_file=_resolve_rsid_lookup_file(ref_extra),
+                report_group=ref_extra.get("report_group", "bot_investigation"),
+                date_range=date_range,
+                interval=ci_interval,
+                investigation_label=ci_investigation_label,
+                output_base=output_base,
+                sm=sm,
+                file_name_extra=ci_file_name_extra,
+                no_resume=False,
+                step_id=config_ref,
+                test_limits=job.test_limits if job.test_mode else None,
+                job_name=job.output.job_name if job.output else None,
+                batch_size=ref_extra.get("batch_size", 12),
+            )
+
+            if retry_result.failed:
+                raise RuntimeError(
+                    f"Step {step.id!r}: {retry_result.failed} file(s) still failed after "
+                    "retry — " + "; ".join(retry_result.errors[:3])
+                )
+
+            valid, missing = check_output_files(expected)
+            missing_count = len(missing)
+
+        return {"missing_count": missing_count}
+
     # --- report_download: standard enumeration with optional retry ---
     interval: str = ref_extra.get("interval", "full")
     file_name_extra: str | None = ref_extra.get("file_name_extra")
@@ -691,6 +864,10 @@ async def _run_validate_output_step(
     rsids = RsidSource.model_validate(rsids_raw)
 
     segments = _resolve_segments(ref_extra.get("segments"), step_outputs)
+    segment_iterations = None
+    if segments is None and ref_extra.get("bot_rules"):
+        bot_rules = _parse_bot_rules_from_config(ref_extra["bot_rules"], step_outputs, step.id)
+        segment_iterations = _segment_iterations_from_bot_rules(bot_rules)
     report_defs = _resolve_report_defs(ref_extra)
 
     expected = enumerate_expected_paths(
@@ -701,6 +878,7 @@ async def _run_validate_output_step(
         interval=interval,
         output_base=output_base,
         segments=segments,
+        segment_iterations=segment_iterations,
         file_name_extra=file_name_extra,
         include_segment_id_in_filename=include_segment_id_in_filename,
         job_name=job.output.job_name if job.output else None,
@@ -740,6 +918,7 @@ async def _run_validate_output_step(
             output_base=output_base,
             sm=sm,
             segments=segments,
+            segment_iterations=segment_iterations,
             file_name_extra=file_name_extra,
             include_segment_id_in_filename=include_segment_id_in_filename,
             no_resume=False,
@@ -985,9 +1164,198 @@ async def _run_final_bot_metrics_step(
     }
 
 
+async def _run_generate_country_matrix_step(
+    step: CompositeStep,
+    job: CompositeJobConfig,
+    step_outputs: dict[str, dict[str, Any]],
+    sm: Any,
+    ac: Any,
+    no_resume: bool,
+) -> dict[str, Any]:
+    from adobe_downloader.flows.country_matrix import run_generate_country_matrix
+
+    extra = step.extra_fields()
+
+    date_range = _coerce_date_range(extra.get("date_range") or job.date_range)
+    if date_range is None:
+        raise ValueError(f"Step {step.id!r}: date_range is required for generate_country_matrix")
+
+    output_base = _resolve_output_base(extra, job)
+    job_name = job.output.job_name if job.output else None
+
+    rsids_raw = extra.get("rsids")
+    if rsids_raw is None:
+        raise ValueError(f"Step {step.id!r}: rsids is required for generate_country_matrix")
+    rsids = RsidSource.model_validate(rsids_raw)
+
+    visit_threshold = extra.get("visit_threshold")
+    if visit_threshold is None:
+        raise ValueError(
+            f"Step {step.id!r}: visit_threshold is required for generate_country_matrix"
+        )
+
+    rsid_lookup_file = _resolve_rsid_lookup_file(extra)
+
+    country_lookup_file = Path(
+        extra.get("country_segment_lookup", "data/country_segment_lookup.json")
+    )
+    matrix_file = Path(output_base) / job.client / "country_matrix" / f"{step.id}_matrix.json"
+
+    result = await run_generate_country_matrix(
+        client=ac,
+        client_name=job.client,
+        rsids=rsids,
+        rsid_lookup_file=rsid_lookup_file,
+        date_range=date_range,
+        visit_threshold=int(visit_threshold),
+        country_lookup_file=country_lookup_file,
+        matrix_file=matrix_file,
+        sm=sm,
+        share_with_users=extra.get("share_with_users", []),
+        no_resume=no_resume,
+        step_id=step.id,
+        test_limits=job.test_limits if job.test_mode else None,
+        job_name=job_name,
+        output_base=output_base,
+    )
+
+    if result.failed:
+        raise RuntimeError(
+            f"Step {step.id!r}: {result.failed} failure(s) — " + "; ".join(result.errors[:3])
+        )
+
+    return {
+        "matrix_file": str(result.matrix_file),
+        "pair_count": len(result.pairs),
+        "segments_created": result.segments_created,
+    }
+
+
+def _resolve_matrix_file(
+    matrix_raw: dict[str, Any],
+    step_outputs: dict[str, dict[str, Any]],
+    step_id: str,
+) -> Path:
+    matrix = MatrixSource.model_validate(matrix_raw)
+    if matrix.source == "step_output":
+        dep_step_id = matrix.step_id
+        output_key = matrix.output_key
+        assert dep_step_id is not None and output_key is not None
+        if dep_step_id not in step_outputs:
+            raise ValueError(
+                f"Step {step_id!r}: matrix.step_output references {dep_step_id!r} "
+                "which has not yet produced outputs"
+            )
+        resolved_path = step_outputs[dep_step_id].get(output_key)
+        if not resolved_path:
+            raise ValueError(
+                f"Step {step_id!r}: matrix.step_output: key {output_key!r} not found "
+                f"in outputs of step {dep_step_id!r}"
+            )
+        return Path(resolved_path)
+    assert matrix.file is not None
+    return Path(matrix.file)
+
+
+async def _run_country_investigation_step(
+    step: CompositeStep,
+    job: CompositeJobConfig,
+    step_outputs: dict[str, dict[str, Any]],
+    sm: Any,
+    ac: Any,
+    no_resume: bool,
+) -> dict[str, Any]:
+    from adobe_downloader.flows.country_investigation import run_country_investigation
+
+    extra = step.extra_fields()
+
+    date_range = _coerce_date_range(extra.get("date_range") or job.date_range)
+    if date_range is None:
+        from adobe_downloader.utils.date_defaults import default_date_range
+
+        date_range = default_date_range(report_group=extra.get("report_group", "bot_investigation"))
+    if date_range is None:
+        raise ValueError(f"Step {step.id!r}: date_range is required for country_investigation")
+
+    output_base = _resolve_output_base(extra, job)
+    interval: str = extra.get("interval", "full")
+    report_group: str = extra.get("report_group", "bot_investigation")
+    investigation_label: str = extra.get("investigation_label", "FullRun")
+    file_name_extra: str | None = extra.get("file_name_extra")
+    batch_size: int = extra.get("batch_size", 12)
+
+    matrix_raw = extra.get("matrix")
+    if matrix_raw is None:
+        raise ValueError(f"Step {step.id!r}: matrix is required for country_investigation")
+    matrix_file = _resolve_matrix_file(matrix_raw, step_outputs, step.id)
+    rsid_lookup_file = _resolve_rsid_lookup_file(extra)
+
+    result = await run_country_investigation(
+        client=ac,
+        client_name=job.client,
+        matrix_file=matrix_file,
+        rsid_lookup_file=rsid_lookup_file,
+        report_group=report_group,
+        date_range=date_range,
+        interval=interval,
+        investigation_label=investigation_label,
+        output_base=output_base,
+        sm=sm,
+        file_name_extra=file_name_extra,
+        no_resume=no_resume,
+        step_id=step.id,
+        test_limits=job.test_limits if job.test_mode else None,
+        job_name=job.output.job_name if job.output else None,
+        batch_size=batch_size,
+    )
+
+    if result.failed:
+        raise RuntimeError(
+            f"Step {step.id!r}: {result.failed} download(s) failed — "
+            + "; ".join(result.errors[:3])
+        )
+
+    return {
+        "job_id": result.job_id,
+        "json_folder": str(result.json_folder),
+        "downloaded": result.downloaded,
+        "skipped": result.skipped,
+        "copied": result.copied,
+    }
+
+
 # ---------------------------------------------------------------------------
 # Resolution helpers
 # ---------------------------------------------------------------------------
+
+
+def _segment_iterations_from_bot_rules(bot_rules: list[Any]) -> list[Any]:  # list[SegmentIteration]
+    """Build one SegmentIteration per bot rule.
+
+    Lets a report_download step filter and anchor filenames straight from a
+    bot_rules list, without a separate segments: block — mirrors
+    report_download.load_segment_list's blank/collision guard so two rules can't
+    silently overwrite the same output file.
+    """
+    from adobe_downloader.flows.report_download import SegmentIteration
+
+    seen_by_sanitized: dict[str, str] = {}
+    iterations = []
+    for rule in bot_rules:
+        if not rule.segment_name.strip():
+            raise ValueError(f"bot rule {rule.segment_id!r} has a blank/missing name")
+        sanitized = sanitize_segment_name_for_filename(rule.segment_name)
+        if sanitized in seen_by_sanitized:
+            raise ValueError(
+                f"bot rules {seen_by_sanitized[sanitized]!r} and {rule.segment_id!r} both "
+                f"sanitize to filename component {sanitized!r} — rename one so their "
+                "downloaded files don't overwrite each other"
+            )
+        seen_by_sanitized[sanitized] = rule.segment_id
+        iterations.append(
+            SegmentIteration(ids=[rule.segment_id], id=rule.segment_id, name=sanitized)
+        )
+    return iterations
 
 
 def _resolve_segments(
@@ -1103,12 +1471,16 @@ def _parse_bot_rules_from_config(
         raw_rules: list[dict[str, Any]] = bot_rules_raw.get("rules", [])
         bot_rules = []
         for r in raw_rules:
-            short = r.get("report_to_skip", "")
-            full = DIMENSION_MAPPING.get(
-                short,
-                short
-                if short.startswith("botInvestigation")
-                else f"botInvestigationMetricsBy{short}",
+            short = r.get("report_to_skip")
+            full = (
+                DIMENSION_MAPPING.get(
+                    short,
+                    short
+                    if short.startswith("botInvestigation")
+                    else f"botInvestigationMetricsBy{short}",
+                )
+                if short
+                else None
             )
             bot_rules.append(
                 BotRule(
@@ -1119,6 +1491,20 @@ def _parse_bot_rules_from_config(
             )
         return bot_rules
     raise ValueError(f"Step {step_id!r}: unknown bot_rules.source {source!r}")
+
+
+def _resolve_rsid_lookup_file(extra: dict[str, Any]) -> Path:
+    """Return the step's rsid_lookup_file override, or auto-discover the latest one."""
+    from adobe_downloader.utils.rsid_lookup import find_latest_rsid_file
+
+    rsid_lookup_raw: str | None = extra.get("rsid_lookup_file")
+    if rsid_lookup_raw:
+        return Path(rsid_lookup_raw)
+    data_root = Path("data")
+    rsid_lookup_file = find_latest_rsid_file(data_root / "report_suite_lists")
+    if rsid_lookup_file is None:
+        raise FileNotFoundError("No RSID lookup file found in data/report_suite_lists")
+    return rsid_lookup_file
 
 
 def _resolve_output_base(extra: dict[str, Any], job: CompositeJobConfig) -> str:
