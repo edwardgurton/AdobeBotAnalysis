@@ -240,7 +240,7 @@ async def _run_report_download_step(
     rsids_raw = extra.get("rsids")
     if rsids_raw is None:
         raise ValueError(f"Step {step.id!r}: rsids is required for report_download")
-    rsids = RsidSource.model_validate(rsids_raw)
+    rsids = _resolve_rsids(rsids_raw, step_outputs)
 
     # Resolve segments (handle step_output references). If no segments: block is
     # given but bot_rules: is, derive the per-rule filter/filename anchor from it
@@ -507,7 +507,7 @@ async def _run_transform_concat_step(
                     f"Step {step.id!r}: split_by_rsid requires 'rsids' on the referenced "
                     f"report_download step {dl_step.id!r}"
                 )
-            rsid_clean_names = list(iterate_rsids(RsidSource.model_validate(rsids_raw)))
+            rsid_clean_names = list(iterate_rsids(_resolve_rsids(rsids_raw, step_outputs)))
 
             final_folder = Path(job.output.base_folder) / job.client / job_name
             final_folder.mkdir(parents=True, exist_ok=True)
@@ -551,9 +551,9 @@ async def _run_transform_concat_step(
                 key = f"{pair.rsid_clean_name}-{pair.country}"
                 safe_name = _sanitize_filename_component(
                     combo_label(pair.rsid_clean_name, pair.country, "")
-                ).rstrip("-")
+                )
                 combo_out = final_folder / f"{prefix}_{job_name}{extra_part}_{safe_name}.csv"
-                token = combo_label(pair.rsid_clean_name, pair.country, "").rstrip("-")
+                token = combo_label(pair.rsid_clean_name, pair.country, "")
                 matched = _boundary_matches(eligible_csvs, token)
                 count = (
                     concatenate_csv_files(matched, combo_out, custom_headers=custom_headers)
@@ -736,7 +736,7 @@ async def _run_validate_output_step(
         rsids_raw = ref_extra.get("rsids")
         if rsids_raw is None:
             raise ValueError(f"Step {step.id!r}: rsids required on referenced step {config_ref!r}")
-        rsid_clean_names = list(iterate_rsids(RsidSource.model_validate(rsids_raw)))
+        rsid_clean_names = list(iterate_rsids(_resolve_rsids(rsids_raw, step_outputs)))
 
         comparison_round = float(ref_extra.get("comparison_round", 1.0))
         bot_rules = _parse_bot_rules_from_config(
@@ -786,6 +786,7 @@ async def _run_validate_output_step(
         ci_interval = ref_extra.get("interval", "full")
         ci_investigation_label = ref_extra.get("investigation_label", "FullRun")
         ci_file_name_extra = ref_extra.get("file_name_extra")
+        report_defs = load_report_group(ref_extra.get("report_group", "bot_investigation"))
 
         expected = enumerate_country_investigation_paths(
             client_name=job.client,
@@ -861,7 +862,7 @@ async def _run_validate_output_step(
     rsids_raw = ref_extra.get("rsids")
     if rsids_raw is None:
         raise ValueError(f"Step {step.id!r}: rsids required on referenced step {config_ref!r}")
-    rsids = RsidSource.model_validate(rsids_raw)
+    rsids = _resolve_rsids(rsids_raw, step_outputs)
 
     segments = _resolve_segments(ref_extra.get("segments"), step_outputs)
     segment_iterations = None
@@ -1031,7 +1032,7 @@ async def _run_bot_rule_compare_step(
     rsids_raw = extra.get("rsids")
     if rsids_raw is None:
         raise ValueError(f"Step {step.id!r}: rsids is required for bot_rule_compare")
-    rsids = RsidSource.model_validate(rsids_raw)
+    rsids = _resolve_rsids(rsids_raw, step_outputs)
 
     from adobe_downloader.flows.report_download import iterate_rsids
 
@@ -1104,7 +1105,7 @@ async def _run_final_bot_metrics_step(
     rsids_raw = extra.get("rsids")
     if rsids_raw is None:
         raise ValueError(f"Step {step.id!r}: rsids is required for final_bot_metrics")
-    rsids = RsidSource.model_validate(rsids_raw)
+    rsids = _resolve_rsids(rsids_raw, step_outputs)
 
     # Resolve segment list file (literal path or step_output reference)
     seg_file_raw: str | None = extra.get("segment_list_file")
@@ -1186,7 +1187,7 @@ async def _run_generate_country_matrix_step(
     rsids_raw = extra.get("rsids")
     if rsids_raw is None:
         raise ValueError(f"Step {step.id!r}: rsids is required for generate_country_matrix")
-    rsids = RsidSource.model_validate(rsids_raw)
+    rsids = _resolve_rsids(rsids_raw, step_outputs)
 
     visit_threshold = extra.get("visit_threshold")
     if visit_threshold is None:
@@ -1385,6 +1386,33 @@ def _resolve_segments(
         return SegmentSource(source="segment_list_file", file=str(resolved_path))
 
     return SegmentSource.model_validate(segments_raw)
+
+
+def _resolve_rsids(
+    rsids_raw: dict[str, Any],
+    step_outputs: dict[str, dict[str, Any]],
+) -> RsidSource:
+    """Return a resolved RsidSource, substituting step_output references."""
+    if rsids_raw.get("source") == "step_output":
+        dep_step_id = rsids_raw["step_id"]
+        output_key = rsids_raw["output_key"]
+        if dep_step_id not in step_outputs:
+            raise ValueError(
+                f"rsids.step_output references {dep_step_id!r} which has not yet produced outputs"
+            )
+        resolved_path = step_outputs[dep_step_id].get(output_key)
+        if not resolved_path:
+            raise ValueError(
+                f"rsids.step_output: key {output_key!r} not found "
+                f"in outputs of step {dep_step_id!r}"
+            )
+        return RsidSource(
+            source="file",
+            file=str(resolved_path),
+            batch_size=rsids_raw.get("batch_size", 12),
+        )
+
+    return RsidSource.model_validate(rsids_raw)
 
 
 def _resolve_report_defs(extra: dict[str, Any]) -> list[Any]:

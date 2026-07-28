@@ -75,12 +75,17 @@ def _report_def(name: str) -> Any:
 class TestComboLabel:
     def test_basic(self) -> None:
         assert combo_label("CasinoOrg", "United Kingdom", "FullRun-V1") == (
-            "CasinoOrg-United-Kingdom-FullRun-V1"
+            "CasinoOrg-United-Kingdom_FullRun-V1"
         )
 
+    def test_no_label_omits_separator(self) -> None:
+        assert combo_label("CasinoOrg", "United Kingdom", "") == "CasinoOrg-United-Kingdom"
+
     def test_sanitizes_underscores_in_country(self) -> None:
-        # Underscores would shift transform_report's positional filename parsing.
-        assert "_" not in combo_label("CasinoOrg", "Some_Country", "FullRun-V1")
+        # An underscore inside the country name would shift transform_report's
+        # positional filename parsing — only the one deliberate underscore
+        # (ahead of investigation_label) should survive.
+        assert combo_label("CasinoOrg", "Some_Country", "FullRun-V1").count("_") == 1
 
 
 # ---------------------------------------------------------------------------
@@ -135,8 +140,8 @@ class TestRunCountryInvestigation:
 
         json_dir = tmp_path / "output" / "Legend" / "JSON"
         names = [f.name for f in json_dir.glob("*.json")]
-        assert any("CasinoOrg-United-Kingdom-FullRun-V1" in n for n in names)
-        assert any("Legend2-France-FullRun-V1" in n for n in names)
+        assert any("CasinoOrg-United-Kingdom_FullRun-V1" in n for n in names)
+        assert any("Legend2-France_FullRun-V1" in n for n in names)
 
     async def test_file_name_extra_suffix_appended(self, tmp_path: Path) -> None:
         rsid_file = _make_rsid_file(tmp_path, [("rsid1", "CasinoOrg")])
@@ -172,7 +177,7 @@ class TestRunCountryInvestigation:
 
         json_dir = tmp_path / "output" / "Legend" / "JSON"
         names = [f.name for f in json_dir.glob("*.json")]
-        assert any("CasinoOrg-United-Kingdom-FullRun-V1-Daily" in n for n in names)
+        assert any("CasinoOrg-United-Kingdom_FullRun-V1-Daily" in n for n in names)
 
     async def test_unknown_rsid_in_matrix_skipped(self, tmp_path: Path) -> None:
         rsid_file = _make_rsid_file(tmp_path, [("rsid1", "KnownSite")])

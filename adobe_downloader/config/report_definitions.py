@@ -18,6 +18,7 @@ class ReportEntry(BaseModel):
     segments: list[str] | None = None
     metrics: list[str] | None = None
     csv_headers: list[str] | None = None
+    shared: bool = False
 
 
 class ReportDefinitionDefaults(BaseModel):
@@ -66,6 +67,7 @@ class ReportDefinitionFile(BaseModel):
                 if entry.csv_headers is not None
                 else self.defaults.csv_headers
             ),
+            shared=entry.shared,
         )
 
 

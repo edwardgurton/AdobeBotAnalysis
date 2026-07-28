@@ -8,7 +8,12 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 
 from adobe_downloader.config.report_definitions import load_report_group, load_report_registry
-from adobe_downloader.config.schema import DateRange, RsidSource, SegmentSource
+from adobe_downloader.config.schema import (
+    DateRange,
+    ReportDefinitionInline,
+    RsidSource,
+    SegmentSource,
+)
 from adobe_downloader.flows.report_download import download_report, make_output_path
 
 # ---------------------------------------------------------------------------
@@ -225,6 +230,34 @@ def test_load_report_group_consistent_with_registry():
         assert d.name in registry
 
 
+def test_load_report_group_bot_validation_marks_shared_reports():
+    """Only the two totals reports are shared — everything else still gets the
+    per-rule segment a bot_validation download iterates over."""
+    defs = load_report_group("bot_validation")
+    shared_by_name = {d.name: d.shared for d in defs}
+
+    assert shared_by_name["botFilterExcludeMetricsByMonth"] is True
+    assert shared_by_name["botFilterIncludeMetricsByMonth"] is True
+
+    not_shared = [
+        "botFilterExcludexBotRuleMetricsByMonth",
+        "botFilterIncludexBotRuleMetricsByMonth",
+        "botFilterExcludexBotRuleXSuspiciousMarketingChannelsMetricsByMonth",
+        "botFilterExcludexBotRuleXDesktopMetricsByMonth",
+        "botFilterExcludexBotRuleMetricsByPageUrl",
+        "JustSegmentMetricsByMonth",
+    ]
+    for name in not_shared:
+        assert shared_by_name[name] is False, name
+
+
+def test_load_report_group_defaults_shared_to_false():
+    """shared has no group-level default fallback — every other group's reports
+    are unaffected and keep applying whatever segment a caller iterates over."""
+    defs = load_report_group("bot_investigation")
+    assert all(d.shared is False for d in defs)
+
+
 # ---------------------------------------------------------------------------
 # run_report_download — per-segment filename embedding
 # ---------------------------------------------------------------------------
@@ -336,3 +369,144 @@ async def test_run_report_download_two_segments_produce_distinct_output_paths(
 
     out_paths = {call[0][2] for call in sm.track_request.call_args_list}
     assert len(out_paths) == 2
+
+
+async def test_run_report_download_segment_iterations_bypasses_segments(tmp_path: Path) -> None:
+    """segment_iterations, when given, is used verbatim — composite jobs pass this
+    when a report_download step derives its per-rule filter directly from a
+    bot_rules list instead of a separate segments: block."""
+    from adobe_downloader.flows.report_download import SegmentIteration, run_report_download
+
+    report_def = load_report_registry()["botInvestigationMetricsByBrowser"]
+    rsids = RsidSource.model_validate({"source": "single", "single": "rsid1"})
+    sm = _make_sm()
+    ac = _mock_client({"rows": []})
+
+    await run_report_download(
+        client=ac,
+        client_name="TestClient",
+        report_defs=[report_def],
+        rsids=rsids,
+        date_range=_date("2025-01-01", "2025-02-01"),
+        interval="full",
+        output_base=str(tmp_path),
+        sm=sm,
+        segments=None,
+        segment_iterations=[SegmentIteration(ids=["seg1"], id="seg1", name="RuleOne")],
+    )
+
+    out_path = sm.track_request.call_args_list[0][0][2]
+    assert "RULERuleOne" in out_path.name
+    request_body = sm.track_request.call_args_list[0][0][1]
+    assert {"type": "segment", "segmentId": "seg1"} in request_body["globalFilters"]
+
+
+# ---------------------------------------------------------------------------
+# run_report_download — shared report defs
+# ---------------------------------------------------------------------------
+
+
+def _shared_report_def() -> ReportDefinitionInline:
+    return ReportDefinitionInline.model_validate(
+        {
+            "name": "botFilterExcludeMetricsByMonth",
+            "segments": ["s3938_base"],
+            "metrics": ["metrics/event3"],
+            "csv_headers": ["id", "month"],
+            "shared": True,
+        }
+    )
+
+
+async def test_run_report_download_shared_report_ignores_segment_iterations(
+    tmp_path: Path,
+) -> None:
+    """A shared report def's request body never includes the per-iteration segment
+    (e.g. a bot rule) — only its own report_def.segments — even though each
+    iteration still gets its own per-name output path."""
+    from adobe_downloader.flows.report_download import SegmentIteration, run_report_download
+
+    rsids = RsidSource.model_validate({"source": "single", "single": "rsid1"})
+    sm = _make_sm()
+    ac = _mock_client({"rows": []})
+
+    await run_report_download(
+        client=ac,
+        client_name="TestClient",
+        report_defs=[_shared_report_def()],
+        rsids=rsids,
+        date_range=_date("2025-01-01", "2025-02-01"),
+        interval="full",
+        output_base=str(tmp_path),
+        sm=sm,
+        segments=None,
+        segment_iterations=[
+            SegmentIteration(ids=["ruleA"], id="ruleA", name="RuleA"),
+            SegmentIteration(ids=["ruleB"], id="ruleB", name="RuleB"),
+        ],
+    )
+
+    assert sm.track_request.call_count == 2
+    out_paths = [call[0][2] for call in sm.track_request.call_args_list]
+    assert any("RULERuleA" in p.name for p in out_paths)
+    assert any("RULERuleB" in p.name for p in out_paths)
+
+    for call in sm.track_request.call_args_list:
+        request_body = call[0][1]
+        segment_ids = {
+            f["segmentId"] for f in request_body["globalFilters"] if f["type"] == "segment"
+        }
+        assert segment_ids == {"s3938_base"}
+
+
+async def test_run_report_download_shared_report_canonical_dedup(tmp_path: Path) -> None:
+    """Because a shared report's request body is identical across iterations, the
+    state manager's canonical-request dedup downloads it once and copies the file
+    for every other iteration — the legacy JS's SHARED_REPORTS behaviour, driven
+    entirely by the report definition instead of per-job config."""
+    from adobe_downloader.flows.report_download import SegmentIteration, run_report_download
+    from adobe_downloader.state_manager import (
+        StateManager,
+        compute_config_hash,
+        compute_job_id,
+        state_db_path,
+    )
+
+    config_file = tmp_path / "job.yaml"
+    config_file.write_text("job_type: composite\nclient: TestClient\n")
+    config_hash = compute_config_hash(config_file)
+    job_id = compute_job_id(config_file, config_hash)
+    db_path = state_db_path(tmp_path, "TestClient", job_id)
+    sm = StateManager(db_path, job_id, config_file, config_hash)
+    sm.mark_job_started()
+
+    rsids = RsidSource.model_validate({"source": "single", "single": "rsid1"})
+    ac = _mock_client({"rows": [{"itemId": "1", "data": [10]}]})
+
+    result = await run_report_download(
+        client=ac,
+        client_name="TestClient",
+        report_defs=[_shared_report_def()],
+        rsids=rsids,
+        date_range=_date("2025-01-01", "2025-02-01"),
+        interval="full",
+        output_base=str(tmp_path / "out"),
+        sm=sm,
+        segments=None,
+        segment_iterations=[
+            SegmentIteration(ids=["ruleA"], id="ruleA", name="RuleA"),
+            SegmentIteration(ids=["ruleB"], id="ruleB", name="RuleB"),
+        ],
+    )
+
+    assert ac.get_report.await_count == 1
+    assert result.downloaded == 1
+    assert result.copied == 1
+
+    out_dir = tmp_path / "out" / "TestClient" / "JSON"
+    files = sorted(p.name for p in out_dir.glob("*.json"))
+    assert len(files) == 2
+    assert any("RULERuleA" in f for f in files)
+    assert any("RULERuleB" in f for f in files)
+    contents = {(out_dir / f).read_text(encoding="utf-8") for f in files}
+    assert len(contents) == 1  # the copy is byte-identical to the real download

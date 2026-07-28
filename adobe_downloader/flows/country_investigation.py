@@ -3,10 +3,12 @@
 Given a matrix of (rsid, country, segment) pairs (see flows/country_matrix.py),
 downloads the full report_group (bot_investigation by default) for each pair —
 one segment-filtered download per pair, not a cross product of every RSID against
-every country. Files are named ``{rsid}-{country}-{investigation_label}`` so
-transform_concat can split_by_rsid_country or, for totals, concatenate every
-pair together into one file (RSID+country stay identifiable via the fileName
-column, same as a plain per-RSID bot investigation).
+every country. Files are named ``{rsid}-{country}_{investigation_label}`` — an
+underscore ahead of the label, matching how a plain report_download separates
+rsid from its file_name_extra — so transform_concat can split_by_rsid_country
+or, for totals, concatenate every pair together into one file (RSID+country
+stay identifiable via the fileName column, same as a plain per-RSID bot
+investigation).
 """
 
 from __future__ import annotations
@@ -39,9 +41,15 @@ class CountryInvestigationResult:
 
 
 def combo_label(rsid_clean_name: str, country: str, investigation_label: str) -> str:
-    """Build the ``{rsid}-{country}-{investigation_label}`` filename token."""
+    """Build the ``{rsid}-{country}[_{investigation_label}]`` filename token.
+
+    The rsid-country combination itself stays hyphen-joined; an underscore
+    separates it from investigation_label, matching how report_download's
+    make_output_path separates rsid from file_name_extra.
+    """
     country_token = sanitize_segment_name_for_filename(country).replace(" ", "-")
-    return f"{rsid_clean_name}-{country_token}-{investigation_label}"
+    combo = f"{rsid_clean_name}-{country_token}"
+    return f"{combo}_{investigation_label}" if investigation_label else combo
 
 
 async def run_country_investigation(

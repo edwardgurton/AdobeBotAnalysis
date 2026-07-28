@@ -772,7 +772,7 @@ output:
             <tr><td><code>CompareValidate</code></td><td><code>Compare</code>, <code>Validate</code>, <code>Compare - Special</code>, <code>Validate - Special</code></td><td>Determines which output list the segment appears in.</td></tr>
             <tr><td><code>SegmentName</code></td><td>string</td><td>Human-readable segment name (also used to derive the bot rule name).</td></tr>
             <tr><td><code>RSIDCleanName</code></td><td>string</td><td>Clean name of the report suite the segment is scoped to. Ignored on <code>- Special</code> rows.</td></tr>
-            <tr><td><code>Dimension1</code></td><td>friendly name</td><td>First dimension for the segment condition (e.g. <code>BrowserType</code>). On <code>- Special</code> rows this value is written through as-is to <code>reportToIgnore</code> instead of being resolved.</td></tr>
+            <tr><td><code>Dimension1</code></td><td>friendly name</td><td>First dimension for the segment condition (e.g. <code>BrowserType</code>). On <code>Compare - Special</code> rows this value is written through as-is to <code>reportToIgnore</code> instead of being resolved (Compare rows only — <code>reportToIgnore</code> isn't written for Validate rows at all, since bot_validation never reads it).</td></tr>
             <tr><td><code>Dimension1Item</code></td><td>string</td><td>Value to match for dimension 1. Ignored on <code>- Special</code> rows.</td></tr>
             <tr><td><code>Dimension2</code></td><td>friendly name or blank</td><td>Optional second dimension condition. Ignored on <code>- Special</code> rows.</td></tr>
             <tr><td><code>Dimension2Item</code></td><td>string or blank</td><td>Required if <code>Dimension2</code> is set. Ignored on <code>- Special</code> rows.</td></tr>

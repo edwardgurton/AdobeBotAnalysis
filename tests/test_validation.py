@@ -107,6 +107,29 @@ def test_enumerate_with_segment_list(tmp_path: Path) -> None:
     assert len(paths) == 2
 
 
+def test_enumerate_with_segment_iterations_bypasses_segments(tmp_path: Path) -> None:
+    """segment_iterations, when given, is used verbatim — no segments: resolution
+    needed. Mirrors run_report_download's bot_rules-derived filtering."""
+    from adobe_downloader.flows.report_download import SegmentIteration
+
+    paths = enumerate_expected_paths(
+        client_name="C",
+        report_defs=[_make_report_def("rep")],
+        rsids=_rsids_single("rsid1"),
+        date_range=_date_range("2025-01-01", "2025-02-01"),
+        interval="full",
+        output_base=tmp_path,
+        segment_iterations=[
+            SegmentIteration(ids=["seg1"], id="seg1", name="RuleOne"),
+            SegmentIteration(ids=["seg2"], id="seg2", name="RuleTwo"),
+        ],
+    )
+    assert len(paths) == 2
+    names = {p.name for p in paths}
+    assert any("RULERuleOne" in n for n in names)
+    assert any("RULERuleTwo" in n for n in names)
+
+
 def test_enumerate_paths_live_under_client_json_folder(tmp_path: Path) -> None:
     paths = enumerate_expected_paths(
         client_name="MyClient",
@@ -594,11 +617,9 @@ async def test_composite_validate_output_missing_config_ref_raises(tmp_path: Pat
 async def test_composite_validate_output_bot_rule_compare_all_present(tmp_path: Path) -> None:
     """validate_output with bot_rule_compare config_ref enumerates Segment+AllTraffic pairs."""
     from adobe_downloader.config.schema import CompositeJobConfig
-    from adobe_downloader.flows.bot_rule_compare import BotRule
     from adobe_downloader.flows.composite_job import _run_validate_output_step
     from adobe_downloader.flows.report_download import make_output_path
 
-    bot_rule = BotRule(segment_id="seg1", segment_name="SG-GeoCountry", report_to_skip="")
     rd = _make_report_def("botInvestigationMetricsByRegion")
     dr = _date_range("2026-03-01", "2026-05-31")
 

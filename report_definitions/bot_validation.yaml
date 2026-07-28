@@ -15,8 +15,13 @@ defaults:
   row_limit: 5000
 
 reports:
+  # shared: true — this report doesn't depend on which bot rule is under test, so
+  # any per-rule segment a caller is iterating over (bot_rules, segment_list_file)
+  # is not applied to it. It's downloaded once and copied for every rule via the
+  # state manager's canonical-request dedup (see report_download._process_one).
   botFilterExcludeMetricsByMonth:
     dimension: variables/daterangemonth
+    shared: true
     csv_headers:
       - id
       - month
@@ -51,8 +56,10 @@ reports:
       - botRuleName
       - rsidName
 
+  # shared: true — see note above on botFilterExcludeMetricsByMonth.
   botFilterIncludeMetricsByMonth:
     dimension: variables/daterangemonth
+    shared: true
     segments:
       - s3938_666ae77965ae5e6a3c2c1709  # Master Bot Filter Include
     csv_headers:

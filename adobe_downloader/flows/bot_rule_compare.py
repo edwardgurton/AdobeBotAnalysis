@@ -50,7 +50,11 @@ DIMENSION_MAPPING: dict[str, str] = {
 class BotRule:
     segment_id: str
     segment_name: str
-    report_to_skip: str  # full report name, e.g. "botInvestigationMetricsByDomain"
+    # Full report name, e.g. "botInvestigationMetricsByDomain" — None means no report
+    # is skipped (bot_validation's lists have no reportToIgnore column; only
+    # bot_rule_compare uses this, to avoid tautologically comparing the dimension a
+    # rule was built from against itself).
+    report_to_skip: str | None = None
 
 
 @dataclass
@@ -72,8 +76,12 @@ class BotRuleCompareResult:
 def parse_bot_rule_csv(csv_path: Path) -> list[BotRule]:
     """Parse a bot-rule CSV into a list of BotRule objects.
 
-    Expected columns: DimSegmentId, botRuleName, reportToIgnore
-    reportToIgnore may be a short name (e.g. "Domain") or a full report name.
+    Required columns: DimSegmentId, botRuleName
+    Optional column: reportToIgnore — a short name (e.g. "Domain") or a full report
+    name, for the report that should be skipped since it's the dimension the rule
+    was built from. Only bot_rule_compare uses this; omit it entirely for
+    bot_validation lists (a missing column, or a blank value, means no report is
+    skipped for that rule).
     """
     text = csv_path.read_text(encoding="utf-8-sig")
     lines = [ln for ln in text.splitlines() if ln.strip()]
@@ -84,11 +92,9 @@ def parse_bot_rule_csv(csv_path: Path) -> list[BotRule]:
     try:
         seg_id_idx = header.index("DimSegmentId")
         rule_name_idx = header.index("botRuleName")
-        ignore_idx = header.index("reportToIgnore")
     except ValueError as exc:
-        raise ValueError(
-            f"CSV {csv_path} must have columns: DimSegmentId, botRuleName, reportToIgnore"
-        ) from exc
+        raise ValueError(f"CSV {csv_path} must have columns: DimSegmentId, botRuleName") from exc
+    ignore_idx = header.index("reportToIgnore") if "reportToIgnore" in header else None
 
     rules: list[BotRule] = []
     for i, line in enumerate(lines[1:], start=2):
@@ -97,16 +103,20 @@ def parse_bot_rule_csv(csv_path: Path) -> list[BotRule]:
         values = [v.strip() for v in line.split(",")]
         seg_id = values[seg_id_idx]
         rule_name = values[rule_name_idx]
-        short_name = values[ignore_idx]
+        short_name = values[ignore_idx] if ignore_idx is not None else ""
 
-        # Map short dimension name → full report name; fall back to constructed name
-        full_report = DIMENSION_MAPPING.get(short_name)
-        if full_report is None:
-            if short_name.startswith("botInvestigationMetricsBy"):
-                full_report = short_name
-            else:
-                _log.warning("Row %d: unknown reportToIgnore %r — constructing name", i, short_name)
-                full_report = f"botInvestigationMetricsBy{short_name}"
+        full_report: str | None = None
+        if short_name:
+            # Map short dimension name → full report name; fall back to constructed name
+            full_report = DIMENSION_MAPPING.get(short_name)
+            if full_report is None:
+                if short_name.startswith("botInvestigationMetricsBy"):
+                    full_report = short_name
+                else:
+                    _log.warning(
+                        "Row %d: unknown reportToIgnore %r — constructing name", i, short_name
+                    )
+                    full_report = f"botInvestigationMetricsBy{short_name}"
 
         rules.append(BotRule(segment_id=seg_id, segment_name=rule_name, report_to_skip=full_report))
 

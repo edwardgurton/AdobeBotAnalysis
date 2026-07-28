@@ -9,10 +9,10 @@ rsids:
   file: data/rsid_lists/legend_validation.txt
   batch_size: 12
 
-bot_rules:
-  source: file
-  file: data/bot_rule_lists/<bot-rule-list>.csv
-
+# Standalone report_download jobs don't run transforms from this config (transform:
+# below is a no-op here — run `adobe-downloader transform` separately, or use a
+# composite job instead). That also means bot_rules: isn't wired up for this job
+# type — segments: is the only field that actually drives the download/filenames.
 segments:
   source: segment_list_file
   file: data/segment_lists/Legend/<segment-list>.json

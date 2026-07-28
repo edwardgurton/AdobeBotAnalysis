@@ -235,6 +235,7 @@ async def run_report_download(
     output_base: str | Path,
     sm: Any,  # StateManager — avoid circular import
     segments: SegmentSource | None = None,
+    segment_iterations: list[SegmentIteration] | None = None,
     file_name_extra: str | None = None,
     include_segment_id_in_filename: bool = False,
     no_resume: bool = False,
@@ -253,6 +254,10 @@ async def run_report_download(
     By default, a segment_list_file's per-segment name (not the raw segment ID) is
     what disambiguates otherwise-identical filenames across segments — pass
     include_segment_id_in_filename=True to also embed the raw ID via DIMSEG.
+
+    segment_iterations, when given, is used verbatim instead of resolving `segments`
+    — composite jobs pass this when a report_download step derives its per-rule
+    filter and RULE{name} filename anchor straight from a bot_rules list.
     """
     from adobe_downloader.core.request_builder import build_request
     from adobe_downloader.state_manager import compute_request_key
@@ -265,7 +270,9 @@ async def run_report_download(
     # Filenames use the readable clean name (e.g. "Casinoorg"), not the resolved
     # RSID (e.g. "tribecasinoorg.test") used for the API request itself.
     clean_name_by_rsid = dict(zip(rsid_list, rsid_clean_names, strict=True))
-    all_segments = list(iterate_segments(segments))
+    all_segments = (
+        segment_iterations if segment_iterations is not None else list(iterate_segments(segments))
+    )
 
     if test_limits is not None:
         from adobe_downloader.utils.test_mode import apply_all_limits
@@ -304,7 +311,12 @@ async def run_report_download(
             report_def=rd,
             date_range=date_interval,
             rsid=rsid,
-            segments=segment.ids,
+            # A shared report def (rd.shared) ignores whichever segment this
+            # iteration is looping over — its request body is then identical across
+            # iterations, so the canonical-request dedup below downloads it once and
+            # copies the rest, even though each iteration still gets its own
+            # per-name output path.
+            segments=[] if rd.shared else segment.ids,
         )
         out_path = make_output_path(
             base_folder=output_base,

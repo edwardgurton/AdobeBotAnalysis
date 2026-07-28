@@ -165,11 +165,17 @@ def _validate_row(row: _CsvRow) -> list[str]:
 
 
 def _write_csv(file_path: Path, rows: list[dict[str, str]]) -> None:
+    """Write rows to CSV, with columns matching the first row's keys.
+
+    Compare rows include reportToIgnore (bot_rule_compare uses it to skip the
+    report a rule was built from); validate rows don't, since bot_validation
+    never reads that column.
+    """
     if not rows:
         return
     file_path.parent.mkdir(parents=True, exist_ok=True)
     with file_path.open("w", newline="", encoding="utf-8") as fh:
-        writer = csv.DictWriter(fh, fieldnames=["DimSegmentId", "botRuleName", "reportToIgnore"])
+        writer = csv.DictWriter(fh, fieldnames=list(rows[0].keys()))
         writer.writeheader()
         writer.writerows(rows)
 
@@ -231,9 +237,7 @@ async def run_segment_creation(
 
     if test_mode_row is not None:
         if test_mode_row < 1 or test_mode_row > len(rows):
-            raise ValueError(
-                f"test_mode_row {test_mode_row} out of range (1-{len(rows)})"
-            )
+            raise ValueError(f"test_mode_row {test_mode_row} out of range (1-{len(rows)})")
         row = rows[test_mode_row - 1]
         logger.info("Test mode: row %d — %s", test_mode_row, row.segment_name)
         _log_row_resolved(row, lookup_base, rsid_lookup_file)
@@ -257,7 +261,9 @@ async def run_segment_creation(
         is_special = row.compare_validate in ("Compare - Special", "Validate - Special")
         is_compare = row.compare_validate in ("Compare", "Compare - Special")
 
-        bot_rule_fn = transform_to_bot_rule_name if is_compare else transform_to_validate_bot_rule_name
+        bot_rule_fn = (
+            transform_to_bot_rule_name if is_compare else transform_to_validate_bot_rule_name
+        )
 
         try:
             if is_special:
@@ -272,15 +278,24 @@ async def run_segment_creation(
                     raise ValueError(f"RSID not found for clean name: {row.rsid_clean_name!r}")
 
                 # Resolve dimension values
-                val1, is_num1 = resolve_dimension_value(row.dimension1, row.dimension1_item, lookup_base)
+                val1, is_num1 = resolve_dimension_value(
+                    row.dimension1, row.dimension1_item, lookup_base
+                )
 
                 seg_def: dict
                 if row.dimension2:
-                    val2, is_num2 = resolve_dimension_value(row.dimension2, row.dimension2_item, lookup_base)
+                    val2, is_num2 = resolve_dimension_value(
+                        row.dimension2, row.dimension2_item, lookup_base
+                    )
                     seg_def = build_dual_condition_segment(
-                        row.segment_name, rsid,
-                        row.dimension1, val1, is_num1,
-                        row.dimension2, val2, is_num2,
+                        row.segment_name,
+                        rsid,
+                        row.dimension1,
+                        val1,
+                        is_num1,
+                        row.dimension2,
+                        val2,
+                        is_num2,
                     )
                 else:
                     seg_def = build_single_condition_segment(
@@ -304,15 +319,16 @@ async def run_segment_creation(
             if is_special:
                 result.special_count += 1
 
-            out_row = {
-                "DimSegmentId": seg_id,
-                "botRuleName": bot_rule_name,
-                "reportToIgnore": report_to_ignore,
-            }
             if is_compare:
-                compare_rows.append(out_row)
+                compare_rows.append(
+                    {
+                        "DimSegmentId": seg_id,
+                        "botRuleName": bot_rule_name,
+                        "reportToIgnore": report_to_ignore,
+                    }
+                )
             else:
-                validate_rows.append(out_row)
+                validate_rows.append({"DimSegmentId": seg_id, "botRuleName": bot_rule_name})
 
         except Exception as exc:
             msg = f"Row {row.row_num} ({row.segment_name}): {exc}"

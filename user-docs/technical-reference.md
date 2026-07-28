@@ -441,11 +441,11 @@ For `Compare - Special` / `Validate - Special` rows no API call is made — the 
 
 Three output files are produced:
 
-**`segment_list_file`** (`{list_name}.json`): A JSON array of `{"id": "...", "name": "..."}` objects for every successfully created segment (non-special rows only). This is the file consumed by downstream `report_download` steps that iterate by segment.
+**`segment_list_file`** (`{list_name}.json`): A JSON array of `{"id": "...", "name": "..."}` objects for every successfully created segment (non-special rows only, both Compare and Validate). A `report_download` step's `segments: source: segment_list_file` iterates this directly when it doesn't need per-rule CSV metadata (e.g. no `split_by_bot_rule`).
 
-**`compare_list_file`** (`{list_name}_compare.csv`): A CSV with columns `DimSegmentId, botRuleName, reportToIgnore` for every `Compare` / `Compare - Special` row. `botRuleName` is derived by `transform_to_bot_rule_name`, which strips punctuation and spaces from the segment name and abbreviates long dimension names. `reportToIgnore` is the raw `Dimension1` value.
+**`compare_list_file`** (`{list_name}_compare.csv`): A CSV with columns `DimSegmentId, botRuleName, reportToIgnore` for every `Compare` / `Compare - Special` row. `botRuleName` is derived by `transform_to_bot_rule_name`, which strips punctuation and spaces from the segment name and abbreviates long dimension names. `reportToIgnore` is the raw `Dimension1` value — used only by `bot_rule_compare`, to skip the report the rule was built from.
 
-**`validate_list_file`** (`{list_name}_validate.csv`): Same columns, same structure, but for `Validate` / `Validate - Special` rows. The bot rule name transformation uses `transform_to_validate_bot_rule_name`, which additionally converts non-alphanumeric characters (other than `_`) to hyphens.
+**`validate_list_file`** (`{list_name}_validate.csv`): Same structure, but for `Validate` / `Validate - Special` rows, with just `DimSegmentId, botRuleName` — no `reportToIgnore` column, since bot_validation never reads it. This is the file a bot_validation `report_download` step points its `bot_rules:` field at — that single field drives the per-rule download filter, the filename anchor, and (if `split_by_bot_rule` is set) the split labeling, so no separate `segments:` block is needed. The bot rule name transformation uses `transform_to_validate_bot_rule_name`, which additionally converts non-alphanumeric characters (other than `_`) to hyphens.
 
 Both CSV formats are the input format expected by `parse_bot_rule_csv` in `bot_rule_compare.py`.
 
@@ -582,7 +582,7 @@ The composite job YAML can set `test_mode: true` and a `test_limits` block. When
 
 ### Input: bot rule CSV
 
-`parse_bot_rule_csv` reads a CSV with columns `DimSegmentId`, `botRuleName`, `reportToIgnore`. `reportToIgnore` may be a short name (`"Domain"`) or a full report name (`"botInvestigationMetricsByDomain"`). The `DIMENSION_MAPPING` dict maps short names to full names; if neither matches, the name is prefixed with `"botInvestigationMetricsBy"`.
+`parse_bot_rule_csv` reads a CSV with required columns `DimSegmentId`, `botRuleName`, and an optional `reportToIgnore` column. `reportToIgnore` may be a short name (`"Domain"`) or a full report name (`"botInvestigationMetricsByDomain"`). The `DIMENSION_MAPPING` dict maps short names to full names; if neither matches, the name is prefixed with `"botInvestigationMetricsBy"`. When the column is missing (or a row's value is blank), no report is skipped for that rule — this is the normal case for bot_validation lists, which reuse this same parser via `bot_rules:` but have no report to skip.
 
 ### AllTraffic baseline requests
 
@@ -730,7 +730,7 @@ reports:
 
 ### `resolve(report_name)`
 
-`ReportDefinitionFile.resolve` merges a named `ReportEntry` with its group defaults and returns a `ReportDefinitionInline`. For each of `row_limit`, `segments`, `metrics`, and `csv_headers`, the entry value is used if not `None`, otherwise the default is used.
+`ReportDefinitionFile.resolve` merges a named `ReportEntry` with its group defaults and returns a `ReportDefinitionInline`. For each of `row_limit`, `segments`, `metrics`, and `csv_headers`, the entry value is used if not `None`, otherwise the default is used. `shared` (default `false`) has no default-fallback — it's set per-report only. When `true`, `run_report_download` never adds a caller's per-iteration segment (a bot rule, a segment_list_file entry) to this report's request body, so it downloads once and gets copied for every iteration via the state manager's canonical-request dedup (used by `bot_validation`'s `botFilterExclude/IncludeMetricsByMonth`).
 
 ### `load_report_registry()`
 

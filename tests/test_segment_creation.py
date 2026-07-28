@@ -6,6 +6,13 @@ from pathlib import Path
 
 import pytest
 
+from adobe_downloader.flows.segment_creation import (
+    _ensure_max_length,
+    _read_csv,
+    _validate_row,
+    transform_to_bot_rule_name,
+    transform_to_validate_bot_rule_name,
+)
 from adobe_downloader.segments.create_segment import (
     build_dual_condition_segment,
     build_single_condition_segment,
@@ -16,15 +23,7 @@ from adobe_downloader.segments.create_segment import (
     requires_lookup,
     resolve_dimension_value,
 )
-from adobe_downloader.flows.segment_creation import (
-    _ensure_max_length,
-    _read_csv,
-    _validate_row,
-    transform_to_bot_rule_name,
-    transform_to_validate_bot_rule_name,
-)
 from adobe_downloader.utils.rsid_lookup import find_latest_rsid_file, load_rsid_lookup, lookup_rsid
-
 
 # ---------------------------------------------------------------------------
 # create_segment helpers
@@ -120,13 +119,7 @@ def test_build_dual_condition_segment() -> None:
 
 def test_load_lookup_file(tmp_path: Path) -> None:
     lf = tmp_path / "lookup.txt"
-    lf.write_text(
-        "// comment\n"
-        "Google|8\n"
-        "Apple|6\n"
-        "* another comment\n"
-        "Samsung|24\n"
-    )
+    lf.write_text("// comment\nGoogle|8\nApple|6\n* another comment\nSamsung|24\n")
     result = load_lookup_file(lf)
     assert result == {"Google": "8", "Apple": "6", "Samsung": "24"}
 
@@ -199,7 +192,9 @@ def test_lookup_rsid_not_found(tmp_path: Path) -> None:
 
 def test_find_latest_rsid_file(tmp_path: Path) -> None:
     (tmp_path / "suites20250101.txt").write_text("x:y\n")
-    import time; time.sleep(0.01)
+    import time
+
+    time.sleep(0.01)
     latest = tmp_path / "suites20251231.txt"
     latest.write_text("a:b\n")
     found = find_latest_rsid_file(tmp_path)
@@ -232,7 +227,9 @@ def test_transform_to_bot_rule_name_user_agent_stripped() -> None:
 
 
 def test_transform_to_validate_bot_rule_name_basic() -> None:
-    result = transform_to_validate_bot_rule_name("0158 BOT RULE: Cardschat - OperatingSystem=Android")
+    result = transform_to_validate_bot_rule_name(
+        "0158 BOT RULE: Cardschat - OperatingSystem=Android"
+    )
     assert " " not in result
 
 
@@ -261,7 +258,15 @@ def test_ensure_max_length_truncation() -> None:
 
 def _make_csv(tmp_path: Path, rows: list[dict]) -> Path:
     f = tmp_path / "test.csv"
-    fieldnames = ["CompareValidate", "SegmentName", "RSIDCleanName", "Dimension1", "Dimension1Item", "Dimension2", "Dimension2Item"]
+    fieldnames = [
+        "CompareValidate",
+        "SegmentName",
+        "RSIDCleanName",
+        "Dimension1",
+        "Dimension1Item",
+        "Dimension2",
+        "Dimension2Item",
+    ]
     with f.open("w", newline="") as fh:
         writer = csv.DictWriter(fh, fieldnames=fieldnames)
         writer.writeheader()
@@ -270,10 +275,20 @@ def _make_csv(tmp_path: Path, rows: list[dict]) -> Path:
 
 
 def test_read_csv(tmp_path: Path) -> None:
-    path = _make_csv(tmp_path, [
-        {"CompareValidate": "Compare", "SegmentName": "Seg1", "RSIDCleanName": "CleanA",
-         "Dimension1": "Domain", "Dimension1Item": "bad.com", "Dimension2": "", "Dimension2Item": ""},
-    ])
+    path = _make_csv(
+        tmp_path,
+        [
+            {
+                "CompareValidate": "Compare",
+                "SegmentName": "Seg1",
+                "RSIDCleanName": "CleanA",
+                "Dimension1": "Domain",
+                "Dimension1Item": "bad.com",
+                "Dimension2": "",
+                "Dimension2Item": "",
+            },
+        ],
+    )
     rows = _read_csv(path)
     assert len(rows) == 1
     assert rows[0].segment_name == "Seg1"
@@ -281,39 +296,79 @@ def test_read_csv(tmp_path: Path) -> None:
 
 
 def test_validate_row_valid(tmp_path: Path) -> None:
-    path = _make_csv(tmp_path, [
-        {"CompareValidate": "Validate", "SegmentName": "S", "RSIDCleanName": "R",
-         "Dimension1": "Domain", "Dimension1Item": "x.com", "Dimension2": "", "Dimension2Item": ""},
-    ])
+    path = _make_csv(
+        tmp_path,
+        [
+            {
+                "CompareValidate": "Validate",
+                "SegmentName": "S",
+                "RSIDCleanName": "R",
+                "Dimension1": "Domain",
+                "Dimension1Item": "x.com",
+                "Dimension2": "",
+                "Dimension2Item": "",
+            },
+        ],
+    )
     rows = _read_csv(path)
     assert _validate_row(rows[0]) == []
 
 
 def test_validate_row_missing_segment_name(tmp_path: Path) -> None:
-    path = _make_csv(tmp_path, [
-        {"CompareValidate": "Compare", "SegmentName": "", "RSIDCleanName": "R",
-         "Dimension1": "Domain", "Dimension1Item": "x.com", "Dimension2": "", "Dimension2Item": ""},
-    ])
+    path = _make_csv(
+        tmp_path,
+        [
+            {
+                "CompareValidate": "Compare",
+                "SegmentName": "",
+                "RSIDCleanName": "R",
+                "Dimension1": "Domain",
+                "Dimension1Item": "x.com",
+                "Dimension2": "",
+                "Dimension2Item": "",
+            },
+        ],
+    )
     rows = _read_csv(path)
     errors = _validate_row(rows[0])
     assert any("SegmentName" in e for e in errors)
 
 
 def test_validate_row_invalid_compare_validate(tmp_path: Path) -> None:
-    path = _make_csv(tmp_path, [
-        {"CompareValidate": "Bad", "SegmentName": "S", "RSIDCleanName": "R",
-         "Dimension1": "Domain", "Dimension1Item": "x.com", "Dimension2": "", "Dimension2Item": ""},
-    ])
+    path = _make_csv(
+        tmp_path,
+        [
+            {
+                "CompareValidate": "Bad",
+                "SegmentName": "S",
+                "RSIDCleanName": "R",
+                "Dimension1": "Domain",
+                "Dimension1Item": "x.com",
+                "Dimension2": "",
+                "Dimension2Item": "",
+            },
+        ],
+    )
     rows = _read_csv(path)
     errors = _validate_row(rows[0])
     assert any("CompareValidate" in e for e in errors)
 
 
 def test_validate_row_special_skips_dim_check(tmp_path: Path) -> None:
-    path = _make_csv(tmp_path, [
-        {"CompareValidate": "Compare - Special", "SegmentName": "S", "RSIDCleanName": "",
-         "Dimension1": "", "Dimension1Item": "", "Dimension2": "", "Dimension2Item": ""},
-    ])
+    path = _make_csv(
+        tmp_path,
+        [
+            {
+                "CompareValidate": "Compare - Special",
+                "SegmentName": "S",
+                "RSIDCleanName": "",
+                "Dimension1": "",
+                "Dimension1Item": "",
+                "Dimension2": "",
+                "Dimension2Item": "",
+            },
+        ],
+    )
     rows = _read_csv(path)
     assert _validate_row(rows[0]) == []
 
@@ -328,11 +383,20 @@ async def test_run_segment_creation_special_only(tmp_path: Path) -> None:
     """Special-only CSV produces no API calls and writes compare CSV."""
     from adobe_downloader.flows.segment_creation import run_segment_creation
 
-    input_csv = _make_csv(tmp_path, [
-        {"CompareValidate": "Compare - Special", "SegmentName": "BOTCOMPARE_Special_01: Test",
-         "RSIDCleanName": "", "Dimension1": "Domain", "Dimension1Item": "",
-         "Dimension2": "", "Dimension2Item": ""},
-    ])
+    input_csv = _make_csv(
+        tmp_path,
+        [
+            {
+                "CompareValidate": "Compare - Special",
+                "SegmentName": "BOTCOMPARE_Special_01: Test",
+                "RSIDCleanName": "",
+                "Dimension1": "Domain",
+                "Dimension1Item": "",
+                "Dimension2": "",
+                "Dimension2Item": "",
+            },
+        ],
+    )
     rsid_file = tmp_path / "suites.txt"
     rsid_file.write_text("rsid001:SomeClient\n")
 
@@ -361,11 +425,20 @@ async def test_run_segment_creation_with_api(tmp_path: Path) -> None:
     """Normal row calls create_segment and share_segment on the client."""
     from adobe_downloader.flows.segment_creation import run_segment_creation
 
-    input_csv = _make_csv(tmp_path, [
-        {"CompareValidate": "Validate", "SegmentName": "0001 BOT: TestClient - Domain = bad.com",
-         "RSIDCleanName": "TestClient", "Dimension1": "Domain", "Dimension1Item": "bad.com",
-         "Dimension2": "", "Dimension2Item": ""},
-    ])
+    input_csv = _make_csv(
+        tmp_path,
+        [
+            {
+                "CompareValidate": "Validate",
+                "SegmentName": "0001 BOT: TestClient - Domain = bad.com",
+                "RSIDCleanName": "TestClient",
+                "Dimension1": "Domain",
+                "Dimension1Item": "bad.com",
+                "Dimension2": "",
+                "Dimension2Item": "",
+            },
+        ],
+    )
     rsid_file = tmp_path / "suites.txt"
     rsid_file.write_text("rsid123:TestClient\n")
 
@@ -397,9 +470,57 @@ async def test_run_segment_creation_with_api(tmp_path: Path) -> None:
 
     rows = list(csv.DictReader(result.validate_list_file.open()))
     assert rows[0]["DimSegmentId"] == "s3938_fakeid001"
+    assert rows[0].keys() == {"DimSegmentId", "botRuleName"}
 
     segs = json.loads(result.segment_list_file.read_text())
     assert segs[0]["id"] == "s3938_fakeid001"
+
+
+@pytest.mark.asyncio
+async def test_compare_csv_still_includes_report_to_ignore(tmp_path: Path) -> None:
+    """Unlike validate rows, compare rows keep reportToIgnore — bot_rule_compare
+    uses it to skip the report a rule was built from."""
+    from adobe_downloader.flows.segment_creation import run_segment_creation
+
+    input_csv = _make_csv(
+        tmp_path,
+        [
+            {
+                "CompareValidate": "Compare",
+                "SegmentName": "0001 BOT: TestClient - Domain = bad.com",
+                "RSIDCleanName": "TestClient",
+                "Dimension1": "Domain",
+                "Dimension1Item": "bad.com",
+                "Dimension2": "",
+                "Dimension2Item": "",
+            },
+        ],
+    )
+    rsid_file = tmp_path / "suites.txt"
+    rsid_file.write_text("rsid123:TestClient\n")
+
+    class FakeClient:
+        async def create_segment(self, seg_def: dict) -> dict:
+            return {"id": "s3938_fakeid002", "name": seg_def["name"]}
+
+        async def share_segment(self, seg_id: str, user_ids: list) -> None:
+            pass
+
+    result = await run_segment_creation(
+        client=FakeClient(),
+        input_csv=input_csv,
+        share_with_users=[],
+        compare_list_path=tmp_path / "compare",
+        validate_list_path=None,
+        segment_list_path=None,
+        lookup_base=tmp_path,
+        rsid_lookup_file=rsid_file,
+        test_mode_row=None,
+    )
+    assert result.compare_list_file is not None
+    rows = list(csv.DictReader(result.compare_list_file.open()))
+    assert rows[0].keys() == {"DimSegmentId", "botRuleName", "reportToIgnore"}
+    assert rows[0]["reportToIgnore"] == "Domain"
 
 
 @pytest.mark.asyncio
@@ -407,11 +528,20 @@ async def test_run_segment_creation_api_error(tmp_path: Path) -> None:
     """API failure increments error_count without raising."""
     from adobe_downloader.flows.segment_creation import run_segment_creation
 
-    input_csv = _make_csv(tmp_path, [
-        {"CompareValidate": "Compare", "SegmentName": "Bad Seg",
-         "RSIDCleanName": "TestClient", "Dimension1": "Domain", "Dimension1Item": "bad.com",
-         "Dimension2": "", "Dimension2Item": ""},
-    ])
+    input_csv = _make_csv(
+        tmp_path,
+        [
+            {
+                "CompareValidate": "Compare",
+                "SegmentName": "Bad Seg",
+                "RSIDCleanName": "TestClient",
+                "Dimension1": "Domain",
+                "Dimension1Item": "bad.com",
+                "Dimension2": "",
+                "Dimension2Item": "",
+            },
+        ],
+    )
     rsid_file = tmp_path / "suites.txt"
     rsid_file.write_text("rsid123:TestClient\n")
 

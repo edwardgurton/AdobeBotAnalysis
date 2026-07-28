@@ -16,6 +16,7 @@ from adobe_downloader.config.schema import (
 from adobe_downloader.flows.composite_job import (
     _coerce_date_range,
     _resolve_output_base,
+    _resolve_rsids,
     _resolve_segments,
     _segment_iterations_from_bot_rules,
     _state_key,
@@ -194,6 +195,63 @@ class TestResolveSegments:
             _resolve_segments(
                 {"source": "step_output", "step_id": "step_a", "output_key": "bad_key"},
                 {"step_a": {"segment_list_file": "/data/segs.json"}},
+            )
+
+
+class TestResolveRsids:
+    def test_file_passthrough(self) -> None:
+        result = _resolve_rsids({"source": "file", "file": "/data/rsids.txt"}, {})
+        assert result.source == "file"
+        assert result.file == "/data/rsids.txt"
+
+    def test_list_passthrough(self) -> None:
+        result = _resolve_rsids({"source": "list", "list": ["rsid1", "rsid2"]}, {})
+        assert result.source == "list"
+        assert result.rsid_list == ["rsid1", "rsid2"]
+
+    def test_step_output_resolved_to_file(self) -> None:
+        step_outputs = {
+            "update_rsids": {"investigation_list": "/data/rsid_lists/investigation.txt"}
+        }
+        result = _resolve_rsids(
+            {
+                "source": "step_output",
+                "step_id": "update_rsids",
+                "output_key": "investigation_list",
+                "batch_size": 20,
+            },
+            step_outputs,
+        )
+        assert result.source == "file"
+        assert result.file == "/data/rsid_lists/investigation.txt"
+        assert result.batch_size == 20
+
+    def test_step_output_defaults_batch_size(self) -> None:
+        step_outputs = {
+            "update_rsids": {"investigation_list": "/data/rsid_lists/investigation.txt"}
+        }
+        result = _resolve_rsids(
+            {
+                "source": "step_output",
+                "step_id": "update_rsids",
+                "output_key": "investigation_list",
+            },
+            step_outputs,
+        )
+        assert result.batch_size == 12
+
+    def test_step_output_missing_dep_raises(self) -> None:
+        with pytest.raises(ValueError, match="not yet produced outputs"):
+            _resolve_rsids(
+                {"source": "step_output", "step_id": "missing_step", "output_key": "x"},
+                {},
+            )
+
+    def test_step_output_missing_key_raises(self) -> None:
+        with pytest.raises(ValueError, match="key 'bad_key' not found"):
+            _resolve_rsids(
+                {"source": "step_output", "step_id": "update_rsids", "output_key": "bad_key"},
+                {"update_rsids": {"investigation_list": "/data/rsid_lists/investigation.txt"}},
             )
 
 

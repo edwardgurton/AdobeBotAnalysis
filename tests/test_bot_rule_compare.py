@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -13,12 +12,10 @@ from adobe_downloader.config.schema import (
     CompositeJobConfig,
     CompositeStep,
     DateRange,
-    OutputConfig,
 )
 from adobe_downloader.flows.bot_rule_compare import (
     DIMENSION_MAPPING,
     BotRule,
-    BotRuleCompareResult,
     parse_bot_rule_csv,
     run_bot_rule_compare,
     sanitize_bot_rule_name,
@@ -29,7 +26,6 @@ from adobe_downloader.state_manager import (
     compute_job_id,
     state_db_path,
 )
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -141,6 +137,23 @@ class TestParseBotRuleCsv:
         csv.write_text("DimSegmentId,botRuleName,reportToIgnore\nseg1,Rule1,SomeDimension\n")
         rules = parse_bot_rule_csv(csv)
         assert rules[0].report_to_skip == "botInvestigationMetricsBySomeDimension"
+
+    def test_missing_report_to_ignore_column_is_optional(self, tmp_path: Path) -> None:
+        """bot_validation lists have no reportToIgnore column — that's fine, no report
+        gets skipped for these rules."""
+        csv = tmp_path / "rules.csv"
+        csv.write_text("DimSegmentId,botRuleName\nseg1,Rule1\n")
+        rules = parse_bot_rule_csv(csv)
+        assert len(rules) == 1
+        assert rules[0].segment_id == "seg1"
+        assert rules[0].segment_name == "Rule1"
+        assert rules[0].report_to_skip is None
+
+    def test_blank_report_to_ignore_value_is_none(self, tmp_path: Path) -> None:
+        csv = tmp_path / "rules.csv"
+        csv.write_text("DimSegmentId,botRuleName,reportToIgnore\nseg1,Rule1,\n")
+        rules = parse_bot_rule_csv(csv)
+        assert rules[0].report_to_skip is None
 
 
 # ---------------------------------------------------------------------------

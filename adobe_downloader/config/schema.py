@@ -51,11 +51,13 @@ class OutputConfig(BaseModel):
 class RsidSource(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
-    source: Literal["file", "list", "single"]
+    source: Literal["file", "list", "single", "step_output"]
     file: str | None = None
     rsid_list: list[str] | None = Field(default=None, alias="list")
     single: str | None = None
     batch_size: int = Field(default=12, ge=1)
+    step_id: str | None = None
+    output_key: str | None = None
 
     @model_validator(mode="after")
     def _check_source_value(self) -> "RsidSource":
@@ -65,6 +67,11 @@ class RsidSource(BaseModel):
             raise ValueError("rsids.list is required when source='list'")
         if self.source == "single" and not self.single:
             raise ValueError("rsids.single is required when source='single'")
+        if self.source == "step_output":
+            if not self.step_id:
+                raise ValueError("rsids.step_id is required when source='step_output'")
+            if not self.output_key:
+                raise ValueError("rsids.output_key is required when source='step_output'")
         return self
 
 

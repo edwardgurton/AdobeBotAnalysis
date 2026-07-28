@@ -29,20 +29,16 @@ steps:
       source: file
       file: data/rsid_lists/legend_validation.txt
       batch_size: 12
+    # bot_rules alone drives both the per-rule download filter/filename anchor
+    # and (below) the split-by-rule labeling — no separate segments: needed.
     bot_rules:
       source: step_output
       step_id: create_segments
       output_key: validate_list_file
-    segments:
-      source: step_output
-      step_id: create_segments
-      output_key: segment_list_file
     interval: month
-    optimisation:
-      shared_reports: true
-      shared_report_names:
-        - botFilterExcludeMetricsByMonth
-        - botFilterIncludeMetricsByMonth
+    # botFilterExclude/IncludeMetricsByMonth are marked shared: true in
+    # report_definitions/bot_validation.yaml — they're downloaded once and copied
+    # per bot rule automatically, no config needed here.
 
   - step: validate_output
     id: validate
