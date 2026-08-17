@@ -143,6 +143,7 @@ async def run_bot_rule_compare(
     test_limits: TestLimits | None = None,
     job_name: str | None = None,
     batch_size: int = 12,
+    report_group: str = "bot_rule_compare",
 ) -> BotRuleCompareResult:
     """Download Segment + AllTraffic comparison files for each RSID × bot rule.
 
@@ -150,12 +151,16 @@ async def run_bot_rule_compare(
     second AllTraffic request for the same RSID+report+date has an identical request
     body, so StateManager returns a canonical_id and the file is copied rather than
     re-downloaded. Up to batch_size Segment/AllTraffic downloads run concurrently.
+
+    report_group defaults to "bot_rule_compare" (Master Bot Exclusion Development
+    baked into every report's segments); pass a different group name — e.g. one
+    defined with an alternate exclusion segment — to override it.
     """
     from adobe_downloader.config.report_definitions import load_report_group
     from adobe_downloader.utils.rsid_lookup import load_rsid_lookup
 
     rsid_map = load_rsid_lookup(rsid_lookup_file)
-    report_defs = load_report_group("bot_rule_compare")
+    report_defs = load_report_group(report_group)
     json_folder = Path(output_base) / client_name
     if job_name:
         json_folder = json_folder / job_name

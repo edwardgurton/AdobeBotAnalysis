@@ -742,7 +742,7 @@ async def _run_validate_output_step(
         bot_rules = _parse_bot_rules_from_config(
             ref_extra.get("bot_rules") or {}, step_outputs, step.id
         )
-        report_defs = load_report_group("bot_rule_compare")
+        report_defs = load_report_group(ref_extra.get("report_group", "bot_rule_compare"))
 
         expected = enumerate_bot_rule_compare_paths(
             client_name=job.client,
@@ -1064,6 +1064,7 @@ async def _run_bot_rule_compare_step(
         test_limits=job.test_limits if job.test_mode else None,
         job_name=job.output.job_name if job.output else None,
         batch_size=rsids.batch_size,
+        report_group=extra.get("report_group", "bot_rule_compare"),
     )
 
     if result.failed:
