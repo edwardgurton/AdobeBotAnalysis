@@ -57,7 +57,11 @@ def concatenate_csv_files(
     data_lines: list[str] = []
 
     for csv_file in csv_files:
-        lines = [ln for ln in csv_file.read_text(encoding="utf-8").splitlines() if ln.strip()]
+        lines = [
+            ln
+            for ln in to_long_path(csv_file).read_text(encoding="utf-8").splitlines()
+            if ln.strip()
+        ]
         if not lines:
             continue
         if header is None:
