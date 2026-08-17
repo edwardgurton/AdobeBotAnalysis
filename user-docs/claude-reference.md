@@ -675,6 +675,8 @@ Default metrics: 4 clickout custom metrics.
 - `bot_rules`: `BotRulesSource` (source: `file` | `step_output` | `inline`)
 - `comparison_round`: float (default 1.0), injected into filename
 - `rsid_lookup_file`: optional explicit path; falls back to latest file in `data/report_suite_lists/`
+- `report_group`: string (default `"bot_rule_compare"`) — override to use an alternate-exclusion-segment report group
+- `include_segment_id_in_filename`: bool (default `false`) — the Segment variant's filename already embeds the rule name, which disambiguates it; set `true` to also embed the raw segment ID as a `DIMSEG{id}` token. Off by default since it's rarely needed and its length is a common contributor to exceeding Windows' 260-char MAX_PATH. When off, the `bot_rule_compare` transform's `segmentId`/`segmentHash` CSV columns are blank for Segment rows, since `DIMSEG` is their only source.
 
 **`final_bot_metrics` step fields:**
 - `rsids`: `RsidSource`

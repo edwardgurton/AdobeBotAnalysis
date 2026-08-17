@@ -294,7 +294,7 @@ Each yielded `DateRange` is a Pydantic model with `from_date` and `to` as ISO st
 
 - `{rsid}` is the RSID's clean name (e.g. `Casinoorg`), not the resolved Adobe report suite ID — `run_report_download` maps the resolved RSID back to the clean name it was read from before calling `make_output_path`. Absent if `rsid` is `None` (e.g. flows that already fold RSID into `file_name_extra`, such as `bot_rule_compare`/`final_bot_metrics`).
 - `_extra` is the `file_name_extra` parameter (underscore-prefixed, absent if `None`). For a `segment_list_file`-sourced segment, `resolve_segment_file_name_extra` merges in a `RULE{sanitized_name}` anchor **by default**, joined onto any job-level `file_name_extra` with a hyphen (`{extra}-RULE{name}`) so the whole thing stays one `_`-delimited token. `RULE` anchors the name so downstream transforms (e.g. `transform_bot_validation`) and `transform_concat`'s `split_by_bot_rule` can locate it by scanning for the prefix, rather than trusting a fixed part-index.
-- `DIMSEG{seg_id}_` — the raw segment ID — is **opt-in**: set `include_segment_id_in_filename: true` on a `report_download` step/job (`ReportDownloadConfig`/`CompositeStep`, default `false`) to include it. It's independent of the `RULE{name}` anchor — a step can carry neither, either, or both. `bot_rule_compare`/`final_bot_metrics` call `make_output_path` directly (not through `run_report_download`) and are unaffected by this flag; they keep embedding `DIMSEG` unconditionally, exactly as before.
+- `DIMSEG{seg_id}_` — the raw segment ID — is **opt-in**: set `include_segment_id_in_filename: true` on a `report_download` step/job (`ReportDownloadConfig`/`CompositeStep`, default `false`) to include it. It's independent of the `RULE{name}` anchor — a step can carry neither, either, or both. The dedicated `bot_rule_compare` step (`run_bot_rule_compare`, which calls `make_output_path` directly, not through `run_report_download`) has its own `include_segment_id_in_filename` parameter with the same `false` default — the Segment variant's filename already embeds the rule name via `file_name_extra`, which is enough to disambiguate it, and `DIMSEG`'s extra length is a common contributor to exceeding Windows' 260-char MAX_PATH. `final_bot_metrics` also calls `make_output_path` directly and is unaffected by either flag; it keeps embedding `DIMSEG` unconditionally.
 
 Every RSID now produces a distinct path per (report, date), so `enumerate_expected_paths` also takes `rsid` and can no longer report a false PASS when one RSID's file overwrote another's. `enumerate_expected_paths` also takes `include_segment_id_in_filename` and applies `resolve_segment_file_name_extra` the same way `run_report_download` does, so `validate_output`/`validate-output` enumeration always matches what a report_download run actually produces.
 
@@ -344,9 +344,9 @@ Five transform functions are registered in `_TRANSFORM_REGISTRY`. `transform_rep
 
 **`bot_rule_compare`**: Uses hardcoded headers (not a YAML file). The 23-column header string is defined as `_BOT_RULE_COMPARE_HEADERS`. Filename parsing is more complex, handling two patterns:
 - AllTraffic: `{client}_{reportType}_{rsid}-{round}_{ruleName}-Compare-{ver}-AllTraffic_{from}_{to}`
-- Segment: same but with `DIMSEG{n}_{hash?}_{from}_{to}` before the dates
+- Segment: same but with `DIMSEG{n}_{hash?}_{from}_{to}` before the dates, when `include_segment_id_in_filename` was set on the download step (default `false` — see Output file naming above)
 
-The dimension is derived from `reportType` by stripping the `"botInvestigationMetricsBy"` prefix. `is_segment` and `is_compare` are booleans stored as lowercase strings in the CSV. Per-row appended columns: `fileName, clientName, reportType, dimension, rsidName, botRuleName, compareVersion, trafficType, isCompare, isSegment, segmentId, segmentHash, startDate, endDate`.
+The dimension is derived from `reportType` by stripping the `"botInvestigationMetricsBy"` prefix. `is_segment` and `is_compare` are booleans stored as lowercase strings in the CSV. Per-row appended columns: `fileName, clientName, reportType, dimension, rsidName, botRuleName, compareVersion, trafficType, isCompare, isSegment, segmentId, segmentHash, startDate, endDate`. When the Segment filename carries no `DIMSEG` token, `segmentId`/`segmentHash` are left blank (`""`) — they have no other source.
 
 The two patterns are distinguished by whether `"-Compare-"` appears in `parts[2]` (production, current downloads) or only later, in `parts[4]` (legacy). This is why `run_bot_rule_compare` sanitizes bot rule names with `sanitize_bot_rule_name` (replacing `_` with `-`) before embedding them in filenames — an underscore in the rule name would otherwise split it across multiple `_`-delimited parts and misroute the parse into the legacy branch, corrupting the reconstructed `segmentId`.
 
@@ -592,7 +592,7 @@ The filename includes the investigation name (which encodes the bot rule name an
 
 ### Segment variant requests
 
-For the Segment variant, `segments=[bot_rule.segment_id]` is passed. The output filename encodes `"-Segment"` and uses `segment_id_for_path=bot_rule.segment_id` so that the `DIMSEG{id}` token appears in the filename.
+For the Segment variant, `segments=[bot_rule.segment_id]` is passed. The output filename encodes `"-Segment"`. `segment_id_for_path` is `bot_rule.segment_id` only when the step's `include_segment_id_in_filename` is `true` (default `false`), so the `DIMSEG{id}` token is opt-in — the rule name already embedded via `file_name_extra` (`investigation_name`) is enough to disambiguate the file, and `DIMSEG`'s extra length is a common contributor to exceeding Windows' 260-char MAX_PATH.
 
 ### Canonical deduplication across AllTraffic files
 

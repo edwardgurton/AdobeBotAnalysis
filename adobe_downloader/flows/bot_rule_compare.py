@@ -144,6 +144,7 @@ async def run_bot_rule_compare(
     job_name: str | None = None,
     batch_size: int = 12,
     report_group: str = "bot_rule_compare",
+    include_segment_id_in_filename: bool = False,
 ) -> BotRuleCompareResult:
     """Download Segment + AllTraffic comparison files for each RSID × bot rule.
 
@@ -155,6 +156,14 @@ async def run_bot_rule_compare(
     report_group defaults to "bot_rule_compare" (Master Bot Exclusion Development
     baked into every report's segments); pass a different group name — e.g. one
     defined with an alternate exclusion segment — to override it.
+
+    The Segment variant's filename already embeds the human-readable rule name
+    (via investigation_name), which is enough to disambiguate it from other rules.
+    include_segment_id_in_filename additionally embeds the raw segment ID as a
+    DIMSEG{id} token — off by default since it's rarely needed and its length is
+    a common contributor to exceeding Windows' 260-char MAX_PATH. When off, the
+    bot_rule_compare transform's segmentId/segmentHash CSV columns are left blank
+    for Segment rows, since DIMSEG is their only source.
     """
     from adobe_downloader.config.report_definitions import load_report_group
     from adobe_downloader.utils.rsid_lookup import load_rsid_lookup
@@ -208,7 +217,9 @@ async def run_bot_rule_compare(
                         rsid=rsid,
                         segments=[bot_rule.segment_id],
                         file_name_extra=f"{investigation_name}-Segment",
-                        segment_id_for_path=bot_rule.segment_id,
+                        segment_id_for_path=(
+                            bot_rule.segment_id if include_segment_id_in_filename else None
+                        ),
                         output_base=output_base,
                         sm=sm,
                         no_resume=no_resume,

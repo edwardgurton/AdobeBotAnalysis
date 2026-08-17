@@ -410,7 +410,12 @@ class TestRunBotRuleCompare:
         assert "API error" in result.errors[0]
 
     async def test_investigation_name_format(self, tmp_path: Path) -> None:
-        """Output file names must embed the investigation name pattern."""
+        """Output file names must embed the investigation name pattern.
+
+        DIMSEG is off by default: the rule name already disambiguates the
+        filename, and DIMSEG's extra length is a common contributor to
+        exceeding Windows' 260-char MAX_PATH.
+        """
         rsid_file = _make_rsid_file(tmp_path, [("triarsid1", "Coverscom")])
         sm = _make_mock_sm(tmp_path)
         client = AsyncMock()
@@ -450,7 +455,48 @@ class TestRunBotRuleCompare:
         assert len(all_traffic_files) == 1
         assert "Coverscom-MyRule-Compare-V2-Segment" in segment_files[0]
         assert "Coverscom-MyRule-Compare-V2-AllTraffic" in all_traffic_files[0]
-        assert "DIMSEG" in segment_files[0]
+        assert "DIMSEG" not in segment_files[0]
+        assert "DIMSEG" not in all_traffic_files[0]
+
+    async def test_investigation_name_includes_dimseg_when_opted_in(self, tmp_path: Path) -> None:
+        """include_segment_id_in_filename=True restores the raw-ID DIMSEG token."""
+        rsid_file = _make_rsid_file(tmp_path, [("triarsid1", "Coverscom")])
+        sm = _make_mock_sm(tmp_path)
+        client = AsyncMock()
+        client.get_report = AsyncMock(return_value=_FAKE_REPORT_RESPONSE)
+
+        rd1 = MagicMock()
+        rd1.name = "botInvestigationMetricsByRegion"
+        rd1.segments = []
+
+        bot_rules = [BotRule("seg1", "MyRule", "botInvestigationMetricsByDomain")]
+
+        with (
+            patch("adobe_downloader.config.report_definitions.load_report_group") as mock_load,
+            _patch_build_request(),
+        ):
+            mock_load.return_value = [rd1]
+
+            await run_bot_rule_compare(
+                client=client,
+                client_name="Legend",
+                rsid_clean_names=["Coverscom"],
+                rsid_lookup_file=rsid_file,
+                bot_rules=bot_rules,
+                date_range=_date("2025-01-01", "2025-03-31"),
+                comparison_round=2.0,
+                output_base=str(tmp_path / "output"),
+                sm=sm,
+                no_resume=True,
+                include_segment_id_in_filename=True,
+            )
+
+        json_dir = tmp_path / "output" / "Legend" / "JSON"
+        names = [f.name for f in json_dir.glob("*.json")]
+
+        segment_files = [n for n in names if "Segment" in n]
+        all_traffic_files = [n for n in names if "AllTraffic" in n]
+        assert "DIMSEGseg1" in segment_files[0]
         assert "DIMSEG" not in all_traffic_files[0]
 
     async def test_investigation_name_sanitizes_underscores_in_rule_name(

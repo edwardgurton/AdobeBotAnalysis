@@ -1048,6 +1048,7 @@ async def _run_bot_rule_compare_step(
             raise FileNotFoundError("No RSID lookup file found in data/report_suite_lists")
 
     bot_rules = _parse_bot_rules_from_config(extra.get("bot_rules") or {}, step_outputs, step.id)
+    include_segment_id_in_filename: bool = extra.get("include_segment_id_in_filename", False)
 
     result = await run_bot_rule_compare(
         client=ac,
@@ -1065,6 +1066,7 @@ async def _run_bot_rule_compare_step(
         job_name=job.output.job_name if job.output else None,
         batch_size=rsids.batch_size,
         report_group=extra.get("report_group", "bot_rule_compare"),
+        include_segment_id_in_filename=include_segment_id_in_filename,
     )
 
     if result.failed:
