@@ -161,10 +161,14 @@ def test_enumerate_count_rsids_x_dates(tmp_path: Path) -> None:
 # ---------------------------------------------------------------------------
 
 
-def _make_bot_rule(segment_id: str, segment_name: str, report_to_skip: str = "") -> Any:
+def _make_bot_rule(
+    segment_id: str, segment_name: str, reports_to_skip: list[str] | None = None
+) -> Any:
     from adobe_downloader.flows.bot_rule_compare import BotRule
 
-    return BotRule(segment_id=segment_id, segment_name=segment_name, report_to_skip=report_to_skip)
+    return BotRule(
+        segment_id=segment_id, segment_name=segment_name, reports_to_skip=reports_to_skip or []
+    )
 
 
 def test_bot_rule_compare_paths_segment_and_alltraffic(tmp_path: Path) -> None:
@@ -188,7 +192,7 @@ def test_bot_rule_compare_paths_skips_report_to_skip(tmp_path: Path) -> None:
         client_name="Client",
         rsid_clean_names=["SiteA"],
         bot_rules=[
-            _make_bot_rule("seg1", "MyRule", report_to_skip="botInvestigationMetricsByDomain")
+            _make_bot_rule("seg1", "MyRule", reports_to_skip=["botInvestigationMetricsByDomain"])
         ],
         date_range=_date_range("2026-03-01", "2026-05-31"),
         comparison_round=1.0,
@@ -201,6 +205,35 @@ def test_bot_rule_compare_paths_skips_report_to_skip(tmp_path: Path) -> None:
     # Domain skipped; Region → Segment + AllTraffic = 2
     assert len(paths) == 2
     assert all("Domain" not in p.name for p in paths)
+
+
+def test_bot_rule_compare_paths_skips_multiple_reports_to_skip(tmp_path: Path) -> None:
+    paths = enumerate_bot_rule_compare_paths(
+        client_name="Client",
+        rsid_clean_names=["SiteA"],
+        bot_rules=[
+            _make_bot_rule(
+                "seg1",
+                "MyRule",
+                reports_to_skip=[
+                    "botInvestigationMetricsByDomain",
+                    "botInvestigationMetricsByOperatingSystem",
+                ],
+            )
+        ],
+        date_range=_date_range("2026-03-01", "2026-05-31"),
+        comparison_round=1.0,
+        output_base=tmp_path,
+        report_defs=[
+            _make_report_def("botInvestigationMetricsByDomain"),
+            _make_report_def("botInvestigationMetricsByOperatingSystem"),
+            _make_report_def("botInvestigationMetricsByRegion"),
+        ],
+    )
+    # Domain and OperatingSystem skipped; Region → Segment + AllTraffic = 2
+    assert len(paths) == 2
+    assert all("Domain" not in p.name for p in paths)
+    assert all("OperatingSystem" not in p.name for p in paths)
 
 
 def test_bot_rule_compare_paths_multiple_rules(tmp_path: Path) -> None:

@@ -672,7 +672,7 @@ Default metrics: 4 clickout custom metrics.
 
 **`bot_rule_compare` step fields:**
 - `rsids`: `RsidSource`
-- `bot_rules`: `BotRulesSource` (source: `file` | `step_output` | `inline`)
+- `bot_rules`: `BotRulesSource` (source: `file` | `step_output` | `inline`). Each rule's `report_to_skip`/`reportToIgnore` (the report(s) to skip since they're the dimension(s) the rule was built from) accepts a short name (`Domain`), a full report name (`botInvestigationMetricsByDomain`), a `|`-delimited string for multiple (`Domain|OperatingSystem`), or — inline only — a YAML list (`[Domain, OperatingSystem]`). Resolved into `BotRule.reports_to_skip: list[str]`; see `flows/bot_rule_compare.py`.
 - `comparison_round`: float (default 1.0), injected into filename
 - `rsid_lookup_file`: optional explicit path; falls back to latest file in `data/report_suite_lists/`
 - `report_group`: string (default `"bot_rule_compare"`) — override to use an alternate-exclusion-segment report group

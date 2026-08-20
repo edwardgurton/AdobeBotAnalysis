@@ -772,15 +772,27 @@ output:
             <tr><td><code>CompareValidate</code></td><td><code>Compare</code>, <code>Validate</code>, <code>Compare - Special</code>, <code>Validate - Special</code></td><td>Determines which output list the segment appears in.</td></tr>
             <tr><td><code>SegmentName</code></td><td>string</td><td>Human-readable segment name (also used to derive the bot rule name).</td></tr>
             <tr><td><code>RSIDCleanName</code></td><td>string</td><td>Clean name of the report suite the segment is scoped to. Ignored on <code>- Special</code> rows.</td></tr>
-            <tr><td><code>Dimension1</code></td><td>friendly name</td><td>First dimension for the segment condition (e.g. <code>BrowserType</code>). On <code>Compare - Special</code> rows this value is written through as-is to <code>reportToIgnore</code> instead of being resolved (Compare rows only — <code>reportToIgnore</code> isn't written for Validate rows at all, since bot_validation never reads it).</td></tr>
+            <tr><td><code>Dimension1</code></td><td>friendly name</td><td>First dimension for the segment condition (e.g. <code>BrowserType</code>). On Compare rows, this value is also written to <code>reportToIgnore</code> in the compare list — see <a href="#report-to-ignore">reportToIgnore and multi-dimension rules</a> below (Compare rows only — <code>reportToIgnore</code> isn't written for Validate rows at all, since bot_validation never reads it).</td></tr>
             <tr><td><code>Dimension1Item</code></td><td>string</td><td>Value to match for dimension 1. Ignored on <code>- Special</code> rows.</td></tr>
-            <tr><td><code>Dimension2</code></td><td>friendly name or blank</td><td>Optional second dimension condition. Ignored on <code>- Special</code> rows.</td></tr>
+            <tr><td><code>Dimension2</code></td><td>friendly name or blank</td><td>Optional second dimension condition. Ignored on <code>- Special</code> rows. When set on a Compare row, this dimension is also added to <code>reportToIgnore</code> alongside <code>Dimension1</code>.</td></tr>
             <tr><td><code>Dimension2Item</code></td><td>string or blank</td><td>Required if <code>Dimension2</code> is set. Ignored on <code>- Special</code> rows.</td></tr>
+            <tr><td><code>Dimension3</code></td><td>friendly name or blank</td><td>Optional third dimension condition. Requires <code>Dimension2</code> to be set first — validation fails otherwise. Ignored on <code>- Special</code> rows. This column may be omitted entirely from older, 2-dimension input files.</td></tr>
+            <tr><td><code>Dimension3Item</code></td><td>string or blank</td><td>Required if <code>Dimension3</code> is set. Ignored on <code>- Special</code> rows.</td></tr>
+            <tr><td><code>Dimension4</code></td><td>friendly name or blank</td><td>Optional fourth dimension condition. Requires <code>Dimension3</code> to be set first — validation fails otherwise. Ignored on <code>- Special</code> rows. This column may be omitted entirely from older, 2-dimension input files.</td></tr>
+            <tr><td><code>Dimension4Item</code></td><td>string or blank</td><td>Required if <code>Dimension4</code> is set. Ignored on <code>- Special</code> rows.</td></tr>
           </tbody>
         </table>
       </div>
       <p>Dimensions that require a numeric lookup (such as <code>BrowserType</code>, <code>OperatingSystem</code>, <code>MobileManufacturer</code>, <code>MonitorResolution</code>) are automatically resolved using the lookup files in <code>data/lookups/</code>.</p>
-      <p><code>Dimension1</code> and <code>Dimension2</code> must be one of the following friendly names (on non-<code>Special</code> rows — any other value raises an error before segment creation):</p>
+
+      <h4 id="report-to-ignore">reportToIgnore and multi-dimension rules</h4>
+      <p>Because a rule's segment is built from <code>Dimension1</code> (and optionally <code>Dimension2</code>-<code>Dimension4</code>), comparing that same dimension's report back against the segment is tautological — the report was the reason the rule exists. <code>reportToIgnore</code> in the compare list tells <code>bot_rule_compare</code> which report(s) to skip for each rule:</p>
+      <ul>
+        <li>Single-dimension row (<code>Dimension2</code> blank) → <code>reportToIgnore</code> is just <code>Dimension1</code>, e.g. <code>BrowserType</code>.</li>
+        <li>Multi-dimension row (<code>Dimension2</code>, and optionally <code>Dimension3</code>/<code>Dimension4</code>, set) → <code>reportToIgnore</code> holds every set dimension, <code>|</code>-joined in tier order, e.g. <code>OperatingSystem|BrowserType</code> or <code>OperatingSystem|BrowserType|Domain|MobileManufacturer</code>. All of those reports are skipped when the rule is compared.</li>
+      </ul>
+      <p>This is generated automatically by <code>segment_creation</code> — nothing to configure here. It matters when you're hand-editing a compare CSV or writing an inline <code>bot_rules:</code> block for a <code>bot_rule_compare</code> step; see <a href="#bot-rules-field">bot_rules (bot_rule_compare)</a> in the YAML Field Reference for the exact accepted formats (short name, full report name, <code>|</code>-delimited string, or a YAML list).</p>
+      <p><code>Dimension1</code> through <code>Dimension4</code> must each be one of the following friendly names (on non-<code>Special</code> rows — any other value raises an error before segment creation). Up to 4 dimensions may be AND'ed together in a single segment; dimensions must be filled in tier order (2 before 3, 3 before 4).</p>
       <div class="table-wrap">
         <table>
           <thead><tr><th>Friendly name(s)</th><th>Adobe variable</th><th>Needs numeric lookup?</th></tr></thead>
@@ -1134,6 +1146,40 @@ C:/Adobe_Downloads/Legend/casinoorg_seo_homepage_bot_investigation_90d/INVESTIGA
           </tbody>
         </table>
       </div>
+
+      <h3 id="bot-rules-field">bot_rules (bot_rule_compare)</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>bot_rules.source</code></td><td>string</td><td><code>file</code>, <code>step_output</code>, or <code>inline</code>.</td></tr>
+            <tr><td><code>bot_rules.file</code></td><td>string</td><td>Path to a bot-rule CSV (columns <code>DimSegmentId</code>, <code>botRuleName</code>, optional <code>reportToIgnore</code>). Required when <code>source=file</code>.</td></tr>
+            <tr><td><code>bot_rules.step_id</code></td><td>string</td><td>ID of a previous composite step (typically <code>segment_creation</code>). Required when <code>source=step_output</code>.</td></tr>
+            <tr><td><code>bot_rules.output_key</code></td><td>string</td><td>Key in the referenced step's output dict (e.g. <code>compare_list_file</code>). Required when <code>source=step_output</code>.</td></tr>
+            <tr><td><code>bot_rules.rules</code></td><td>list of objects</td><td>Inline rule list. Required when <code>source=inline</code>. Each object needs <code>segment_id</code>, <code>segment_name</code>, and an optional <code>report_to_skip</code>.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p><code>source: file</code> and <code>source: step_output</code> both read a CSV in the same format produced by <code>segment_creation</code>'s <code>compare_list_path</code> output (see <a href="#report-to-ignore">reportToIgnore and multi-dimension rules</a>). <code>source: inline</code> lets you define rules directly in the job YAML without a CSV — useful for one-off or ad hoc comparisons:</p>
+      <pre><code>bot_rules:
+  source: inline
+  rules:
+    - segment_id: s3938_6a7f36b18d2a7f725e039dcb
+      segment_name: LEGACYBOTRULE001-MonRes-800x600
+      report_to_skip: MonitorResolution</code></pre>
+      <p><strong><code>report_to_skip</code> / <code>reportToIgnore</code></strong> tells the step which report(s) to skip for a rule, since they're the dimension(s) the rule's segment was built from (comparing them back would be tautological). It's optional — omit it, or leave it blank, if the rule shouldn't skip any report. It accepts any of these forms:</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Form</th><th>Where</th><th>Example</th></tr></thead>
+          <tbody>
+            <tr><td>Short dimension name</td><td>CSV <code>reportToIgnore</code> column or inline YAML</td><td><code>Domain</code></td></tr>
+            <tr><td>Full report name</td><td>CSV <code>reportToIgnore</code> column or inline YAML</td><td><code>botInvestigationMetricsByDomain</code></td></tr>
+            <tr><td><code>|</code>-delimited (multiple reports)</td><td>CSV <code>reportToIgnore</code> column or inline YAML</td><td><code>Domain|OperatingSystem</code></td></tr>
+            <tr><td>YAML list (multiple reports)</td><td>Inline YAML only</td><td><code>report_to_skip: [Domain, OperatingSystem]</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Short names are mapped to full report names via a built-in table (<code>DIMENSION_MAPPING</code> in <code>flows/bot_rule_compare.py</code>) covering the standard bot-investigation dimensions (<code>Domain</code>, <code>UserAgent</code>, <code>Region</code>, <code>MonitorResolution</code>, <code>PageURL</code>, <code>BrowserType</code>, <code>OperatingSystem</code>, <code>MobileManufacturer</code>, <code>HourOfDay</code>, <code>MarketingChannel</code>/<code>ReferringDomain</code>). An unrecognized short name still works — it's assumed to be a dimension name and prefixed with <code>botInvestigationMetricsBy</code> — but double-check the resulting report name matches one in your <code>report_group</code> if you see reports unexpectedly not being skipped.</p>
 
       <h3>transform (report_download / transform_concat)</h3>
       <div class="table-wrap">
@@ -1631,7 +1677,7 @@ adobe-downloader validate-output --config jobs/... --retry --debug</code></pre>
             <tr>
               <td><code>adobe-downloader add-dimension</code></td>
               <td><code>-n</code> name (repeatable), <code>-a</code> adobe-variable, <code>-d</code> description, <code>--[no-]requires-lookup</code></td>
-              <td>Register a new friendly dimension name for <a href="#segment-creation-csv-format">segment_creation</a>'s <code>Dimension1</code>/<code>Dimension2</code> columns.</td>
+              <td>Register a new friendly dimension name for <a href="#segment-creation-csv-format">segment_creation</a>'s <code>Dimension1</code>-<code>Dimension4</code> columns.</td>
             </tr>
           </tbody>
         </table>

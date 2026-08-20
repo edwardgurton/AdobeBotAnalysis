@@ -1,0 +1,80 @@
+job_type: composite
+client: Legend
+description: "Full Legend bot investigation pipeline — segment creation + download + validate + transform"
+
+date_range:
+  from: "2026-04-01"
+  to: "2026-06-30"
+
+output:
+  base_folder: "C:/Adobe_Downloads"
+  job_name: "BotInv250k26Q2V2"
+
+steps:
+  - step: report_download
+    id: download_investigation_daily
+    report_group: bot_investigation
+    rsids:
+      source: file
+      file: data\rsid_lists\botInvestigationMinThresholdVisits.txt
+      batch_size: 12
+    interval: day
+    file_name_extra: "FullRun-FY26Q2V2-Daily"
+
+  - step: report_download
+    id: download_investigation_totals
+    report_group: bot_investigation
+    rsids:
+      source: file
+      file: data\rsid_lists\botInvestigationMinThresholdVisits.txt
+      batch_size: 12
+    interval: full
+    file_name_extra: "FullRun-FY26Q2V2-Totals"
+
+  - step: validate_output
+    id: validate_daily
+    depends_on: download_investigation_daily
+    config_ref: download_investigation_daily
+    retry: true
+
+  - step: validate_output
+    id: validate_totals
+    depends_on: download_investigation_totals
+    config_ref: download_investigation_totals
+    retry: true
+
+
+  - step: transform_concat
+    id: transform_daily
+    depends_on: validate_daily
+    transform:
+      type: bot_investigation
+      source_pattern: "*Daily*.json"
+      split_by_rsid: true
+    concat:
+      file_name_extra: "Daily"
+      custom_headers:
+        1: "feature"
+
+  - step: transform_concat
+    id: transform_day_totals
+    depends_on: validate_totals
+    transform:
+      type: bot_investigation
+      source_pattern: "*ByDay*Totals*.json"
+    concat:
+      file_name_extra: "AllInvestigationsMetricsPerDay"
+      custom_headers:
+        1: "feature"
+
+  - step: transform_concat
+    id: transform_feature_totals
+    depends_on: validate_totals
+    transform:
+      type: bot_investigation
+      source_pattern: "^(?!.*ByDay).*Totals.*\\.json$"
+    concat:
+      file_name_extra: "AllInvestigationsMetricsPerFeature"
+      custom_headers:
+        1: "feature"
+

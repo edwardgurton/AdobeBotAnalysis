@@ -10,6 +10,7 @@ rsid_update:
   investigation_threshold: 1000   # minimum visits to include in investigation list
   validation_threshold: 1000      # minimum visits to include in validation list
   include_virtual: false
+  batch_size: 12                  # concurrent visit-count requests in flight (optional, default 12)
 
 output:
   base_folder: data/rsid_lists/

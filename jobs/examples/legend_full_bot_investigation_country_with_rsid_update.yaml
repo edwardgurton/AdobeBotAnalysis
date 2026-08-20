@@ -1,6 +1,6 @@
 job_type: composite
 client: Legend
-description: "Full Legend bot investigation pipeline (RSID×country) — matrix + download + validate + transform"
+description: "Full Legend bot investigation pipeline (RSID×country) — refresh RSIDs, matrix + download + validate + transform"
 
 date_range:
   from: "2026-03-01"
@@ -11,20 +11,36 @@ output:
   job_name: "BotInvCountry26Q2V1"
 
 steps:
+  # Refresh the RSID lists from live report-suite topline metrics before the
+  # matrix step runs, so generate_country_matrix always sees current visit
+  # counts rather than a stale file. Writes to
+  # data/rsid_lists/botInvestigationMinThresholdVisits.txt (and the validation
+  # list), matching the thresholds used in jobs/examples/legend_rsid_update.yaml.
+  - step: rsid_update
+    id: update_rsids
+    rsid_update:
+      investigation_threshold: 1000
+      validation_threshold: 1000
+      include_virtual: false
+    output:
+      base_folder: data/rsid_lists/
+
   # Visits-by-country for every RSID in scope (SegmentsBuilderCountry50), kept
   # where visits > visit_threshold. Reuses a country segment from
   # data/country_segment_lookup.json when one already exists for that country,
   # otherwise creates it via the API and appends it to the lookup so later
   # jobs (any RSID) reuse it too instead of creating a duplicate.
+  # rsids.file is the same path update_rsids just (re)wrote above.
   - step: generate_country_matrix
     id: matrix
+    depends_on: update_rsids
     rsids:
       source: file
       file: data\rsid_lists\botInvestigationMinThresholdVisits.txt
       batch_size: 12
     visit_threshold: 100000
-    share_with_users:
-      - "200419062"
+    # share_with_users:
+    #   - "200419062"
 
   # One full bot_investigation download per (rsid, country) pair — e.g.
   # CasinoOrg-UnitedKingdom, CasinoOrg-UnitedStates — not a cross product of

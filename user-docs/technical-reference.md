@@ -394,12 +394,18 @@ A step's `concat:` block can also set `file_name_extra` — a free-text label sp
 | `Dimension1Item` | Value for that dimension |
 | `Dimension2` | Optional second dimension |
 | `Dimension2Item` | Required if `Dimension2` is set |
+| `Dimension3` | Optional third dimension; requires `Dimension2` to be set |
+| `Dimension3Item` | Required if `Dimension3` is set |
+| `Dimension4` | Optional fourth dimension; requires `Dimension3` to be set |
+| `Dimension4Item` | Required if `Dimension4` is set |
+
+Dimensions 2-4 are filled in tier order — `Dimension3` cannot be set unless `Dimension2` is, and `Dimension4` cannot be set unless `Dimension3` is (each gap raises a validation error). `Dimension3`/`Dimension4` columns are optional in the CSV header itself: older 2-dimension input files without those columns still parse fine, since missing columns are treated as unset.
 
 All rows are validated before any API calls are made. Validation errors accumulate and are raised together.
 
 ### Permitted dimensions
 
-`Dimension1` and `Dimension2` must be one of the friendly names defined in `data/segment_creation_dimensions.yaml` — any other value raises `ValueError` before segment creation (this check is skipped on `- Special` rows, which never resolve a dimension):
+`Dimension1` through `Dimension4` must each be one of the friendly names defined in `data/segment_creation_dimensions.yaml` — any other value raises `ValueError` before segment creation (this check is skipped on `- Special` rows, which never resolve a dimension):
 
 | Friendly name(s) | Adobe variable | Requires lookup? |
 |---|---|---|
@@ -430,8 +436,8 @@ adobe-downloader add-dimension --name Country --name Countries \
 
 For each non-special row:
 1. `RSIDCleanName` (with dots removed) is looked up in the RSID lookup file to get the actual RSID.
-2. `resolve_dimension_value` is called for each dimension. For numeric dimensions (BrowserType, MonitorResolution, MarketingChannel, Region, and their aliases), it reads `data/lookups/{dim}/lookup.txt` (a `value|numericId` file) and returns the numeric ID. For string dimensions it returns the value unchanged.
-3. Either `build_single_condition_segment` or `build_dual_condition_segment` (if `Dimension2` is present) is called to construct the Adobe segment definition dict. Single-condition segments use a `streq` or `eq` predicate in a `visits` container. Dual-condition uses an `and` predicate inside a `hits` container inside a `visits` container.
+2. `resolve_dimension_value` is called for each of the 1-4 dimensions set on the row. For numeric dimensions (BrowserType, MonitorResolution, MarketingChannel, Region, and their aliases), it reads `data/lookups/{dim}/lookup.txt` (a `value|numericId` file) and returns the numeric ID. For string dimensions it returns the value unchanged.
+3. `build_condition_segment` is called with the list of resolved `(dimension, value, is_numeric)` conditions to construct the Adobe segment definition dict. A single condition uses a `streq` or `eq` predicate directly in a `visits` container; 2-4 conditions are AND'ed together inside a `hits` container inside a `visits` container. (`build_single_condition_segment`/`build_dual_condition_segment` remain as thin 1- and 2-condition wrappers around `build_condition_segment` for existing callers.)
 4. The segment is created via `client.create_segment(seg_def)`.
 5. Each user ID in `share_with_users` receives a `client.share_segment` call.
 
@@ -443,7 +449,7 @@ Three output files are produced:
 
 **`segment_list_file`** (`{list_name}.json`): A JSON array of `{"id": "...", "name": "..."}` objects for every successfully created segment (non-special rows only, both Compare and Validate). A `report_download` step's `segments: source: segment_list_file` iterates this directly when it doesn't need per-rule CSV metadata (e.g. no `split_by_bot_rule`).
 
-**`compare_list_file`** (`{list_name}_compare.csv`): A CSV with columns `DimSegmentId, botRuleName, reportToIgnore` for every `Compare` / `Compare - Special` row. `botRuleName` is derived by `transform_to_bot_rule_name`, which strips punctuation and spaces from the segment name and abbreviates long dimension names. `reportToIgnore` is the raw `Dimension1` value — used only by `bot_rule_compare`, to skip the report the rule was built from.
+**`compare_list_file`** (`{list_name}_compare.csv`): A CSV with columns `DimSegmentId, botRuleName, reportToIgnore` for every `Compare` / `Compare - Special` row. `botRuleName` is derived by `transform_to_bot_rule_name`, which strips punctuation and spaces from the segment name and abbreviates long dimension names. `reportToIgnore` is the raw dimension values for every `Dimension1`-`Dimension4` set on the row, `|`-joined in tier order (e.g. `OperatingSystem|BrowserType`) — used only by `bot_rule_compare`, to skip the report(s) the rule was built from.
 
 **`validate_list_file`** (`{list_name}_validate.csv`): Same structure, but for `Validate` / `Validate - Special` rows, with just `DimSegmentId, botRuleName` — no `reportToIgnore` column, since bot_validation never reads it. This is the file a bot_validation `report_download` step points its `bot_rules:` field at — that single field drives the per-rule download filter, the filename anchor, and (if `split_by_bot_rule` is set) the split labeling, so no separate `segments:` block is needed. The bot rule name transformation uses `transform_to_validate_bot_rule_name`, which additionally converts non-alphanumeric characters (other than `_`) to hyphens.
 
@@ -511,7 +517,7 @@ The cleaned dimension name used in the directory path is the dimension string wi
 3. `clean_suite_name` transforms each display name: remove all spaces, remove all dots, remove a trailing `-Production` suffix (case-insensitive). This mirrors the JS convention.
 4. An optional exclusion list is loaded from a plain-text file (one clean name per line). Matched suites are excluded from the threshold comparison but still appear in the suite pairs file.
 5. If `suite_pairs_dir` is set, a file `legendReportSuites{YYYYMMDD}.txt` is written with the format `{rsid}:{cleanName}` — one per line. This file is the RSID lookup file consumed by `bot_rule_compare` and `final_bot_metrics`.
-6. For each RSID, `toplineMetricsForRsidValidation` is fetched from the report registry (a summary report returning totals). `summaryData.totals[1]` is taken as the visit count (index 0 is unique visitors, index 1 is visits).
+6. For each RSID, `toplineMetricsForRsidValidation` is fetched from the report registry (a summary report returning totals). `summaryData.totals[1]` is taken as the visit count (index 0 is unique visitors, index 1 is visits). Fetches run concurrently, bounded by `rsid_update.batch_size` (default 12) in-flight requests at a time — the same concurrency convention used by `report_download`.
 7. Suites are filtered by two independent thresholds: `investigation_threshold` and `validation_threshold`. Suites meeting the threshold have their `cleanName` written to the respective output file.
 
 **Output files** (written to `{output_base}/`):
@@ -582,11 +588,11 @@ The composite job YAML can set `test_mode: true` and a `test_limits` block. When
 
 ### Input: bot rule CSV
 
-`parse_bot_rule_csv` reads a CSV with required columns `DimSegmentId`, `botRuleName`, and an optional `reportToIgnore` column. `reportToIgnore` may be a short name (`"Domain"`) or a full report name (`"botInvestigationMetricsByDomain"`). The `DIMENSION_MAPPING` dict maps short names to full names; if neither matches, the name is prefixed with `"botInvestigationMetricsBy"`. When the column is missing (or a row's value is blank), no report is skipped for that rule — this is the normal case for bot_validation lists, which reuse this same parser via `bot_rules:` but have no report to skip.
+`parse_bot_rule_csv` reads a CSV with required columns `DimSegmentId`, `botRuleName`, and an optional `reportToIgnore` column. `reportToIgnore` may hold one or more short names (`"Domain"`) or full report names (`"botInvestigationMetricsByDomain"`), `|`-delimited for rules built from multiple dimensions (`"Domain|OperatingSystem"`). The `DIMENSION_MAPPING` dict maps short names to full names; if neither matches, the name is prefixed with `"botInvestigationMetricsBy"`. When the column is missing (or a row's value is blank), no report is skipped for that rule — this is the normal case for bot_validation lists, which reuse this same parser via `bot_rules:` but have no report to skip.
 
 ### AllTraffic baseline requests
 
-For each RSID-rule pair, every report in the `bot_rule_compare` report group is visited **except** the one named in `rule.report_to_skip`. For the AllTraffic variant, `segments=[]` is passed to `build_request`, so no segment filter is applied.
+For each RSID-rule pair, every report in the `bot_rule_compare` report group is visited **except** those named in `rule.reports_to_skip`. For the AllTraffic variant, `segments=[]` is passed to `build_request`, so no segment filter is applied.
 
 The filename includes the investigation name (which encodes the bot rule name and comparison version) so that each bot rule gets a distinct AllTraffic output file even though the API request bodies for the same RSID+report+date combination are identical across rules. The bot rule name is passed through `sanitize_bot_rule_name` first, which replaces `_` with `-` — see the `bot_rule_compare` filename-parsing note under Transforms above.
 

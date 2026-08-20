@@ -75,7 +75,7 @@ class TestParseBotRuleCsv:
         assert len(rules) == 1
         assert rules[0].segment_id == "seg123"
         assert rules[0].segment_name == "Philippines-Rule"
-        assert rules[0].report_to_skip == "botInvestigationMetricsByDomain"
+        assert rules[0].reports_to_skip == ["botInvestigationMetricsByDomain"]
 
     def test_short_name_mapping(self, tmp_path: Path) -> None:
         short_names = [
@@ -91,7 +91,7 @@ class TestParseBotRuleCsv:
             csv = tmp_path / f"rules_{short.replace(' ', '_')}.csv"
             csv.write_text(f"DimSegmentId,botRuleName,reportToIgnore\nseg1,Rule1,{short}\n")
             rules = parse_bot_rule_csv(csv)
-            assert rules[0].report_to_skip == expected_full, f"failed for {short}"
+            assert rules[0].reports_to_skip == [expected_full], f"failed for {short}"
 
     def test_full_report_name_passthrough(self, tmp_path: Path) -> None:
         csv = tmp_path / "rules.csv"
@@ -100,7 +100,7 @@ class TestParseBotRuleCsv:
             "seg1,Rule1,botInvestigationMetricsByHourOfDay\n"
         )
         rules = parse_bot_rule_csv(csv)
-        assert rules[0].report_to_skip == "botInvestigationMetricsByHourOfDay"
+        assert rules[0].reports_to_skip == ["botInvestigationMetricsByHourOfDay"]
 
     def test_multiple_rows(self, tmp_path: Path) -> None:
         csv = tmp_path / "rules.csv"
@@ -113,6 +113,17 @@ class TestParseBotRuleCsv:
         rules = parse_bot_rule_csv(csv)
         assert len(rules) == 3
         assert rules[1].segment_id == "seg2"
+
+    def test_pipe_delimited_multiple_values(self, tmp_path: Path) -> None:
+        csv = tmp_path / "rules.csv"
+        csv.write_text(
+            "DimSegmentId,botRuleName,reportToIgnore\nseg1,Rule1,Domain|OperatingSystem\n"
+        )
+        rules = parse_bot_rule_csv(csv)
+        assert rules[0].reports_to_skip == [
+            "botInvestigationMetricsByDomain",
+            "botInvestigationMetricsByOperatingSystem",
+        ]
 
     def test_bom_handled(self, tmp_path: Path) -> None:
         csv = tmp_path / "rules.csv"
@@ -136,7 +147,7 @@ class TestParseBotRuleCsv:
         csv = tmp_path / "rules.csv"
         csv.write_text("DimSegmentId,botRuleName,reportToIgnore\nseg1,Rule1,SomeDimension\n")
         rules = parse_bot_rule_csv(csv)
-        assert rules[0].report_to_skip == "botInvestigationMetricsBySomeDimension"
+        assert rules[0].reports_to_skip == ["botInvestigationMetricsBySomeDimension"]
 
     def test_missing_report_to_ignore_column_is_optional(self, tmp_path: Path) -> None:
         """bot_validation lists have no reportToIgnore column — that's fine, no report
@@ -147,13 +158,13 @@ class TestParseBotRuleCsv:
         assert len(rules) == 1
         assert rules[0].segment_id == "seg1"
         assert rules[0].segment_name == "Rule1"
-        assert rules[0].report_to_skip is None
+        assert rules[0].reports_to_skip == []
 
     def test_blank_report_to_ignore_value_is_none(self, tmp_path: Path) -> None:
         csv = tmp_path / "rules.csv"
         csv.write_text("DimSegmentId,botRuleName,reportToIgnore\nseg1,Rule1,\n")
         rules = parse_bot_rule_csv(csv)
-        assert rules[0].report_to_skip is None
+        assert rules[0].reports_to_skip == []
 
 
 # ---------------------------------------------------------------------------
@@ -202,7 +213,7 @@ class TestRunBotRuleCompare:
             BotRule(
                 segment_id="seg123",
                 segment_name="Philippines-Rule",
-                report_to_skip="botInvestigationMetricsByDomain",
+                reports_to_skip=["botInvestigationMetricsByDomain"],
             )
         ]
 
@@ -239,6 +250,60 @@ class TestRunBotRuleCompare:
         assert result.copied == 1
         assert result.failed == 0
 
+    async def test_skips_multiple_reports_to_skip(self, tmp_path: Path) -> None:
+        """A rule with multiple reports_to_skip must skip every one of them."""
+        rsid_file = _make_rsid_file(tmp_path, [("triacoverscombr", "Coverscom")])
+        sm = _make_mock_sm(tmp_path)
+        client = AsyncMock()
+        client.get_report = AsyncMock(return_value=_FAKE_REPORT_RESPONSE)
+
+        bot_rules = [
+            BotRule(
+                segment_id="seg123",
+                segment_name="Rule1",
+                reports_to_skip=[
+                    "botInvestigationMetricsByDomain",
+                    "botInvestigationMetricsByOperatingSystem",
+                ],
+            )
+        ]
+
+        rd1 = MagicMock()
+        rd1.name = "botInvestigationMetricsByDomain"
+        rd1.segments = []
+        rd2 = MagicMock()
+        rd2.name = "botInvestigationMetricsByOperatingSystem"
+        rd2.segments = []
+        rd3 = MagicMock()
+        rd3.name = "botInvestigationMetricsByRegion"
+        rd3.segments = []
+
+        with (
+            patch("adobe_downloader.config.report_definitions.load_report_group") as mock_load,
+            _patch_build_request(),
+        ):
+            mock_load.return_value = [rd1, rd2, rd3]
+
+            result = await run_bot_rule_compare(
+                client=client,
+                client_name="Legend",
+                rsid_clean_names=["Coverscom"],
+                rsid_lookup_file=rsid_file,
+                bot_rules=bot_rules,
+                date_range=_date("2025-01-01", "2025-03-31"),
+                comparison_round=1.0,
+                output_base=str(tmp_path / "output"),
+                sm=sm,
+                no_resume=True,
+            )
+
+        # Domain and OperatingSystem were both skipped; only Region remains:
+        # Segment (download) + AllTraffic (copy) = 1 API call, 1 copy
+        assert client.get_report.call_count == 1
+        assert result.downloaded == 1
+        assert result.copied == 1
+        assert result.failed == 0
+
     async def test_all_traffic_canonical_dedup(self, tmp_path: Path) -> None:
         """AllTraffic files for the same RSID+report should be copied, not re-downloaded."""
         rsid_file = _make_rsid_file(tmp_path, [("triacoverscombr", "Coverscom")])
@@ -247,8 +312,8 @@ class TestRunBotRuleCompare:
         client.get_report = AsyncMock(return_value=_FAKE_REPORT_RESPONSE)
 
         bot_rules = [
-            BotRule("seg1", "Rule1", "botInvestigationMetricsByDomain"),
-            BotRule("seg2", "Rule2", "botInvestigationMetricsByDomain"),
+            BotRule("seg1", "Rule1", ["botInvestigationMetricsByDomain"]),
+            BotRule("seg2", "Rule2", ["botInvestigationMetricsByDomain"]),
         ]
 
         rd1 = MagicMock()
@@ -295,7 +360,7 @@ class TestRunBotRuleCompare:
         rd1.name = "botInvestigationMetricsByRegion"
         rd1.segments = []
 
-        bot_rules = [BotRule("seg1", "Rule1", "botInvestigationMetricsByDomain")]
+        bot_rules = [BotRule("seg1", "Rule1", ["botInvestigationMetricsByDomain"])]
 
         with (
             patch("adobe_downloader.config.report_definitions.load_report_group") as mock_load,
@@ -331,7 +396,7 @@ class TestRunBotRuleCompare:
         rd1.name = "botInvestigationMetricsByRegion"
         rd1.segments = []
 
-        bot_rules = [BotRule("seg1", "Rule1", "botInvestigationMetricsByDomain")]
+        bot_rules = [BotRule("seg1", "Rule1", ["botInvestigationMetricsByDomain"])]
 
         with (
             patch("adobe_downloader.config.report_definitions.load_report_group") as mock_load,
@@ -385,7 +450,7 @@ class TestRunBotRuleCompare:
         rd1.name = "botInvestigationMetricsByRegion"
         rd1.segments = []
 
-        bot_rules = [BotRule("seg1", "Rule1", "botInvestigationMetricsByDomain")]
+        bot_rules = [BotRule("seg1", "Rule1", ["botInvestigationMetricsByDomain"])]
 
         with (
             patch("adobe_downloader.config.report_definitions.load_report_group") as mock_load,
@@ -425,7 +490,7 @@ class TestRunBotRuleCompare:
         rd1.name = "botInvestigationMetricsByRegion"
         rd1.segments = []
 
-        bot_rules = [BotRule("seg1", "MyRule", "botInvestigationMetricsByDomain")]
+        bot_rules = [BotRule("seg1", "MyRule", ["botInvestigationMetricsByDomain"])]
 
         with (
             patch("adobe_downloader.config.report_definitions.load_report_group") as mock_load,
@@ -469,7 +534,7 @@ class TestRunBotRuleCompare:
         rd1.name = "botInvestigationMetricsByRegion"
         rd1.segments = []
 
-        bot_rules = [BotRule("seg1", "MyRule", "botInvestigationMetricsByDomain")]
+        bot_rules = [BotRule("seg1", "MyRule", ["botInvestigationMetricsByDomain"])]
 
         with (
             patch("adobe_downloader.config.report_definitions.load_report_group") as mock_load,
@@ -514,7 +579,7 @@ class TestRunBotRuleCompare:
         rd1.name = "botInvestigationMetricsByRegion"
         rd1.segments = []
 
-        bot_rules = [BotRule("seg1", "BOTCOMPARE_NL_01Rule", "botInvestigationMetricsByDomain")]
+        bot_rules = [BotRule("seg1", "BOTCOMPARE_NL_01Rule", ["botInvestigationMetricsByDomain"])]
 
         with (
             patch("adobe_downloader.config.report_definitions.load_report_group") as mock_load,
@@ -563,7 +628,7 @@ class TestRunBotRuleCompare:
         rd1.name = "botInvestigationMetricsByRegion"
         rd1.segments = []
 
-        bot_rules = [BotRule("seg1", "Rule1", "botInvestigationMetricsByDomain")]
+        bot_rules = [BotRule("seg1", "Rule1", ["botInvestigationMetricsByDomain"])]
 
         def _build_req(
             report_def: Any, date_range: Any, rsid: str, segments: list[str]

@@ -111,6 +111,9 @@ reports:
       - raw_clickouts
       - engaged_visits
       - engagement_rate
+      - First_Time_Visits
+      - Total_Seconds_Spent
+      - Page_Views
       - fileName
       - requestName
       - botRuleName
@@ -129,6 +132,9 @@ reports:
       - raw_clickouts
       - engaged_visits
       - engagement_rate
+      - First_Time_Visits
+      - Total_Seconds_Spent
+      - Page_Views
       - fileName
       - requestName
       - botRuleName

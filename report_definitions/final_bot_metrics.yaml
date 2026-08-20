@@ -31,6 +31,8 @@ reports:
       - unique_visitors
       - visits
       - fileName
+      - botRuleName
+      - rsidName
       - fromDate
       - toDate
 
@@ -44,5 +46,7 @@ reports:
       - unique_visitors
       - visits
       - fileName
+      - botRuleName
+      - rsidName
       - fromDate
       - toDate

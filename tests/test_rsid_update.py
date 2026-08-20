@@ -2,16 +2,14 @@
 
 from __future__ import annotations
 
-import json
+import asyncio
 from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
 from adobe_downloader.config.schema import DateRange, RsidUpdateConfig
 from adobe_downloader.flows.rsid_update import (
-    RsidUpdateResult,
-    RsidWithVisits,
     _archive_file,
     _write_clean_name_list,
     _write_suite_pairs_file,
@@ -19,7 +17,6 @@ from adobe_downloader.flows.rsid_update import (
     load_exclusion_list,
     run_rsid_update,
 )
-
 
 # ---------------------------------------------------------------------------
 # clean_suite_name
@@ -145,7 +142,9 @@ def _make_totals_response(visits: int) -> dict:
 @pytest.mark.asyncio
 async def test_run_rsid_update_filters_virtual(tmp_path: Path) -> None:
     """Virtual suites are excluded when include_virtual=False."""
-    cfg = RsidUpdateConfig(investigation_threshold=100, validation_threshold=100, include_virtual=False)
+    cfg = RsidUpdateConfig(
+        investigation_threshold=100, validation_threshold=100, include_virtual=False
+    )
 
     with patch(
         "adobe_downloader.flows.rsid_update._fetch_visits",
@@ -168,7 +167,9 @@ async def test_run_rsid_update_filters_virtual(tmp_path: Path) -> None:
 
 @pytest.mark.asyncio
 async def test_run_rsid_update_includes_virtual_when_flag_set(tmp_path: Path) -> None:
-    cfg = RsidUpdateConfig(investigation_threshold=100, validation_threshold=100, include_virtual=True)
+    cfg = RsidUpdateConfig(
+        investigation_threshold=100, validation_threshold=100, include_virtual=True
+    )
 
     with patch(
         "adobe_downloader.flows.rsid_update._fetch_visits",
@@ -347,6 +348,41 @@ async def test_run_rsid_update_handles_fetch_failure(tmp_path: Path) -> None:
     assert result.investigation_count == 2  # tri456 + tri000 succeed; tri123 failed
 
 
+def test_rsid_update_config_default_batch_size() -> None:
+    assert RsidUpdateConfig().batch_size == 12
+
+
+@pytest.mark.asyncio
+async def test_run_rsid_update_respects_batch_size_concurrency(tmp_path: Path) -> None:
+    """Visit-count fetches run concurrently, bounded by batch_size in flight."""
+    cfg = RsidUpdateConfig(investigation_threshold=100, validation_threshold=100, batch_size=2)
+
+    active = 0
+    max_active = 0
+
+    async def _tracking_visits(client: object, rsid: str, date_range: object) -> int | None:
+        nonlocal active, max_active
+        active += 1
+        max_active = max(max_active, active)
+        await asyncio.sleep(0.01)
+        active -= 1
+        return 500
+
+    with patch("adobe_downloader.flows.rsid_update._fetch_visits", side_effect=_tracking_visits):
+        mock_client = AsyncMock()
+        mock_client.get_report_suites = AsyncMock(return_value=_FAKE_SUITES)
+
+        await run_rsid_update(
+            client=mock_client,
+            rsid_update_cfg=cfg,
+            date_range=_DATE_RANGE,
+            output_base=tmp_path,
+        )
+
+    assert max_active > 1  # no longer strictly sequential
+    assert max_active <= cfg.batch_size
+
+
 @pytest.mark.asyncio
 async def test_run_rsid_update_no_suite_pairs_file_when_dir_none(tmp_path: Path) -> None:
     """No suite pairs file written when suite_pairs_dir is None."""
@@ -376,8 +412,9 @@ async def test_run_rsid_update_no_suite_pairs_file_when_dir_none(tmp_path: Path)
 
 
 def test_rsid_update_job_config_with_date_range() -> None:
-    from adobe_downloader.config.schema import RsidUpdateJobConfig
     import yaml
+
+    from adobe_downloader.config.schema import RsidUpdateJobConfig
 
     raw = yaml.safe_load(
         """
@@ -401,8 +438,9 @@ def test_rsid_update_job_config_with_date_range() -> None:
 
 
 def test_rsid_update_job_config_without_date_range() -> None:
-    from adobe_downloader.config.schema import RsidUpdateJobConfig
     import yaml
+
+    from adobe_downloader.config.schema import RsidUpdateJobConfig
 
     raw = yaml.safe_load(
         """

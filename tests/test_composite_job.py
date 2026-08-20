@@ -15,6 +15,7 @@ from adobe_downloader.config.schema import (
 )
 from adobe_downloader.flows.composite_job import (
     _coerce_date_range,
+    _parse_bot_rules_from_config,
     _resolve_output_base,
     _resolve_rsids,
     _resolve_segments,
@@ -154,6 +155,31 @@ class TestStepIdScoping:
 
 
 # ---------------------------------------------------------------------------
+# CompositeJobConfig: duplicate step id validation
+# ---------------------------------------------------------------------------
+
+
+class TestUniqueStepIds:
+    def test_duplicate_step_id_rejected(self) -> None:
+        with pytest.raises(ValueError, match="Duplicate step id 'transform'"):
+            _composite_job(
+                steps=[
+                    {"step": "transform_concat", "id": "transform", "transform": {}},
+                    {"step": "transform_concat", "id": "transform", "transform": {}},
+                ]
+            )
+
+    def test_distinct_step_ids_accepted(self) -> None:
+        job = _composite_job(
+            steps=[
+                {"step": "transform_concat", "id": "transform_validation", "transform": {}},
+                {"step": "transform_concat", "id": "transform_compare", "transform": {}},
+            ]
+        )
+        assert [s.id for s in job.steps] == ["transform_validation", "transform_compare"]
+
+
+# ---------------------------------------------------------------------------
 # _resolve_segments helper
 # ---------------------------------------------------------------------------
 
@@ -265,11 +291,11 @@ class TestSegmentIterationsFromBotRules:
         from adobe_downloader.flows.bot_rule_compare import BotRule
 
         bot_rules = [
-            BotRule(segment_id="seg1", segment_name="Rule One", report_to_skip=None),
+            BotRule(segment_id="seg1", segment_name="Rule One", reports_to_skip=[]),
             BotRule(
                 segment_id="seg2",
                 segment_name="Rule Two",
-                report_to_skip="botInvestigationMetricsByDomain",
+                reports_to_skip=["botInvestigationMetricsByDomain"],
             ),
         ]
         iterations = _segment_iterations_from_bot_rules(bot_rules)
@@ -284,7 +310,7 @@ class TestSegmentIterationsFromBotRules:
     def test_blank_name_raises(self) -> None:
         from adobe_downloader.flows.bot_rule_compare import BotRule
 
-        bot_rules = [BotRule(segment_id="seg1", segment_name="   ", report_to_skip=None)]
+        bot_rules = [BotRule(segment_id="seg1", segment_name="   ", reports_to_skip=[])]
         with pytest.raises(ValueError, match="blank/missing name"):
             _segment_iterations_from_bot_rules(bot_rules)
 
@@ -292,11 +318,82 @@ class TestSegmentIterationsFromBotRules:
         from adobe_downloader.flows.bot_rule_compare import BotRule
 
         bot_rules = [
-            BotRule(segment_id="seg1", segment_name="Rule/One", report_to_skip=None),
-            BotRule(segment_id="seg2", segment_name="Rule-One", report_to_skip=None),
+            BotRule(segment_id="seg1", segment_name="Rule/One", reports_to_skip=[]),
+            BotRule(segment_id="seg2", segment_name="Rule-One", reports_to_skip=[]),
         ]
         with pytest.raises(ValueError, match="both sanitize to filename component"):
             _segment_iterations_from_bot_rules(bot_rules)
+
+
+# ---------------------------------------------------------------------------
+# _parse_bot_rules_from_config — inline source
+# ---------------------------------------------------------------------------
+
+
+class TestParseBotRulesFromConfigInline:
+    def test_scalar_report_to_skip(self) -> None:
+        bot_rules = _parse_bot_rules_from_config(
+            {
+                "source": "inline",
+                "rules": [
+                    {"segment_id": "s1", "segment_name": "RuleA", "report_to_skip": "Domain"}
+                ],
+            },
+            step_outputs={},
+            step_id="step1",
+        )
+        assert bot_rules[0].reports_to_skip == ["botInvestigationMetricsByDomain"]
+
+    def test_pipe_delimited_report_to_skip(self) -> None:
+        bot_rules = _parse_bot_rules_from_config(
+            {
+                "source": "inline",
+                "rules": [
+                    {
+                        "segment_id": "s1",
+                        "segment_name": "RuleA",
+                        "report_to_skip": "Domain|OperatingSystem",
+                    }
+                ],
+            },
+            step_outputs={},
+            step_id="step1",
+        )
+        assert bot_rules[0].reports_to_skip == [
+            "botInvestigationMetricsByDomain",
+            "botInvestigationMetricsByOperatingSystem",
+        ]
+
+    def test_list_report_to_skip(self) -> None:
+        bot_rules = _parse_bot_rules_from_config(
+            {
+                "source": "inline",
+                "rules": [
+                    {
+                        "segment_id": "s1",
+                        "segment_name": "RuleA",
+                        "report_to_skip": ["Domain", "OperatingSystem"],
+                    }
+                ],
+            },
+            step_outputs={},
+            step_id="step1",
+        )
+        assert bot_rules[0].reports_to_skip == [
+            "botInvestigationMetricsByDomain",
+            "botInvestigationMetricsByOperatingSystem",
+        ]
+
+    def test_missing_report_to_skip_is_empty(self) -> None:
+        bot_rules = _parse_bot_rules_from_config(
+            {
+                "source": "inline",
+                "rules": [{"segment_id": "s1", "segment_name": "RuleA"}],
+            },
+            step_outputs={},
+            step_id="step1",
+        )
+        assert bot_rules[0].reports_to_skip == []
 
 
 # ---------------------------------------------------------------------------
@@ -645,6 +742,172 @@ class TestRunCompositeJob:
 
 
 # ---------------------------------------------------------------------------
+# Partial download failures: a download-bearing step should only hard-fail
+# the composite job when no validate_output step is wired (via config_ref) to
+# reconcile its output. This mirrors the legacy JS workflow, where a flaky
+# download never stopped a separate validate script from mopping up stragglers.
+# ---------------------------------------------------------------------------
+
+
+class TestPartialFailureTolerance:
+    async def test_report_download_failure_without_validate_step_raises(
+        self, tmp_path: Path, _fake_report_defs: list[Any]
+    ) -> None:
+        job, config_path, sm, ac = await _make_composite_job_with_download_step(
+            tmp_path, _fake_report_defs
+        )
+
+        from adobe_downloader.flows.report_download import ReportDownloadResult
+
+        fake_result = ReportDownloadResult(
+            job_id=sm.job_id,
+            json_folder=tmp_path / "Legend" / "JSON",
+            downloaded=1,
+            failed=1,
+            errors=["rsid1/report: timeout"],
+        )
+
+        with (
+            patch(
+                "adobe_downloader.flows.composite_job._resolve_report_defs",
+                return_value=_fake_report_defs,
+            ),
+            patch(
+                "adobe_downloader.flows.report_download.run_report_download",
+                new_callable=lambda: lambda *a, **kw: _async_return(fake_result),
+            ),
+            pytest.raises(RuntimeError, match=r"1 download\(s\) failed"),
+        ):
+            await run_composite_job(job, config_path, sm, ac)
+
+        assert sm.is_step_complete("dl_step") is False
+
+    async def test_report_download_failure_tolerated_when_validate_step_follows(
+        self, tmp_path: Path, _fake_report_defs: list[Any]
+    ) -> None:
+        job = CompositeJobConfig.model_validate(
+            {
+                "job_type": "composite",
+                "client": "Legend",
+                "output": {"base_folder": str(tmp_path)},
+                "date_range": {"from": "2025-01-01", "to": "2025-01-02"},
+                "steps": [
+                    {
+                        "step": "report_download",
+                        "id": "dl_step",
+                        "report_group": "bot_investigation",
+                        "rsids": {"source": "single", "single": "rsid1"},
+                        "interval": "day",
+                    },
+                    {
+                        "step": "validate_output",
+                        "id": "validate",
+                        "depends_on": "dl_step",
+                        "config_ref": "dl_step",
+                    },
+                ],
+            }
+        )
+        config_path = tmp_path / "job.yaml"
+        config_path.write_text("job_type: composite\nclient: Legend\n")
+        config_hash = compute_config_hash(config_path)
+        job_id = compute_job_id(config_path, config_hash)
+        db_path = state_db_path(tmp_path, "Legend", job_id)
+        sm = StateManager(db_path, job_id, config_path, config_hash)
+        ac = MagicMock()
+
+        from adobe_downloader.flows.report_download import ReportDownloadResult
+
+        fake_result = ReportDownloadResult(
+            job_id=sm.job_id,
+            json_folder=tmp_path / "Legend" / "JSON",
+            downloaded=1,
+            failed=1,
+            errors=["rsid1/report: timeout"],
+        )
+
+        with (
+            patch(
+                "adobe_downloader.flows.composite_job._resolve_report_defs",
+                return_value=_fake_report_defs,
+            ),
+            patch(
+                "adobe_downloader.flows.report_download.run_report_download",
+                new_callable=lambda: lambda *a, **kw: _async_return(fake_result),
+            ),
+        ):
+            step_outputs = await run_composite_job(job, config_path, sm, ac)
+
+        # The download step completes despite the failure — it's on record, not fatal.
+        assert sm.is_step_complete("dl_step") is True
+        assert step_outputs["dl_step"]["failed"] == 1
+        # The job proceeds all the way to (and past) the validate step.
+        assert "validate" in step_outputs
+        assert sm.is_step_complete("validate") is True
+
+    async def test_bot_rule_compare_failure_tolerated_when_validate_step_follows(
+        self, tmp_path: Path
+    ) -> None:
+        rsid_lookup_file = tmp_path / "rsids.txt"
+        rsid_lookup_file.write_text("rsid1:Legend")
+
+        job = CompositeJobConfig.model_validate(
+            {
+                "job_type": "composite",
+                "client": "Legend",
+                "output": {"base_folder": str(tmp_path), "job_name": "TestJob"},
+                "date_range": {"from": "2025-01-01", "to": "2025-01-02"},
+                "steps": [
+                    {
+                        "step": "bot_rule_compare",
+                        "id": "download_compare",
+                        "rsids": {"source": "single", "single": "rsid1"},
+                        "rsid_lookup_file": str(rsid_lookup_file),
+                        "bot_rules": {
+                            "source": "inline",
+                            "rules": [{"segment_id": "s1", "segment_name": "RuleA"}],
+                        },
+                    },
+                    {
+                        "step": "validate_output",
+                        "id": "validate",
+                        "depends_on": "download_compare",
+                        "config_ref": "download_compare",
+                    },
+                ],
+            }
+        )
+        config_path = tmp_path / "job.yaml"
+        config_path.write_text("job_type: composite\nclient: Legend\n")
+        config_hash = compute_config_hash(config_path)
+        job_id = compute_job_id(config_path, config_hash)
+        db_path = state_db_path(tmp_path, "Legend", job_id)
+        sm = StateManager(db_path, job_id, config_path, config_hash)
+        ac = MagicMock()
+
+        from adobe_downloader.flows.bot_rule_compare import BotRuleCompareResult
+
+        fake_result = BotRuleCompareResult(
+            job_id=sm.job_id,
+            json_folder=tmp_path / "Legend" / "TestJob" / "JSON",
+            downloaded=1,
+            failed=1,
+            errors=["rsid1/RuleA: timeout"],
+        )
+
+        with patch(
+            "adobe_downloader.flows.bot_rule_compare.run_bot_rule_compare",
+            new_callable=lambda: lambda *a, **kw: _async_return(fake_result),
+        ):
+            step_outputs = await run_composite_job(job, config_path, sm, ac)
+
+        assert sm.is_step_complete("download_compare") is True
+        assert step_outputs["download_compare"]["failed"] == 1
+        assert "validate" in step_outputs
+        assert sm.is_step_complete("validate") is True
+
+
+# ---------------------------------------------------------------------------
 # test_mode / full-run state isolation (regression: a --test run must never
 # satisfy a later full run's resume check, or vice versa)
 # ---------------------------------------------------------------------------
@@ -946,6 +1209,88 @@ class TestTransformConcatSplitByBotRule:
         rule_b_content = Path(result["concatenated_files"]["RuleB"]).read_text()
         assert "RuleB" in rule_b_content
         assert "RuleA" not in rule_b_content
+
+    async def test_split_resolves_own_download_step_when_job_has_two(self, tmp_path: Path) -> None:
+        """A job with both a bot_validation-style download and a bot_rule_compare
+        download (e.g. a combined validate+compare job) must resolve each
+        transform_concat step's bot rules from *its own* dependency chain, not
+        whichever bot_rules-bearing download step happens to be declared first.
+        """
+        json_folder = tmp_path / "Legend" / "TestJob" / "JSON"
+        json_folder.mkdir(parents=True)
+        compare_file = (
+            json_folder / "Legend_botInvestigationMetricsByBrowser_Coverscom-RuleCompare-Compare-V1"
+            "-Segment_2025-01-01_2025-01-02.json"
+        )
+        compare_file.write_text("{}")
+
+        step_outputs = {
+            "download_validation": {"json_folder": str(json_folder)},
+            "download_compare": {"json_folder": str(json_folder)},
+        }
+        job = CompositeJobConfig.model_validate(
+            {
+                "job_type": "composite",
+                "client": "Legend",
+                "output": {"base_folder": str(tmp_path), "job_name": "TestJob"},
+                "steps": [
+                    {
+                        "step": "report_download",
+                        "id": "download_validation",
+                        "bot_rules": {
+                            "source": "inline",
+                            "rules": [
+                                {"segment_id": "s1", "segment_name": "RuleValidation"},
+                            ],
+                        },
+                    },
+                    {
+                        "step": "bot_rule_compare",
+                        "id": "download_compare",
+                        "bot_rules": {
+                            "source": "inline",
+                            "rules": [
+                                {"segment_id": "s2", "segment_name": "RuleCompare"},
+                            ],
+                        },
+                    },
+                    {
+                        "step": "transform_concat",
+                        "id": "transform_compare",
+                        "depends_on": "download_compare",
+                        "transform": {
+                            "type": "bot_rule_compare",
+                            "source_pattern": ".*Compare-V1.*\\.json$",
+                            "split_by_bot_rule": True,
+                        },
+                    },
+                ],
+            }
+        )
+        step_obj = job.steps[2]
+
+        def _fake_dispatch(
+            src: Path,
+            transform_type: str | None = None,
+            headers_dir: object = None,
+            *,
+            output_path: Path | None = None,
+        ) -> None:
+            p = output_path or src.with_suffix(".csv")
+            p.parent.mkdir(parents=True, exist_ok=True)
+            p.write_text(f"col1\n{src.stem}\n")
+
+        from adobe_downloader.flows.composite_job import _run_transform_concat_step
+
+        with patch(
+            "adobe_downloader.transforms.specialized.transform_report_dispatch",
+            side_effect=_fake_dispatch,
+        ):
+            result = await _run_transform_concat_step(step_obj, job, step_outputs)
+
+        # Must resolve RuleCompare (its own download step), not RuleValidation
+        # (the first bot_rules-bearing download step declared in the job).
+        assert set(result["concatenated_files"].keys()) == {"RuleCompare"}
 
     async def test_split_requires_bot_rules_source_in_job(self, tmp_path: Path) -> None:
         json_folder = tmp_path / "Legend" / "TestJob" / "JSON"

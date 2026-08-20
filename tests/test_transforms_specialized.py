@@ -4,6 +4,8 @@ from pathlib import Path
 
 import pytest
 
+from adobe_downloader.config.report_definitions import load_report_registry
+from adobe_downloader.transforms.base import load_column_headers
 from adobe_downloader.transforms.specialized import (
     _detect_transform_type,
     transform_bot_investigation,
@@ -16,6 +18,7 @@ from adobe_downloader.transforms.specialized import (
 
 _FIXTURES = Path(__file__).parent / "fixtures" / "transforms"
 _HEADERS_DIR = Path(__file__).parent.parent / "data" / "report_headers"
+_REPORT_DEFS_DIR = Path(__file__).parent.parent / "report_definitions"
 
 
 # ---------------------------------------------------------------------------
@@ -367,3 +370,34 @@ def test_dispatch_writes_file(tmp_path: Path) -> None:
     transform_report_dispatch(json_path, "bot_investigation", _HEADERS_DIR, output_path=out)
     assert out.exists()
     assert out.read_text(encoding="utf-8").startswith("id,browser")
+
+
+# ---------------------------------------------------------------------------
+# report_definitions/*.yaml csv_headers <-> data/report_headers/*.yaml columns
+# ---------------------------------------------------------------------------
+#
+# The two are maintained independently (only data/report_headers/*.yaml is read
+# by the transform), but are meant to describe the same columns. A report whose
+# csv_headers drifts out of sync with its header YAML — e.g. missing a trailing
+# metric column added to every report in the group — passes config validation
+# silently and only fails once real (non-empty) data reaches transform_bot_validation.
+
+
+def test_report_definitions_headers_match_data_report_headers() -> None:
+    registry = load_report_registry(_REPORT_DEFS_DIR)
+    mismatches = []
+    for report_name, report_def in registry.items():
+        header_path = _HEADERS_DIR / f"{report_name}.yaml"
+        if not header_path.exists():
+            continue
+        actual_columns = load_column_headers(report_name, _HEADERS_DIR)
+        if report_def.csv_headers != actual_columns:
+            mismatches.append((report_name, report_def.csv_headers, actual_columns))
+
+    assert not mismatches, (
+        "report_definitions csv_headers out of sync with data/report_headers for: "
+        + ", ".join(
+            f"{name} (report_definitions={rd!r} vs report_headers={rh!r})"
+            for name, rd, rh in mismatches
+        )
+    )

@@ -14,6 +14,7 @@ from adobe_downloader.flows.segment_creation import (
     transform_to_validate_bot_rule_name,
 )
 from adobe_downloader.segments.create_segment import (
+    build_condition_segment,
     build_dual_condition_segment,
     build_single_condition_segment,
     get_dimension_description,
@@ -115,6 +116,59 @@ def test_build_dual_condition_segment() -> None:
     assert len(and_pred["preds"]) == 2
     assert and_pred["preds"][0]["func"] == "streq"
     assert and_pred["preds"][1]["func"] == "eq"
+
+
+def test_build_condition_segment_three_conditions() -> None:
+    seg = build_condition_segment(
+        name="Triple Test",
+        rsid="myrsid",
+        conditions=[
+            ("Domain", "bad.com", False),
+            ("BrowserType", "5", True),
+            ("OperatingSystem", "Linux", False),
+        ],
+    )
+    outer = seg["definition"]["container"]["pred"]
+    assert outer["func"] == "container"
+    assert outer["context"] == "hits"
+    and_pred = outer["pred"]
+    assert and_pred["func"] == "and"
+    assert len(and_pred["preds"]) == 3
+
+
+def test_build_condition_segment_four_conditions() -> None:
+    seg = build_condition_segment(
+        name="Quad Test",
+        rsid="myrsid",
+        conditions=[
+            ("Domain", "bad.com", False),
+            ("BrowserType", "5", True),
+            ("OperatingSystem", "Linux", False),
+            ("MobileManufacturer", "Acme", False),
+        ],
+    )
+    and_pred = seg["definition"]["container"]["pred"]["pred"]
+    assert len(and_pred["preds"]) == 4
+
+
+def test_build_condition_segment_too_many_raises() -> None:
+    with pytest.raises(ValueError, match="At most 4 conditions"):
+        build_condition_segment(
+            name="Too Many",
+            rsid="myrsid",
+            conditions=[
+                ("Domain", "a.com", False),
+                ("BrowserType", "5", True),
+                ("OperatingSystem", "Linux", False),
+                ("MobileManufacturer", "Acme", False),
+                ("ReferringDomain", "x.com", False),
+            ],
+        )
+
+
+def test_build_condition_segment_empty_raises() -> None:
+    with pytest.raises(ValueError, match="At least one condition"):
+        build_condition_segment(name="Empty", rsid="myrsid", conditions=[])
 
 
 def test_load_lookup_file(tmp_path: Path) -> None:
@@ -266,6 +320,10 @@ def _make_csv(tmp_path: Path, rows: list[dict]) -> Path:
         "Dimension1Item",
         "Dimension2",
         "Dimension2Item",
+        "Dimension3",
+        "Dimension3Item",
+        "Dimension4",
+        "Dimension4Item",
     ]
     with f.open("w", newline="") as fh:
         writer = csv.DictWriter(fh, fieldnames=fieldnames)
@@ -352,6 +410,75 @@ def test_validate_row_invalid_compare_validate(tmp_path: Path) -> None:
     rows = _read_csv(path)
     errors = _validate_row(rows[0])
     assert any("CompareValidate" in e for e in errors)
+
+
+def test_validate_row_dimension3_requires_dimension2(tmp_path: Path) -> None:
+    path = _make_csv(
+        tmp_path,
+        [
+            {
+                "CompareValidate": "Compare",
+                "SegmentName": "S",
+                "RSIDCleanName": "R",
+                "Dimension1": "Domain",
+                "Dimension1Item": "x.com",
+                "Dimension2": "",
+                "Dimension2Item": "",
+                "Dimension3": "BrowserType",
+                "Dimension3Item": "5",
+            },
+        ],
+    )
+    rows = _read_csv(path)
+    errors = _validate_row(rows[0])
+    assert any("Dimension3 set but Dimension2 missing" in e for e in errors)
+
+
+def test_validate_row_dimension4_requires_dimension3(tmp_path: Path) -> None:
+    path = _make_csv(
+        tmp_path,
+        [
+            {
+                "CompareValidate": "Compare",
+                "SegmentName": "S",
+                "RSIDCleanName": "R",
+                "Dimension1": "Domain",
+                "Dimension1Item": "x.com",
+                "Dimension2": "OperatingSystem",
+                "Dimension2Item": "Linux",
+                "Dimension3": "",
+                "Dimension3Item": "",
+                "Dimension4": "BrowserType",
+                "Dimension4Item": "5",
+            },
+        ],
+    )
+    rows = _read_csv(path)
+    errors = _validate_row(rows[0])
+    assert any("Dimension4 set but Dimension3 missing" in e for e in errors)
+
+
+def test_validate_row_four_dimensions_valid(tmp_path: Path) -> None:
+    path = _make_csv(
+        tmp_path,
+        [
+            {
+                "CompareValidate": "Compare",
+                "SegmentName": "S",
+                "RSIDCleanName": "R",
+                "Dimension1": "Domain",
+                "Dimension1Item": "x.com",
+                "Dimension2": "OperatingSystem",
+                "Dimension2Item": "Linux",
+                "Dimension3": "BrowserType",
+                "Dimension3Item": "5",
+                "Dimension4": "MobileManufacturer",
+                "Dimension4Item": "Acme",
+            },
+        ],
+    )
+    rows = _read_csv(path)
+    assert _validate_row(rows[0]) == []
 
 
 def test_validate_row_special_skips_dim_check(tmp_path: Path) -> None:
@@ -521,6 +648,115 @@ async def test_compare_csv_still_includes_report_to_ignore(tmp_path: Path) -> No
     rows = list(csv.DictReader(result.compare_list_file.open()))
     assert rows[0].keys() == {"DimSegmentId", "botRuleName", "reportToIgnore"}
     assert rows[0]["reportToIgnore"] == "Domain"
+
+
+@pytest.mark.asyncio
+async def test_compare_csv_report_to_ignore_includes_both_dimensions(tmp_path: Path) -> None:
+    """A dual-condition row (Dimension1 + Dimension2) was built from both
+    dimensions, so reportToIgnore must skip both, `|`-joined."""
+    from adobe_downloader.flows.segment_creation import run_segment_creation
+
+    input_csv = _make_csv(
+        tmp_path,
+        [
+            {
+                "CompareValidate": "Compare",
+                "SegmentName": "0001 BOT: TestClient - OS Linux AND Domain bad.com",
+                "RSIDCleanName": "TestClient",
+                "Dimension1": "OperatingSystem",
+                "Dimension1Item": "Linux",
+                "Dimension2": "Domain",
+                "Dimension2Item": "bad.com",
+            },
+        ],
+    )
+    rsid_file = tmp_path / "suites.txt"
+    rsid_file.write_text("rsid123:TestClient\n")
+
+    class FakeClient:
+        async def create_segment(self, seg_def: dict) -> dict:
+            return {"id": "s3938_fakeid003", "name": seg_def["name"]}
+
+        async def share_segment(self, seg_id: str, user_ids: list) -> None:
+            pass
+
+    result = await run_segment_creation(
+        client=FakeClient(),
+        input_csv=input_csv,
+        share_with_users=[],
+        compare_list_path=tmp_path / "compare",
+        validate_list_path=None,
+        segment_list_path=None,
+        lookup_base=tmp_path,
+        rsid_lookup_file=rsid_file,
+        test_mode_row=None,
+    )
+    assert result.error_count == 0
+    assert result.compare_list_file is not None
+    rows = list(csv.DictReader(result.compare_list_file.open()))
+    assert rows[0]["reportToIgnore"] == "OperatingSystem|Domain"
+
+
+@pytest.mark.asyncio
+async def test_run_segment_creation_four_dimensions(tmp_path: Path) -> None:
+    """A 4-dimension row builds a 4-predicate AND segment and joins all 4
+    dimensions into reportToIgnore."""
+    from adobe_downloader.flows.segment_creation import run_segment_creation
+
+    input_csv = _make_csv(
+        tmp_path,
+        [
+            {
+                "CompareValidate": "Compare",
+                "SegmentName": "0001 BOT: TestClient - Quad",
+                "RSIDCleanName": "TestClient",
+                "Dimension1": "OperatingSystem",
+                "Dimension1Item": "Linux",
+                "Dimension2": "Domain",
+                "Dimension2Item": "bad.com",
+                "Dimension3": "BrowserType",
+                "Dimension3Item": "5",
+                "Dimension4": "MobileManufacturer",
+                "Dimension4Item": "Acme",
+            },
+        ],
+    )
+    rsid_file = tmp_path / "suites.txt"
+    rsid_file.write_text("rsid123:TestClient\n")
+
+    lookup_dir = tmp_path / "variablesbrowsertype"
+    lookup_dir.mkdir()
+    (lookup_dir / "lookup.txt").write_text("5|5\n")
+
+    captured: dict = {}
+
+    class FakeClient:
+        async def create_segment(self, seg_def: dict) -> dict:
+            captured["seg_def"] = seg_def
+            return {"id": "s3938_fakeid004", "name": seg_def["name"]}
+
+        async def share_segment(self, seg_id: str, user_ids: list) -> None:
+            pass
+
+    result = await run_segment_creation(
+        client=FakeClient(),
+        input_csv=input_csv,
+        share_with_users=[],
+        compare_list_path=tmp_path / "compare",
+        validate_list_path=None,
+        segment_list_path=None,
+        lookup_base=tmp_path,
+        rsid_lookup_file=rsid_file,
+        test_mode_row=None,
+    )
+    assert result.error_count == 0
+    assert result.compare_list_file is not None
+    rows = list(csv.DictReader(result.compare_list_file.open()))
+    assert rows[0]["reportToIgnore"] == "OperatingSystem|Domain|BrowserType|MobileManufacturer"
+
+    and_pred = captured["seg_def"]["definition"]["container"]["pred"]["pred"]
+    assert and_pred["func"] == "and"
+    assert len(and_pred["preds"]) == 4
 
 
 @pytest.mark.asyncio
