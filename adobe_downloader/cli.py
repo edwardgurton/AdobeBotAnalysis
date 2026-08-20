@@ -797,7 +797,7 @@ def search_lookup(dimension: str, value: str) -> None:
     "names",
     multiple=True,
     required=True,
-    help="Friendly name accepted in Dimension1/Dimension2. Repeat for aliases, "
+    help="Friendly name accepted in Dimension1-Dimension4. Repeat for aliases, "
     "e.g. -n Country -n Countries.",
 )
 @click.option(
@@ -823,7 +823,7 @@ def add_dimension(
     description: str | None,
     requires_lookup: bool,
 ) -> None:
-    """Add a new permitted Dimension1/Dimension2 value to segment_creation_dimensions.yaml."""
+    """Add a new permitted Dimension1-Dimension4 value to segment_creation_dimensions.yaml."""
     import re as _re
 
     import yaml

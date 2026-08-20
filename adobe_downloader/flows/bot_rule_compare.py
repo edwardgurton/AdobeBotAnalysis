@@ -50,11 +50,11 @@ DIMENSION_MAPPING: dict[str, str] = {
 class BotRule:
     segment_id: str
     segment_name: str
-    # Full report name, e.g. "botInvestigationMetricsByDomain" — None means no report
-    # is skipped (bot_validation's lists have no reportToIgnore column; only
-    # bot_rule_compare uses this, to avoid tautologically comparing the dimension a
-    # rule was built from against itself).
-    report_to_skip: str | None = None
+    # Full report names, e.g. ["botInvestigationMetricsByDomain"] — empty means no
+    # report is skipped (bot_validation's lists have no reportToIgnore column; only
+    # bot_rule_compare uses this, to avoid tautologically comparing the dimension(s)
+    # a rule was built from against itself).
+    reports_to_skip: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -73,13 +73,34 @@ class BotRuleCompareResult:
 # ---------------------------------------------------------------------------
 
 
+def _resolve_report_name(short_name: str, *, row_num: int | None = None) -> str:
+    """Map a short dimension name (e.g. "Domain") to its full report name.
+
+    Falls back to constructing "botInvestigationMetricsBy{short_name}" — with a
+    warning — when short_name isn't in DIMENSION_MAPPING and isn't already a full
+    report name.
+    """
+    full_report = DIMENSION_MAPPING.get(short_name)
+    if full_report is not None:
+        return full_report
+    if short_name.startswith("botInvestigationMetricsBy"):
+        return short_name
+    _log.warning(
+        "%sunknown reportToIgnore %r — constructing name",
+        f"Row {row_num}: " if row_num is not None else "",
+        short_name,
+    )
+    return f"botInvestigationMetricsBy{short_name}"
+
+
 def parse_bot_rule_csv(csv_path: Path) -> list[BotRule]:
     """Parse a bot-rule CSV into a list of BotRule objects.
 
     Required columns: DimSegmentId, botRuleName
-    Optional column: reportToIgnore — a short name (e.g. "Domain") or a full report
-    name, for the report that should be skipped since it's the dimension the rule
-    was built from. Only bot_rule_compare uses this; omit it entirely for
+    Optional column: reportToIgnore — one or more short names (e.g. "Domain") or
+    full report names, `|`-delimited (e.g. "Domain|OperatingSystem"), for the
+    report(s) that should be skipped since they're the dimension(s) the rule was
+    built from. Only bot_rule_compare uses this; omit it entirely for
     bot_validation lists (a missing column, or a blank value, means no report is
     skipped for that rule).
     """
@@ -103,22 +124,14 @@ def parse_bot_rule_csv(csv_path: Path) -> list[BotRule]:
         values = [v.strip() for v in line.split(",")]
         seg_id = values[seg_id_idx]
         rule_name = values[rule_name_idx]
-        short_name = values[ignore_idx] if ignore_idx is not None else ""
+        raw_ignore = values[ignore_idx] if ignore_idx is not None else ""
 
-        full_report: str | None = None
-        if short_name:
-            # Map short dimension name → full report name; fall back to constructed name
-            full_report = DIMENSION_MAPPING.get(short_name)
-            if full_report is None:
-                if short_name.startswith("botInvestigationMetricsBy"):
-                    full_report = short_name
-                else:
-                    _log.warning(
-                        "Row %d: unknown reportToIgnore %r — constructing name", i, short_name
-                    )
-                    full_report = f"botInvestigationMetricsBy{short_name}"
+        short_names = [part.strip() for part in raw_ignore.split("|") if part.strip()]
+        reports_to_skip = [_resolve_report_name(name, row_num=i) for name in short_names]
 
-        rules.append(BotRule(segment_id=seg_id, segment_name=rule_name, report_to_skip=full_report))
+        rules.append(
+            BotRule(segment_id=seg_id, segment_name=rule_name, reports_to_skip=reports_to_skip)
+        )
 
     return rules
 
@@ -199,7 +212,7 @@ async def run_bot_rule_compare(
             )
 
             for report_def in report_defs:
-                if report_def.name == bot_rule.report_to_skip:
+                if report_def.name in bot_rule.reports_to_skip:
                     _log.debug(
                         "SKIP report %s (reportToSkip for rule %s)",
                         report_def.name,

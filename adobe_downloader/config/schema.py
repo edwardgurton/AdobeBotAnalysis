@@ -172,6 +172,7 @@ class RsidUpdateConfig(BaseModel):
     investigation_threshold: int = 1000
     validation_threshold: int = 1000
     include_virtual: bool = False
+    batch_size: int = Field(default=12, ge=1)
 
 
 class LookupGenerationConfig(BaseModel):
@@ -332,6 +333,22 @@ class CompositeJobConfig(BaseModel):
     test_mode: bool = False
     test_limits: TestLimits = Field(default_factory=TestLimits)
     output: OutputConfig | None = None
+
+    @model_validator(mode="after")
+    def _require_unique_step_ids(self) -> "CompositeJobConfig":
+        # Step state (resume markers, step_outputs, depends_on lookups) is keyed
+        # purely by step id — a duplicate id makes the second step silently look
+        # "already complete" the moment the first one finishes, so it never runs.
+        seen: set[str] = set()
+        for step in self.steps:
+            if step.id in seen:
+                raise ValueError(
+                    f"Duplicate step id {step.id!r} — step ids must be unique within "
+                    "a composite job, since state, outputs, and depends_on are all "
+                    "keyed by id"
+                )
+            seen.add(step.id)
+        return self
 
     @model_validator(mode="after")
     def _require_job_name_for_transform_concat(self) -> "CompositeJobConfig":

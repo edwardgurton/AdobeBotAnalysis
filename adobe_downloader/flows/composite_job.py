@@ -75,6 +75,22 @@ def _state_key(step_id: str, job: CompositeJobConfig) -> str:
     return f"{step_id}::test" if job.test_mode else step_id
 
 
+def _has_validate_step_for(job: CompositeJobConfig, step_id: str) -> bool:
+    """True if a validate_output step in the job reconciles step_id's output.
+
+    Mirrors the legacy JS workflow, where download and validate ran as separate
+    scripts — a flaky download never stopped the validate script from later
+    scanning for and re-downloading just the missing files. When a
+    validate_output step is wired via config_ref to this download step, we can
+    let a partial failure through and rely on that step's retry logic instead
+    of aborting the whole composite job.
+    """
+    return any(
+        s.step == "validate_output" and s.extra_fields().get("config_ref") == step_id
+        for s in job.steps
+    )
+
+
 # ---------------------------------------------------------------------------
 # Public entry point
 # ---------------------------------------------------------------------------
@@ -285,10 +301,19 @@ async def _run_report_download_step(
     )
 
     if result.failed:
-        raise RuntimeError(
-            f"Step {step.id!r}: {result.failed} download(s) failed — "
-            + "; ".join(result.errors[:3])
-        )
+        if _has_validate_step_for(job, step.id):
+            _log.warning(
+                "Step %s: %d download(s) failed — tolerating because validate_output "
+                "will reconcile missing files: %s",
+                step.id,
+                result.failed,
+                "; ".join(result.errors[:3]),
+            )
+        else:
+            raise RuntimeError(
+                f"Step {step.id!r}: {result.failed} download(s) failed — "
+                + "; ".join(result.errors[:3])
+            )
 
     return {
         "job_id": result.job_id,
@@ -296,6 +321,7 @@ async def _run_report_download_step(
         "downloaded": result.downloaded,
         "skipped": result.skipped,
         "copied": result.copied,
+        "failed": result.failed,
     }
 
 
@@ -597,20 +623,29 @@ async def _run_transform_concat_step(
 def _find_bot_rules_for_split(
     job: CompositeJobConfig, step_outputs: dict[str, dict[str, Any]], step_id: str
 ) -> list[Any]:  # list[BotRule]
-    """Locate the bot_rules source from a sibling download step, for split_by_bot_rule.
+    """Walk depends_on/config_ref back from step_id to its originating bot_rules step.
 
-    Lets a transform_concat step split its output per bot rule without duplicating
-    the bot_rules file/source already given to the job's bot_rule_compare (or
-    report_download) step.
+    Mirrors _find_report_download_step_for_split — required when a job has more
+    than one bot_rules-bearing download step (e.g. a separate bot_validation
+    download plus a bot_rule_compare download in the same job) so each
+    transform_concat step resolves the bot rules it actually consumed, not
+    whichever such step happens to be declared first.
     """
-    for s in job.steps:
-        if s.step in ("bot_rule_compare", "report_download"):
-            bot_rules_raw = s.extra_fields().get("bot_rules")
+    seen: set[str] = set()
+    current: str | None = step_id
+    while current and current not in seen:
+        seen.add(current)
+        ref = next((s for s in job.steps if s.id == current), None)
+        if ref is None:
+            break
+        if ref.step in ("bot_rule_compare", "report_download"):
+            bot_rules_raw = ref.extra_fields().get("bot_rules")
             if bot_rules_raw:
                 return _parse_bot_rules_from_config(bot_rules_raw, step_outputs, step_id)
+        current = ref.extra_fields().get("config_ref") or ref.depends_on
     raise ValueError(
         f"Step {step_id!r}: split_by_bot_rule requires a bot_rule_compare or "
-        "report_download step in this job with a 'bot_rules' source"
+        "report_download step reachable via depends_on/config_ref with a 'bot_rules' source"
     )
 
 
@@ -619,11 +654,9 @@ def _find_report_download_step_for_split(
 ) -> CompositeStep | None:
     """Walk depends_on/config_ref back from step_id to its originating report_download step.
 
-    Used by split_by_rsid. Unlike _find_bot_rules_for_split (which just grabs the
-    first report_download step in the job), this follows the actual dependency
-    chain — required when a job has more than one report_download step (e.g.
-    separate Daily/Totals downloads) so each transform_concat step resolves the
-    RSIDs it actually consumed, not another step's.
+    Used by split_by_rsid — required when a job has more than one report_download
+    step (e.g. separate Daily/Totals downloads) so each transform_concat step
+    resolves the RSIDs it actually consumed, not another step's.
     """
     seen: set[str] = set()
     current = step_id
@@ -1070,10 +1103,19 @@ async def _run_bot_rule_compare_step(
     )
 
     if result.failed:
-        raise RuntimeError(
-            f"Step {step.id!r}: {result.failed} download(s) failed — "
-            + "; ".join(result.errors[:3])
-        )
+        if _has_validate_step_for(job, step.id):
+            _log.warning(
+                "Step %s: %d download(s) failed — tolerating because validate_output "
+                "will reconcile missing files: %s",
+                step.id,
+                result.failed,
+                "; ".join(result.errors[:3]),
+            )
+        else:
+            raise RuntimeError(
+                f"Step {step.id!r}: {result.failed} download(s) failed — "
+                + "; ".join(result.errors[:3])
+            )
 
     return {
         "job_id": result.job_id,
@@ -1081,6 +1123,7 @@ async def _run_bot_rule_compare_step(
         "downloaded": result.downloaded,
         "skipped": result.skipped,
         "copied": result.copied,
+        "failed": result.failed,
     }
 
 
@@ -1155,16 +1198,26 @@ async def _run_final_bot_metrics_step(
     )
 
     if result.failed:
-        raise RuntimeError(
-            f"Step {step.id!r}: {result.failed} download(s) failed — "
-            + "; ".join(result.errors[:3])
-        )
+        if _has_validate_step_for(job, step.id):
+            _log.warning(
+                "Step %s: %d download(s) failed — tolerating because validate_output "
+                "will reconcile missing files: %s",
+                step.id,
+                result.failed,
+                "; ".join(result.errors[:3]),
+            )
+        else:
+            raise RuntimeError(
+                f"Step {step.id!r}: {result.failed} download(s) failed — "
+                + "; ".join(result.errors[:3])
+            )
 
     return {
         "job_id": result.job_id,
         "json_folder": str(result.json_folder),
         "downloaded": result.downloaded,
         "skipped": result.skipped,
+        "failed": result.failed,
     }
 
 
@@ -1224,14 +1277,24 @@ async def _run_generate_country_matrix_step(
     )
 
     if result.failed:
-        raise RuntimeError(
-            f"Step {step.id!r}: {result.failed} failure(s) — " + "; ".join(result.errors[:3])
-        )
+        if _has_validate_step_for(job, step.id):
+            _log.warning(
+                "Step %s: %d failure(s) — tolerating because validate_output "
+                "will reconcile missing files: %s",
+                step.id,
+                result.failed,
+                "; ".join(result.errors[:3]),
+            )
+        else:
+            raise RuntimeError(
+                f"Step {step.id!r}: {result.failed} failure(s) — " + "; ".join(result.errors[:3])
+            )
 
     return {
         "matrix_file": str(result.matrix_file),
         "pair_count": len(result.pairs),
         "segments_created": result.segments_created,
+        "failed": result.failed,
     }
 
 
@@ -1314,10 +1377,19 @@ async def _run_country_investigation_step(
     )
 
     if result.failed:
-        raise RuntimeError(
-            f"Step {step.id!r}: {result.failed} download(s) failed — "
-            + "; ".join(result.errors[:3])
-        )
+        if _has_validate_step_for(job, step.id):
+            _log.warning(
+                "Step %s: %d download(s) failed — tolerating because validate_output "
+                "will reconcile missing files: %s",
+                step.id,
+                result.failed,
+                "; ".join(result.errors[:3]),
+            )
+        else:
+            raise RuntimeError(
+                f"Step {step.id!r}: {result.failed} download(s) failed — "
+                + "; ".join(result.errors[:3])
+            )
 
     return {
         "job_id": result.job_id,
@@ -1325,6 +1397,7 @@ async def _run_country_investigation_step(
         "downloaded": result.downloaded,
         "skipped": result.skipped,
         "copied": result.copied,
+        "failed": result.failed,
     }
 
 
@@ -1480,8 +1553,8 @@ def _parse_bot_rules_from_config(
 ) -> list[Any]:  # list[BotRule]
     """Parse a bot_rules config dict into a list of BotRule objects."""
     from adobe_downloader.flows.bot_rule_compare import (
-        DIMENSION_MAPPING,
         BotRule,
+        _resolve_report_name,
         parse_bot_rule_csv,
     )
 
@@ -1502,22 +1575,21 @@ def _parse_bot_rules_from_config(
         raw_rules: list[dict[str, Any]] = bot_rules_raw.get("rules", [])
         bot_rules = []
         for r in raw_rules:
-            short = r.get("report_to_skip")
-            full = (
-                DIMENSION_MAPPING.get(
-                    short,
-                    short
-                    if short.startswith("botInvestigation")
-                    else f"botInvestigationMetricsBy{short}",
-                )
-                if short
-                else None
-            )
+            # Accepts a single short name, a "|"-delimited string, or a native
+            # YAML list of short names.
+            raw_skip = r.get("report_to_skip")
+            if not raw_skip:
+                short_names: list[str] = []
+            elif isinstance(raw_skip, list):
+                short_names = [str(name).strip() for name in raw_skip if str(name).strip()]
+            else:
+                short_names = [part.strip() for part in str(raw_skip).split("|") if part.strip()]
+
             bot_rules.append(
                 BotRule(
                     segment_id=r["segment_id"],
                     segment_name=r["segment_name"],
-                    report_to_skip=full,
+                    reports_to_skip=[_resolve_report_name(name) for name in short_names],
                 )
             )
         return bot_rules

@@ -148,15 +148,30 @@ def _build_predicate(
 # ---------------------------------------------------------------------------
 
 
-def build_single_condition_segment(
+MAX_SEGMENT_CONDITIONS = 4
+
+
+def build_condition_segment(
     name: str,
     rsid: str,
-    dimension: str,
-    value: str,
-    is_numeric: bool,
+    conditions: list[tuple[str, str, bool]],
 ) -> dict:
-    """Return a segment definition dict for a single-predicate segment."""
-    pred = _build_predicate(dimension, value, is_numeric)
+    """Return a segment definition dict for 1-4 dimension conditions, AND'ed together."""
+    if not conditions:
+        raise ValueError("At least one condition is required")
+    if len(conditions) > MAX_SEGMENT_CONDITIONS:
+        raise ValueError(f"At most {MAX_SEGMENT_CONDITIONS} conditions are supported")
+
+    preds = [_build_predicate(dim, val, is_num) for dim, val, is_num in conditions]
+    pred = (
+        preds[0]
+        if len(preds) == 1
+        else {
+            "func": "container",
+            "context": "hits",
+            "pred": {"func": "and", "preds": preds},
+        }
+    )
     return {
         "name": name,
         "description": "",
@@ -174,6 +189,17 @@ def build_single_condition_segment(
     }
 
 
+def build_single_condition_segment(
+    name: str,
+    rsid: str,
+    dimension: str,
+    value: str,
+    is_numeric: bool,
+) -> dict:
+    """Return a segment definition dict for a single-predicate segment."""
+    return build_condition_segment(name, rsid, [(dimension, value, is_numeric)])
+
+
 def build_dual_condition_segment(
     name: str,
     rsid: str,
@@ -185,24 +211,8 @@ def build_dual_condition_segment(
     is_numeric2: bool,
 ) -> dict:
     """Return a segment definition dict for an AND dual-predicate segment."""
-    pred1 = _build_predicate(dimension1, value1, is_numeric1)
-    pred2 = _build_predicate(dimension2, value2, is_numeric2)
-    return {
-        "name": name,
-        "description": "",
-        "definition": {
-            "container": {
-                "func": "container",
-                "context": "visits",
-                "pred": {
-                    "func": "container",
-                    "context": "hits",
-                    "pred": {"func": "and", "preds": [pred1, pred2]},
-                },
-            },
-            "func": "segment",
-            "version": [1, 0, 0],
-        },
-        "isPostShardId": True,
-        "rsid": rsid,
-    }
+    return build_condition_segment(
+        name,
+        rsid,
+        [(dimension1, value1, is_numeric1), (dimension2, value2, is_numeric2)],
+    )

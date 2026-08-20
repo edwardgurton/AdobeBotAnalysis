@@ -30,7 +30,24 @@ class _CsvRow:
     dimension1_item: str
     dimension2: str
     dimension2_item: str
+    dimension3: str
+    dimension3_item: str
+    dimension4: str
+    dimension4_item: str
     row_num: int
+
+    def dimensions(self) -> list[tuple[str, str]]:
+        """Return the (dimension, item) pairs set on this row, in tier order."""
+        return [
+            (dim, item)
+            for dim, item in (
+                (self.dimension1, self.dimension1_item),
+                (self.dimension2, self.dimension2_item),
+                (self.dimension3, self.dimension3_item),
+                (self.dimension4, self.dimension4_item),
+            )
+            if dim
+        ]
 
 
 @dataclass
@@ -136,6 +153,10 @@ def _read_csv(file_path: Path) -> list[_CsvRow]:
                     dimension1_item=row.get("Dimension1Item", "").strip(),
                     dimension2=row.get("Dimension2", "").strip(),
                     dimension2_item=row.get("Dimension2Item", "").strip(),
+                    dimension3=row.get("Dimension3", "").strip(),
+                    dimension3_item=row.get("Dimension3Item", "").strip(),
+                    dimension4=row.get("Dimension4", "").strip(),
+                    dimension4_item=row.get("Dimension4Item", "").strip(),
                     row_num=i,
                 )
             )
@@ -159,8 +180,16 @@ def _validate_row(row: _CsvRow) -> list[str]:
             errors.append(f"Row {row.row_num}: Missing Dimension1")
         if not row.dimension1_item:
             errors.append(f"Row {row.row_num}: Missing Dimension1Item")
-        if row.dimension2 and not row.dimension2_item:
-            errors.append(f"Row {row.row_num}: Dimension2 set but Dimension2Item missing")
+        tiers = (
+            (2, row.dimension2, row.dimension2_item, row.dimension1),
+            (3, row.dimension3, row.dimension3_item, row.dimension2),
+            (4, row.dimension4, row.dimension4_item, row.dimension3),
+        )
+        for n, dim, item, prior_dim in tiers:
+            if dim and not item:
+                errors.append(f"Row {row.row_num}: Dimension{n} set but Dimension{n}Item missing")
+            if dim and not prior_dim:
+                errors.append(f"Row {row.row_num}: Dimension{n} set but Dimension{n - 1} missing")
     return errors
 
 
@@ -218,8 +247,7 @@ async def run_segment_creation(
         :class:`SegmentCreationResult` with output paths and counters.
     """
     from adobe_downloader.segments.create_segment import (
-        build_dual_condition_segment,
-        build_single_condition_segment,
+        build_condition_segment,
         resolve_dimension_value,
     )
     from adobe_downloader.utils.rsid_lookup import lookup_rsid
@@ -269,7 +297,7 @@ async def run_segment_creation(
             if is_special:
                 seg_id = "UPDATE-SEGMENT-ID"
                 bot_rule_name = bot_rule_fn(row.segment_name)
-                report_to_ignore = row.dimension1
+                report_to_ignore = "|".join(dim for dim, _ in row.dimensions())
             else:
                 # Resolve RSID
                 clean_rsid_name = row.rsid_clean_name.replace(".", "")
@@ -278,29 +306,11 @@ async def run_segment_creation(
                     raise ValueError(f"RSID not found for clean name: {row.rsid_clean_name!r}")
 
                 # Resolve dimension values
-                val1, is_num1 = resolve_dimension_value(
-                    row.dimension1, row.dimension1_item, lookup_base
-                )
-
-                seg_def: dict
-                if row.dimension2:
-                    val2, is_num2 = resolve_dimension_value(
-                        row.dimension2, row.dimension2_item, lookup_base
-                    )
-                    seg_def = build_dual_condition_segment(
-                        row.segment_name,
-                        rsid,
-                        row.dimension1,
-                        val1,
-                        is_num1,
-                        row.dimension2,
-                        val2,
-                        is_num2,
-                    )
-                else:
-                    seg_def = build_single_condition_segment(
-                        row.segment_name, rsid, row.dimension1, val1, is_num1
-                    )
+                conditions = [
+                    (dim, *resolve_dimension_value(dim, item, lookup_base))
+                    for dim, item in row.dimensions()
+                ]
+                seg_def = build_condition_segment(row.segment_name, rsid, conditions)
 
                 # Create via API
                 api_result = await client.create_segment(seg_def)
@@ -312,7 +322,7 @@ async def run_segment_creation(
                     await client.share_segment(seg_id, share_with_users)
 
                 bot_rule_name = bot_rule_fn(row.segment_name)
-                report_to_ignore = row.dimension1
+                report_to_ignore = "|".join(dim for dim, _ in row.dimensions())
                 all_segments.append({"id": seg_id, "name": row.segment_name})
                 result.created_count += 1
 
@@ -367,9 +377,6 @@ def _log_row_resolved(row: _CsvRow, lookup_base: Path, rsid_lookup_file: Path) -
     rsid = lookup_rsid(clean_rsid_name, rsid_lookup_file)
     logger.info("  RSID: %s", rsid)
 
-    val1, is_num1 = resolve_dimension_value(row.dimension1, row.dimension1_item, lookup_base)
-    logger.info("  Dim1: %s = %r (numeric=%s)", row.dimension1, val1, is_num1)
-
-    if row.dimension2:
-        val2, is_num2 = resolve_dimension_value(row.dimension2, row.dimension2_item, lookup_base)
-        logger.info("  Dim2: %s = %r (numeric=%s)", row.dimension2, val2, is_num2)
+    for i, (dim, item) in enumerate(row.dimensions(), start=1):
+        val, is_num = resolve_dimension_value(dim, item, lookup_base)
+        logger.info("  Dim%d: %s = %r (numeric=%s)", i, dim, val, is_num)

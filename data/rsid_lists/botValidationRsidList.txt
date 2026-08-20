@@ -1,23 +1,36 @@
-# Minimum threshold = 1000
-# Date range = 2025-01-01 to 2025-01-31
-# File generated on 20260505
+# Minimum threshold = 20000
+# Date range = 2023-09-01 to 2026-08-16
+# File generated on 20260819
 
 OnlineBettingcom
+Casinous
+Casinoit
 MarcadoresOnlinecom
 Casinoorg
 elcomparadorcom
 OnlineCasinoscom
 Apuestasdeportivascom
 OnlineSlotsca
+Casinogroundscom
 Casinoin
 OnlineCasinoconz
 Casinocouk
+GuruDE
+GuruES
+GuruMain
+GuruIT
+GuruJP
+GuruPT
+GuruSE
+GuruOther
 Pokerde1stSite
 OnlineCasinoca
+Roulettecom
 OnlineGamblingcom
 CasinoSpielede
 Pokersitescom
 SportsBookReviewcom
+ReplayPoker
 OnlineGamblingca
 CasinoOnlinenl
 coverscom
@@ -32,9 +45,12 @@ CasinoEnligneca
 Cardschatcom
 Casinoonlinecom
 OnlineCasinoat
+Blackjackcom
 Casinoca
 OnlineSlotscom
 Casinocoza
 OnlineRouletteca
+OnlineCasinocouk
 CasinoOnlinede
 Casinoch
+Weltde

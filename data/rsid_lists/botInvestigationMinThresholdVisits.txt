@@ -1,17 +1,33 @@
 # Minimum threshold = 250000
-# Date range = 2026-04-01 to 2026-06-30
-# File generated on 20260707
+# Date range = 2023-09-01 to 2026-08-16
+# File generated on 20260819
 
 Casinous
 MarcadoresOnlinecom
 Casinoorg
+elcomparadorcom
 Apuestasdeportivascom
+OnlineSlotsca
 Casinogroundscom
 GuruDE
 GuruES
 GuruMain
+GuruIT
+GuruJP
+GuruPT
+GuruSE
 GuruOther
+Pokerde1stSite
+OnlineGamblingcom
 SportsBookReviewcom
+ReplayPoker
 coverscom
+Spielautomatende
+Casinomx
 MoneyPillar
 Oddspediacom
+Casinoat
+Cardschatcom
+Casinoca
+CasinoOnlinede
+Casinoch

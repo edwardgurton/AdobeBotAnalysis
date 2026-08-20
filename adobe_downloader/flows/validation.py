@@ -76,7 +76,7 @@ def enumerate_bot_rule_compare_paths(
 ) -> list[Path]:
     """Return every JSON output path that a bot_rule_compare run would produce.
 
-    For each clean_name × bot_rule × report_def (skipping report_to_skip), two paths
+    For each clean_name × bot_rule × report_def (skipping reports_to_skip), two paths
     are emitted: the Segment variant and the AllTraffic variant.
     """
     paths: list[Path] = []
@@ -87,7 +87,7 @@ def enumerate_bot_rule_compare_paths(
                 f"-Compare-V{comparison_round:g}"
             )
             for report_def in report_defs:
-                if report_def.name == bot_rule.report_to_skip:
+                if report_def.name in bot_rule.reports_to_skip:
                     continue
                 paths.append(
                     make_output_path(

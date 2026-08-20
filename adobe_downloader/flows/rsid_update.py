@@ -1,5 +1,6 @@
 """Report suite updater — fetch all suites, run topline metrics, filter by threshold."""
 
+import asyncio
 import logging
 import re
 from collections.abc import Callable
@@ -171,9 +172,7 @@ async def run_rsid_update(
         )
 
     # 3. Generate clean names
-    pairs: list[tuple[str, str]] = [
-        (s["rsid"], clean_suite_name(s["name"])) for s in suites
-    ]
+    pairs: list[tuple[str, str]] = [(s["rsid"], clean_suite_name(s["name"])) for s in suites]
 
     # 4. Load exclusion list
     excluded: set[str] = load_exclusion_list(exclusion_file)
@@ -183,25 +182,32 @@ async def run_rsid_update(
     # 5. Write suite pairs file (rsid:cleanName) for downstream lookups
     suite_pairs_path: Path | None = None
     if suite_pairs_dir is not None:
-        suite_pairs_path = (
-            Path(suite_pairs_dir) / f"legendReportSuites{today_str}.txt"
-        )
+        suite_pairs_path = Path(suite_pairs_dir) / f"legendReportSuites{today_str}.txt"
         _write_suite_pairs_file(suite_pairs_path, pairs)
         _log.info("Suite pairs file: %s", suite_pairs_path)
 
-    # 6. Fetch topline visit counts for each RSID
-    results: list[RsidWithVisits] = []
-    for rsid, clean_name in pairs:
-        visits = await _fetch_visits(client, rsid, date_range)
+    # 6. Fetch topline visit counts for each RSID, bounded by batch_size in flight
+    semaphore = asyncio.Semaphore(rsid_update_cfg.batch_size)
+
+    async def _process_one(rsid: str, clean_name: str) -> RsidWithVisits:
+        async with semaphore:
+            visits = await _fetch_visits(client, rsid, date_range)
         if visits is None:
             _log.warning("Could not get visits for %s (%s)", rsid, clean_name)
-            results.append(RsidWithVisits(rsid=rsid, clean_name=clean_name, visits=0, error="fetch_failed"))
+            result = RsidWithVisits(
+                rsid=rsid, clean_name=clean_name, visits=0, error="fetch_failed"
+            )
         else:
-            results.append(RsidWithVisits(rsid=rsid, clean_name=clean_name, visits=visits))
+            result = RsidWithVisits(rsid=rsid, clean_name=clean_name, visits=visits)
         status = "FAIL" if visits is None else "OK"
         if on_progress:
             on_progress(rsid, status)
         _log.debug("%s  %s  visits=%s", status, clean_name, visits)
+        return result
+
+    results: list[RsidWithVisits] = list(
+        await asyncio.gather(*(_process_one(rsid, clean_name) for rsid, clean_name in pairs))
+    )
 
     failed_count = sum(1 for r in results if r.error)
 
