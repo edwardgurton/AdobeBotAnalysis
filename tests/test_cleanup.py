@@ -5,6 +5,7 @@ from __future__ import annotations
 import json as _json
 import os
 import time
+from datetime import datetime
 from pathlib import Path
 
 import pytest
@@ -548,3 +549,345 @@ def test_loose_json_in_a_job_root_is_kept_as_unclassified(tree: Path) -> None:
     assert v.remove is False
     assert v.reason == cl.KEEP_UNCLASSIFIED
     assert v.file.category == cl.CATEGORY_UNCLASSIFIED
+
+
+# ===========================================================================
+# Execution: quarantine, delete, purge
+# ===========================================================================
+
+_TS = datetime.fromtimestamp(_NOW).strftime(cl.QUARANTINE_BATCH_FORMAT)
+
+
+def _batch_stamp(days_before: float) -> str:
+    """A quarantine batch folder name that reads as *days_before* days old."""
+    moment = _NOW - days_before * cl.SECONDS_PER_DAY
+    return datetime.fromtimestamp(moment).strftime(cl.QUARANTINE_BATCH_FORMAT)
+
+
+def _snapshot(root: Path) -> dict[str, tuple[int, float]]:
+    """Size and mtime of every data file under *root*.
+
+    Report files are excluded: a dry run deliberately still writes its report, and
+    that is an addition to the audit trail, not a change to the data.
+    """
+    return {
+        str(p.relative_to(root)): (p.stat().st_size, p.stat().st_mtime)
+        for p in root.rglob("*")
+        if p.is_file() and "cleanup" not in p.parts
+    }
+
+
+def _run(
+    tree_path: Path, *, dry_run: bool = False, timestamp: str = _TS, **overrides: object
+) -> tuple:
+    target: dict[str, object] = {"base_folder": str(tree_path)}
+    extra_target = overrides.pop("target", None)
+    if isinstance(extra_target, dict):
+        target.update(extra_target)
+    cfg = _cfg(target=target, **overrides)
+    plan = cl.scan(cfg, now=_NOW)
+    result = cl.execute(plan, cfg, timestamp=timestamp, dry_run=dry_run)
+    return cfg, plan, result
+
+
+# ---------------------------------------------------------------------------
+# Dry run
+# ---------------------------------------------------------------------------
+
+
+def test_dry_run_touches_nothing_and_reports_zero(tree: Path) -> None:
+    before = _snapshot(tree)
+    _cfg_, plan, result = _run(tree, dry_run=True)
+    assert _snapshot(tree) == before
+    assert result.touched == 0
+    assert result.reclaimed_bytes == 0
+    assert plan.to_remove, "the fixture should have had removable files"
+
+
+def test_dry_run_defaults_to_the_config_setting(tree: Path) -> None:
+    """execute() with dry_run unset must honour defaults.dry_run, which is true."""
+    before = _snapshot(tree)
+    cfg = _cfg(target={"base_folder": str(tree)})
+    plan = cl.scan(cfg, now=_NOW)
+    result = cl.execute(plan, cfg, timestamp=_TS)
+    assert _snapshot(tree) == before
+    assert result.touched == 0
+
+
+# ---------------------------------------------------------------------------
+# Quarantine
+# ---------------------------------------------------------------------------
+
+
+def test_quarantine_moves_files_preserving_relative_path(tree: Path) -> None:
+    _cfg_, _plan_, result = _run(tree)
+    moved = tree / "Legend" / "_trash" / _TS / "MyJob" / "JSON" / "a.json"
+    assert moved.is_file()
+    assert not (tree / "Legend" / "MyJob" / "JSON" / "a.json").exists()
+    assert result.quarantined > 0
+    assert result.deleted == 0
+    assert result.batch_timestamp == _TS
+
+
+def test_quarantine_reclaims_nothing_yet(tree: Path) -> None:
+    """Moving within a volume frees no space -- the report must not claim it does."""
+    _cfg_, _plan_, result = _run(tree)
+    assert result.quarantined_bytes > 0
+    assert result.reclaimed_bytes == 0
+
+
+def test_protected_files_survive_a_real_run(tree: Path) -> None:
+    _run(tree)
+    assert (tree / "Legend" / "MyJob" / "COMPARE_MyJob_rule1.csv").is_file()
+    assert (tree / "Legend" / "MyJob" / "CSV" / "stray_concat.csv").is_file()
+    assert (tree / "Legend" / ".history" / "job_history.jsonl").is_file()
+    assert (tree / "Legend" / ".history" / "configs" / "old.yaml").is_file()
+    assert (tree / "Legend" / "Unfinished" / "CSV" / "x.csv").is_file()
+    assert (tree / "Legend" / "Restale" / "CSV" / "fresh.csv").is_file()
+
+
+def test_quarantine_is_reversible(tree: Path) -> None:
+    """Every quarantined file can be put back from the batch folder alone."""
+    _cfg_, plan, _result_ = _run(tree)
+    batch = tree / "Legend" / "_trash" / _TS
+    for verdict in plan.to_remove:
+        relative = verdict.file.path.relative_to(tree / "Legend")
+        assert (batch / relative).is_file(), f"{relative} missing from quarantine"
+
+
+# ---------------------------------------------------------------------------
+# Hard delete
+# ---------------------------------------------------------------------------
+
+
+def test_delete_action_unlinks_and_reclaims(tree: Path) -> None:
+    _cfg_, plan, result = _run(tree, defaults={"action": "delete"})
+    assert not (tree / "Legend" / "MyJob" / "JSON" / "a.json").exists()
+    assert not (tree / "Legend" / "_trash").exists()
+    assert result.deleted == len(plan.to_remove)
+    assert result.quarantined == 0
+    assert result.reclaimed_bytes == plan.bytes_to_remove
+
+
+def test_emptied_directories_are_pruned(tree: Path) -> None:
+    processed = tree / "Legend" / "MyJob" / "JSON" / "_processed"
+    assert processed.is_dir()
+    _run(tree, defaults={"action": "delete"})
+    assert not processed.exists()
+    # ...but a folder still holding a kept file survives.
+    assert (tree / "Legend" / "MyJob" / "JSON").is_dir()
+    assert (tree / "Legend" / "MyJob" / "JSON" / "b.json").is_file()
+
+
+# ---------------------------------------------------------------------------
+# Purging quarantine
+# ---------------------------------------------------------------------------
+
+
+def test_old_quarantine_batch_is_purged_on_a_later_run(tree: Path) -> None:
+    """Quarantine, age the batch, then run again: the batch is hard-deleted."""
+    old_stamp = _batch_stamp(30)
+    _run(tree, timestamp=old_stamp)
+    batch = tree / "Legend" / "_trash" / old_stamp
+    assert batch.is_dir()
+
+    _cfg_, _plan_, result = _run(tree)
+    assert result.deleted > 0, "aged quarantine should be hard-deleted"
+    assert not list(batch.rglob("*.json"))
+
+
+def test_trash_is_hard_deleted_even_in_quarantine_mode(tree: Path) -> None:
+    """Quarantining quarantine would loop forever; trash always unlinks."""
+    _run(tree, timestamp=_batch_stamp(30))
+
+    _cfg_, plan, result = _run(tree)
+    trash_verdicts = [v for v in plan.to_remove if v.file.category == cl.CATEGORY_TRASH]
+    assert trash_verdicts
+    assert result.deleted >= len(trash_verdicts)
+    assert result.reclaimed_bytes > 0
+
+
+def test_fresh_quarantine_is_not_purged(tree: Path) -> None:
+    """A batch younger than trash.older_than_days must survive the next run.
+
+    Regression: shutil.move preserves mtime, so every file here is still 60 days
+    old the moment it lands in quarantine. Ageing trash by file mtime purged each
+    batch on the very next run, giving no grace period at all. Batches age from
+    their folder timestamp instead.
+    """
+    _run(tree)
+    _cfg_, _plan_, result = _run(tree)
+    assert result.deleted == 0
+    assert (tree / "Legend" / "_trash" / _TS).is_dir()
+
+
+# ---------------------------------------------------------------------------
+# Failure handling
+# ---------------------------------------------------------------------------
+
+
+def test_one_unremovable_file_does_not_abort_the_run(
+    tree: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    real_move = cl.shutil.move
+
+    def flaky(src: str, dst: str) -> object:
+        if src.endswith("a.json"):
+            raise OSError(13, "Permission denied")
+        return real_move(src, dst)
+
+    monkeypatch.setattr(cl.shutil, "move", flaky)
+    _cfg_, plan, result = _run(tree)
+
+    assert len(result.failures) == 1
+    assert result.failures[0][0].name == "a.json"
+    # Everything else still moved.
+    assert result.quarantined == len(plan.to_remove) - 1
+    assert (tree / "Legend" / "MyJob" / "JSON" / "a.json").is_file()
+
+
+# ---------------------------------------------------------------------------
+# Reporting
+# ---------------------------------------------------------------------------
+
+
+def test_reports_are_written_in_both_formats(tree: Path) -> None:
+    cfg, plan, result = _run(tree, dry_run=True)
+    written = cl.write_reports(plan, result, cfg, dry_run=True, timestamp=_TS)
+    assert len(written) == 2
+    assert {p.suffix for p in written} == {".md", ".json"}
+    for path in written:
+        assert path.parent == tree / "Legend" / ".history" / "cleanup"
+        assert path.read_text(encoding="utf-8").strip()
+
+
+def test_report_data_totals_match_the_plan(tree: Path) -> None:
+    cfg, plan, result = _run(tree, dry_run=True)
+    data = cl.build_report_data(plan, result, cfg, dry_run=True, timestamp=_TS)
+    assert data["removed"]["files"] == len(plan.to_remove)
+    assert data["removed"]["bytes"] == plan.bytes_to_remove
+    assert data["kept"]["files"] == len(plan.to_keep)
+    assert data["scanned"]["files"] == len(plan.verdicts)
+    assert data["dry_run"] is True
+
+
+def test_report_can_be_disabled(tree: Path) -> None:
+    cfg, plan, result = _run(tree, dry_run=True, report={"write_to": None})
+    assert cl.write_reports(plan, result, cfg, dry_run=True, timestamp=_TS) == []
+
+
+def test_console_report_explains_why_files_were_kept(tree: Path) -> None:
+    cfg, plan, result = _run(tree, dry_run=True)
+    text = cl.render_console(plan, result, cfg, dry_run=True)
+    assert "DRY RUN" in text
+    assert "Kept, by reason:" in text
+    assert cl.KEEP_PROTECTED_FINAL_OUTPUT in text
+    assert "Would remove" in text
+
+
+def test_console_report_states_quarantine_reclaims_nothing(tree: Path) -> None:
+    cfg, plan, result = _run(tree)
+    text = cl.render_console(plan, result, cfg, dry_run=False)
+    assert "Space reclaimed now: 0.0 B" in text
+    assert "still occupy the volume" in text
+
+
+def test_markdown_report_is_valid_tables(tree: Path) -> None:
+    cfg, plan, result = _run(tree, dry_run=True)
+    md = cl.render_markdown(plan, result, cfg, dry_run=True, timestamp=_TS)
+    assert md.startswith("# Cleanup report")
+    assert "| Category | Files | Size |" in md
+    assert "| Reason | Files | Size |" in md
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [(0, "0.0 B"), (512, "512.0 B"), (1024, "1.0 KB"), (1024**2, "1.0 MB"), (1024**3, "1.0 GB")],
+)
+def test_human_bytes(value: int, expected: str) -> None:
+    assert cl.human_bytes(value) == expected
+
+
+# ===========================================================================
+# The clean command
+# ===========================================================================
+
+
+def _write_cfg(tmp_path: Path, tree_path: Path, **body: object) -> Path:
+    import yaml
+
+    data: dict[str, object] = {
+        "job_type": "cleanup",
+        "target": {"base_folder": str(tree_path)},
+    }
+    data.update(body)
+    path = tmp_path / "cleanup.yaml"
+    path.write_text(yaml.safe_dump(data), encoding="utf-8")
+    return path
+
+
+def _invoke(args: list[str]) -> object:
+    from click.testing import CliRunner
+
+    from adobe_downloader.cli import main
+
+    return CliRunner().invoke(main, args)
+
+
+def test_clean_is_a_dry_run_by_default(tree: Path, tmp_path: Path) -> None:
+    before = _snapshot(tree)
+    cfg_path = _write_cfg(tmp_path, tree)
+    result = _invoke(["clean", "--config", str(cfg_path)])
+    assert result.exit_code == 0, result.output
+    assert "Dry run" in result.output
+    assert _snapshot(tree) == before
+
+
+def test_confirm_alone_cannot_delete(tree: Path, tmp_path: Path) -> None:
+    """dry_run: true in the config beats --confirm on the command line."""
+    before = _snapshot(tree)
+    cfg_path = _write_cfg(tmp_path, tree, defaults={"dry_run": True})
+    result = _invoke(["clean", "--config", str(cfg_path), "--confirm"])
+    assert result.exit_code == 0
+    assert "has no effect" in result.output
+    assert _snapshot(tree) == before
+
+
+def test_config_alone_cannot_delete(tree: Path, tmp_path: Path) -> None:
+    """dry_run: false without --confirm still runs dry."""
+    before = _snapshot(tree)
+    cfg_path = _write_cfg(tmp_path, tree, defaults={"dry_run": False})
+    result = _invoke(["clean", "--config", str(cfg_path)])
+    assert result.exit_code == 0
+    assert "--confirm was not passed" in result.output
+    assert _snapshot(tree) == before
+
+
+def test_config_plus_confirm_acts(tree: Path, tmp_path: Path) -> None:
+    cfg_path = _write_cfg(tmp_path, tree, defaults={"dry_run": False})
+    result = _invoke(["clean", "--config", str(cfg_path), "--confirm"])
+    assert result.exit_code == 0, result.output
+    assert "Done." in result.output
+    assert not (tree / "Legend" / "MyJob" / "JSON" / "a.json").exists()
+    assert (tree / "Legend" / "MyJob" / "COMPARE_MyJob_rule1.csv").is_file()
+
+
+def test_clean_refuses_a_non_cleanup_config(tmp_path: Path) -> None:
+    import yaml
+
+    path = tmp_path / "download.yaml"
+    path.write_text(
+        yaml.safe_dump(
+            {
+                "job_type": "report_download",
+                "client": "Legend",
+                "report_ref": "x",
+                "rsids": {"source": "single", "single": "abc"},
+                "output": {"base_folder": "C:/nope"},
+            }
+        ),
+        encoding="utf-8",
+    )
+    result = _invoke(["clean", "--config", str(path)])
+    assert result.exit_code == 1
+    assert "requires a cleanup config" in result.output

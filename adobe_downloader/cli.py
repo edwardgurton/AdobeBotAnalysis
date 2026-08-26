@@ -1198,6 +1198,101 @@ def cleanup(
     click.secho(f"Deleted {count} file(s).", fg="green" if count else "yellow")
 
 
+@main.command()
+@click.option("--config", "-c", required=True, type=click.Path(exists=True, path_type=Path))
+@click.option(
+    "--confirm",
+    is_flag=True,
+    default=False,
+    help="Actually remove files. Without this the run is a dry run whatever the config says.",
+)
+@click.option("--debug", is_flag=True, default=False, help="Verbose console logging.")
+def clean(config: Path, confirm: bool, debug: bool) -> None:
+    """Reclaim disk space in an output tree. Dry run unless --confirm is passed.
+
+    Removal requires both dry_run: false in the config and --confirm on the command
+    line, so neither a stale config nor a stray flag can delete anything on its own.
+    """
+    from datetime import datetime
+
+    from adobe_downloader.config.loader import load_config
+    from adobe_downloader.config.schema import CleanupJobConfig
+    from adobe_downloader.flows.cleanup import execute, human_bytes, render_console, scan
+    from adobe_downloader.flows.cleanup import write_reports as write_cleanup_reports
+    from adobe_downloader.utils.logging import setup_logging
+
+    try:
+        job = load_config(config)
+    except Exception as exc:
+        click.secho(f"Failed to load config: {exc}", fg="red", bold=True)
+        sys.exit(1)
+
+    if not isinstance(job, CleanupJobConfig):
+        click.secho(
+            f"'clean' requires a cleanup config (got job_type {job.job_type!r}). "
+            "Use 'adobe-downloader run' for job types that download or transform.",
+            fg="red",
+            bold=True,
+        )
+        sys.exit(1)
+
+    setup_logging(None, "cleanup", job_name=config.stem, debug=debug)
+
+    dry_run = job.defaults.dry_run or not confirm
+    if job.defaults.dry_run and confirm:
+        click.secho(
+            "Config sets dry_run: true, so --confirm has no effect. "
+            "Set dry_run: false in the config to allow removal.",
+            fg="yellow",
+        )
+    elif not job.defaults.dry_run and not confirm:
+        click.secho(
+            "Config sets dry_run: false, but --confirm was not passed - running dry.",
+            fg="yellow",
+        )
+
+    timestamp = datetime.now().strftime("%Y-%m-%d_%H%M%S")
+
+    click.secho(f"Scanning {job.target.base_folder} ...", fg="cyan")
+    plan = scan(job)
+
+    if not plan.verdicts:
+        click.secho("Nothing found to consider. Check target.base_folder.", fg="yellow")
+        return
+
+    result = execute(plan, job, timestamp=timestamp, dry_run=dry_run)
+
+    if job.report.console:
+        click.echo(render_console(plan, result, job, dry_run=dry_run))
+
+    for path in write_cleanup_reports(plan, result, job, dry_run=dry_run, timestamp=timestamp):
+        click.secho(f"Report: {path}", fg="cyan")
+
+    if dry_run:
+        click.secho(
+            f"Dry run - nothing was touched. {human_bytes(plan.bytes_to_remove)} is removable; "
+            "set dry_run: false and pass --confirm to act on it.",
+            fg="yellow",
+            bold=True,
+        )
+    elif result.failures:
+        click.secho(
+            f"Completed with {len(result.failures)} failure(s) - see the report.", fg="yellow"
+        )
+        sys.exit(1)
+    else:
+        click.secho(
+            f"Done. Reclaimed {human_bytes(result.reclaimed_bytes)}"
+            + (
+                f"; {human_bytes(result.quarantined_bytes)} moved to quarantine."
+                if result.quarantined
+                else "."
+            ),
+            fg="green",
+            bold=True,
+        )
+
+
 @main.command("validate-output")
 @click.option("--config", "-c", required=True, type=click.Path(exists=True, path_type=Path))
 @click.option("--retry/--no-retry", default=False, help="Re-download missing/empty files.")

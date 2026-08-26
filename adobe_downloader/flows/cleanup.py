@@ -15,11 +15,15 @@ cleanup never removes a file it cannot name.
 from __future__ import annotations
 
 import fnmatch
+import json
 import os
+import shutil
 import time
 from collections.abc import Iterator, Sequence
 from dataclasses import dataclass, field
+from datetime import datetime
 from pathlib import Path, PurePosixPath
+from typing import Any
 
 from adobe_downloader.config.schema import (
     CleanupCategory,
@@ -37,6 +41,10 @@ SECONDS_PER_DAY = 86_400.0
 # absolute_min_age_days is the real protection here; this only matters when a
 # config drops that floor to zero.
 RECENTLY_ACTIVE_SECONDS = 3_600.0
+
+# Quarantine batch folders are named with this stamp, and it is the only
+# reliable record of when a batch was made.
+QUARANTINE_BATCH_FORMAT = "%Y-%m-%d_%H%M%S"
 
 # ---------------------------------------------------------------------------
 # Categories
@@ -563,10 +571,32 @@ def _scan_quarantine(
     if not quarantine_root.is_dir():
         return
     for batch in _subdirectories(quarantine_root):
-        for path, size, mtime in _walk_files(batch):
-            scanned = ScannedFile(path, size, mtime, CATEGORY_TRASH, client)
+        # Every file in a batch ages from when the batch was made, never from its
+        # own mtime -- see _batch_timestamp.
+        batch_mtime = _batch_timestamp(batch)
+        for path, size, _file_mtime in _walk_files(batch):
+            scanned = ScannedFile(path, size, batch_mtime, CATEGORY_TRASH, client)
             gate = _age_gate(scanned, category, cfg, now)
             yield Verdict(scanned, remove=gate is None, reason=gate or REMOVE_STALE)
+
+
+def _batch_timestamp(batch: Path) -> float:
+    """When a quarantine batch was created, from its folder name.
+
+    shutil.move preserves mtime, so a 60-day-old JSON is still 60 days old the
+    instant it lands in quarantine. Ageing trash by file mtime would therefore
+    purge every batch on the very next run and defeat the point of quarantining
+    at all -- the grace period has to run from the move, and the folder name is
+    the only record of that.
+    """
+    try:
+        return datetime.strptime(batch.name, QUARANTINE_BATCH_FORMAT).timestamp()
+    except ValueError:
+        _log.debug("Quarantine batch %s is not timestamp-named; using its mtime", batch.name)
+        try:
+            return batch.stat().st_mtime
+        except OSError:
+            return 0.0
 
 
 def _walk_files(root: Path) -> Iterator[tuple[Path, int, float]]:
@@ -647,3 +677,371 @@ def scan(cfg: CleanupJobConfig, *, now: float | None = None) -> CleanupPlan:
         len(plan.to_remove),
     )
     return plan
+
+
+# ---------------------------------------------------------------------------
+# Execution
+# ---------------------------------------------------------------------------
+
+
+@dataclass
+class CleanupResult:
+    """What phase 2 actually did. All zeros after a dry run."""
+
+    quarantined: int = 0
+    quarantined_bytes: int = 0
+    deleted: int = 0
+    deleted_bytes: int = 0
+    failures: list[tuple[Path, str]] = field(default_factory=list)
+    batch_timestamp: str | None = None
+
+    @property
+    def touched(self) -> int:
+        return self.quarantined + self.deleted
+
+    @property
+    def reclaimed_bytes(self) -> int:
+        """Bytes actually freed. Quarantined files still occupy the volume."""
+        return self.deleted_bytes
+
+
+def human_bytes(n: int) -> str:
+    size = float(n)
+    for unit in ("B", "KB", "MB", "GB"):
+        if size < 1024:
+            return f"{size:,.1f} {unit}"
+        size /= 1024
+    return f"{size:,.1f} TB"
+
+
+def _quarantine_destination(
+    scanned: ScannedFile, base: Path, quarantine_folder: str, timestamp: str
+) -> Path:
+    """Mirror the file's path under <client>/<quarantine_folder>/<timestamp>/.
+
+    Preserving the relative path keeps the batch self-describing and makes name
+    collisions impossible without inventing suffixes.
+    """
+    client_dir = base / scanned.client
+    try:
+        relative = scanned.path.relative_to(client_dir)
+    except ValueError:  # defensive: a path from outside the client tree
+        relative = Path(scanned.path.name)
+    return client_dir / quarantine_folder / timestamp / relative
+
+
+def execute(
+    plan: CleanupPlan,
+    cfg: CleanupJobConfig,
+    *,
+    timestamp: str,
+    dry_run: bool | None = None,
+) -> CleanupResult:
+    """Carry out *plan*. Returns an all-zero result when running dry.
+
+    Quarantine is a same-volume rename, so it is instant and reversible, but it
+    frees nothing until a later run purges the batch. Files in the trash category
+    are always hard-deleted regardless of action -- purging quarantine is the
+    point of that category, and it only ever reaches files an earlier run listed.
+    """
+    from adobe_downloader.utils.winpath import to_long_path
+
+    result = CleanupResult()
+    if dry_run is None:
+        dry_run = cfg.defaults.dry_run
+    if dry_run:
+        return result
+
+    base = Path(cfg.target.base_folder)
+    quarantining = cfg.defaults.action == "quarantine"
+    if quarantining:
+        result.batch_timestamp = timestamp
+
+    for verdict in plan.to_remove:
+        scanned = verdict.file
+        hard_delete = not quarantining or scanned.category == CATEGORY_TRASH
+        try:
+            if hard_delete:
+                to_long_path(scanned.path).unlink()
+                result.deleted += 1
+                result.deleted_bytes += scanned.size
+            else:
+                destination = _quarantine_destination(
+                    scanned, base, cfg.defaults.quarantine_folder, timestamp
+                )
+                long_destination = to_long_path(destination)
+                long_destination.parent.mkdir(parents=True, exist_ok=True)
+                if long_destination.exists():
+                    long_destination.unlink()
+                shutil.move(str(to_long_path(scanned.path)), str(long_destination))
+                result.quarantined += 1
+                result.quarantined_bytes += scanned.size
+        except OSError as exc:
+            # One locked or vanished file must not abort the whole run.
+            _log.warning("Could not remove %s: %s", scanned.path, exc)
+            result.failures.append((scanned.path, str(exc)))
+
+    _prune_empty_dirs(plan, cfg)
+
+    _log.info(
+        "Cleanup complete: %d quarantined, %d deleted, %d failure(s)",
+        result.quarantined,
+        result.deleted,
+        len(result.failures),
+    )
+    return result
+
+
+def _prune_empty_dirs(plan: CleanupPlan, cfg: CleanupJobConfig) -> None:
+    """Remove directories emptied by the run, deepest first.
+
+    Only directories that held removed files are considered, and rmdir fails
+    harmlessly on any that are not actually empty -- so this can never take out a
+    folder still holding data.
+    """
+    candidates = {v.file.path.parent for v in plan.to_remove}
+    for directory in sorted(candidates, key=lambda p: len(p.parts), reverse=True):
+        try:
+            directory.rmdir()
+            _log.debug("Removed empty directory %s", directory)
+        except OSError:
+            continue
+
+
+# ---------------------------------------------------------------------------
+# Reporting
+# ---------------------------------------------------------------------------
+
+
+def _mode_label(cfg: CleanupJobConfig, dry_run: bool) -> str:
+    if dry_run:
+        return f"DRY RUN (would {cfg.defaults.action})"
+    return "QUARANTINE" if cfg.defaults.action == "quarantine" else "DELETE"
+
+
+def render_console(
+    plan: CleanupPlan, result: CleanupResult, cfg: CleanupJobConfig, *, dry_run: bool
+) -> str:
+    """Human-readable summary. Same numbers whether or not phase 2 ran."""
+    verb = "Would remove" if dry_run else "Removed"
+    lines: list[str] = [
+        "",
+        f"Cleanup report - {_mode_label(cfg, dry_run)}",
+        f"Target: {cfg.target.base_folder}",
+        f"Scanned: {len(plan.verdicts):,} files, "
+        f"{human_bytes(plan.bytes_to_remove + plan.bytes_to_keep)}",
+        "",
+        f"{verb}: {len(plan.to_remove):,} files, {human_bytes(plan.bytes_to_remove)}",
+    ]
+    for category, (count, size) in plan.by_category(remove=True).items():
+        lines.append(f"    {category:<18}{count:>10,} files{human_bytes(size):>14}")
+
+    lines += [
+        "",
+        f"Kept: {len(plan.to_keep):,} files, {human_bytes(plan.bytes_to_keep)}",
+    ]
+    for category, (count, size) in plan.by_category(remove=False).items():
+        lines.append(f"    {category:<18}{count:>10,} files{human_bytes(size):>14}")
+
+    lines += ["", "Kept, by reason:"]
+    for reason, (count, size) in plan.by_keep_reason().items():
+        lines.append(f"    {reason:<30}{count:>10,} files{human_bytes(size):>14}")
+
+    top = plan.largest_kept(cfg.report.top_n_largest_kept)
+    if top:
+        lines += ["", f"Largest {len(top)} kept:"]
+        for verdict in top:
+            lines.append(
+                f"    {human_bytes(verdict.file.size):>12}  "
+                f"{verdict.reason:<28}{verdict.file.path.name}"
+            )
+
+    if not dry_run:
+        lines += [
+            "",
+            f"Quarantined: {result.quarantined:,} ({human_bytes(result.quarantined_bytes)})",
+        ]
+        lines.append(f"Deleted:     {result.deleted:,} ({human_bytes(result.deleted_bytes)})")
+        lines.append(f"Space reclaimed now: {human_bytes(result.reclaimed_bytes)}")
+        if result.quarantined:
+            lines.append(
+                f"Quarantined files still occupy the volume until a run with "
+                f"trash.older_than_days ({cfg.categories.trash.older_than_days}d) purges them."
+            )
+        if result.failures:
+            lines += ["", f"Failed to remove {len(result.failures)} file(s):"]
+            for path, error in result.failures[:10]:
+                lines.append(f"    {path.name}: {error}")
+
+    return "\n".join(lines) + "\n"
+
+
+def build_report_data(
+    plan: CleanupPlan,
+    result: CleanupResult,
+    cfg: CleanupJobConfig,
+    *,
+    dry_run: bool,
+    timestamp: str,
+) -> dict[str, Any]:
+    """Structured report body.
+
+    Summary-level by design: a per-file listing would run to hundreds of
+    thousands of rows on a real tree. When files are quarantined rather than
+    deleted, the batch folder itself is the per-file record.
+    """
+    return {
+        "timestamp": timestamp,
+        "mode": _mode_label(cfg, dry_run),
+        "dry_run": dry_run,
+        "action": cfg.defaults.action,
+        "base_folder": cfg.target.base_folder,
+        "scanned": {
+            "files": len(plan.verdicts),
+            "bytes": plan.bytes_to_remove + plan.bytes_to_keep,
+        },
+        "removed": {
+            "files": len(plan.to_remove),
+            "bytes": plan.bytes_to_remove,
+            "by_category": {
+                k: {"files": c, "bytes": b} for k, (c, b) in plan.by_category(remove=True).items()
+            },
+        },
+        "kept": {
+            "files": len(plan.to_keep),
+            "bytes": plan.bytes_to_keep,
+            "by_category": {
+                k: {"files": c, "bytes": b} for k, (c, b) in plan.by_category(remove=False).items()
+            },
+            "by_reason": {
+                k: {"files": c, "bytes": b} for k, (c, b) in plan.by_keep_reason().items()
+            },
+            "largest": [
+                {
+                    "path": str(v.file.path),
+                    "bytes": v.file.size,
+                    "reason": v.reason,
+                    "category": v.file.category,
+                }
+                for v in plan.largest_kept(cfg.report.top_n_largest_kept)
+            ],
+        },
+        "executed": {
+            "quarantined": result.quarantined,
+            "quarantined_bytes": result.quarantined_bytes,
+            "deleted": result.deleted,
+            "deleted_bytes": result.deleted_bytes,
+            "reclaimed_bytes": result.reclaimed_bytes,
+            "failures": [{"path": str(p), "error": e} for p, e in result.failures],
+        },
+    }
+
+
+def render_markdown(
+    plan: CleanupPlan,
+    result: CleanupResult,
+    cfg: CleanupJobConfig,
+    *,
+    dry_run: bool,
+    timestamp: str,
+) -> str:
+    verb = "Would remove" if dry_run else "Removed"
+    lines = [
+        f"# Cleanup report - {timestamp}",
+        "",
+        f"- **Mode:** {_mode_label(cfg, dry_run)}",
+        f"- **Target:** `{cfg.target.base_folder}`",
+        f"- **Scanned:** {len(plan.verdicts):,} files "
+        f"({human_bytes(plan.bytes_to_remove + plan.bytes_to_keep)})",
+        "",
+        f"## {verb}: {len(plan.to_remove):,} files ({human_bytes(plan.bytes_to_remove)})",
+        "",
+        "| Category | Files | Size |",
+        "|---|---:|---:|",
+    ]
+    for category, (count, size) in plan.by_category(remove=True).items():
+        lines.append(f"| {category} | {count:,} | {human_bytes(size)} |")
+
+    lines += [
+        "",
+        f"## Kept: {len(plan.to_keep):,} files ({human_bytes(plan.bytes_to_keep)})",
+        "",
+        "| Reason | Files | Size |",
+        "|---|---:|---:|",
+    ]
+    for reason, (count, size) in plan.by_keep_reason().items():
+        lines.append(f"| {reason} | {count:,} | {human_bytes(size)} |")
+
+    top = plan.largest_kept(cfg.report.top_n_largest_kept)
+    if top:
+        lines += [
+            "",
+            f"## Largest {len(top)} kept",
+            "",
+            "| Size | Reason | File |",
+            "|---:|---|---|",
+        ]
+        for verdict in top:
+            lines.append(
+                f"| {human_bytes(verdict.file.size)} | {verdict.reason} "
+                f"| `{verdict.file.path.name}` |"
+            )
+
+    if not dry_run:
+        lines += [
+            "",
+            "## Executed",
+            "",
+            f"- Quarantined: {result.quarantined:,} ({human_bytes(result.quarantined_bytes)})",
+            f"- Deleted: {result.deleted:,} ({human_bytes(result.deleted_bytes)})",
+            f"- **Space reclaimed now:** {human_bytes(result.reclaimed_bytes)}",
+        ]
+        if result.failures:
+            lines += ["", f"- Failures: {len(result.failures)}"]
+
+    return "\n".join(lines) + "\n"
+
+
+def write_reports(
+    plan: CleanupPlan,
+    result: CleanupResult,
+    cfg: CleanupJobConfig,
+    *,
+    dry_run: bool,
+    timestamp: str,
+) -> list[Path]:
+    """Write per-client report files. Returns the paths written.
+
+    One report per client, each covering only that client's verdicts, matching
+    the existing per-client .history convention.
+    """
+    if not cfg.report.write_to:
+        return []
+
+    base = Path(cfg.target.base_folder)
+    written: list[Path] = []
+    clients = sorted({v.file.client for v in plan.verdicts})
+
+    for client in clients:
+        client_plan = CleanupPlan([v for v in plan.verdicts if v.file.client == client])
+        out_dir = base / client / cfg.report.write_to
+        try:
+            out_dir.mkdir(parents=True, exist_ok=True)
+        except OSError as exc:
+            _log.warning("Cannot write report to %s: %s", out_dir, exc)
+            continue
+
+        if "markdown" in cfg.report.formats:
+            path = out_dir / f"{timestamp}_cleanup.md"
+            body = render_markdown(client_plan, result, cfg, dry_run=dry_run, timestamp=timestamp)
+            path.write_text(body, encoding="utf-8")
+            written.append(path)
+
+        if "json" in cfg.report.formats:
+            path = out_dir / f"{timestamp}_cleanup.json"
+            data = build_report_data(client_plan, result, cfg, dry_run=dry_run, timestamp=timestamp)
+            data["client"] = client
+            path.write_text(json.dumps(data, indent=2), encoding="utf-8")
+            written.append(path)
+
+    return written
