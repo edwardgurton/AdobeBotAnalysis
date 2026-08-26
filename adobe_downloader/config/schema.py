@@ -1,6 +1,7 @@
 """Pydantic models for all job config types."""
 
 import re
+from pathlib import Path
 from typing import Annotated, Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
@@ -373,6 +374,174 @@ class CompositeJobConfig(BaseModel):
 
 
 # ---------------------------------------------------------------------------
+# Cleanup job
+#
+# Deliberately self-contained: cleanup never touches the Adobe API, never writes
+# state, and is not a valid CompositeStep. It is reachable only via the
+# `adobe-downloader clean` command, so a mistyped config path in a batch script
+# cannot run a cleanup where a download was intended.
+# ---------------------------------------------------------------------------
+
+# Final concatenated outputs are named <PREFIX>_<job_name>[_extra][_<split>].csv and
+# written to the job folder root (see flows/composite_job.py::_TRANSFORM_TYPE_PREFIXES).
+# They are the point of the whole pipeline — cleanup must never remove one.
+DEFAULT_FINAL_OUTPUT_PREFIXES = (
+    "INVESTIGATION",
+    "VALIDATION",
+    "COMPARE",
+    "FINALMETRICS",
+    "REPORT",
+    "SUMMARY",
+    "OUTPUT",
+)
+
+# When a composite job has no output.job_name, transform_concat falls back to
+# "<step_id><extra>_concat.csv" written *inside* the CSV/ folder — a final output
+# living among the disposable per-interval CSVs. Matched by suffix, not location.
+DEFAULT_FINAL_OUTPUT_SUFFIXES = ("_concat.csv",)
+
+JobStatusFilter = Literal["completed", "failed", "any"]
+
+
+class CleanupTarget(BaseModel):
+    """Which client and job folders the scan walks."""
+
+    base_folder: str = "C:/Adobe_Downloads"
+    clients: list[str] = []
+    jobs: list[str] = []
+    exclude_jobs: list[str] = []
+
+
+class CleanupDefaults(BaseModel):
+    """Global switches applying to every category."""
+
+    dry_run: bool = True
+    action: Literal["quarantine", "delete"] = "quarantine"
+    quarantine_folder: str = "_trash"
+    # Hard floor enforced in code, not just config: nothing younger than this is
+    # ever removed, however permissive a per-category older_than_days is.
+    absolute_min_age_days: int = Field(default=7, ge=0)
+
+
+class CleanupProtect(BaseModel):
+    """Never-delete rules. Applied before any category rule is consulted."""
+
+    final_outputs: bool = True
+    final_output_prefixes: list[str] = list(DEFAULT_FINAL_OUTPUT_PREFIXES)
+    final_output_suffixes: list[str] = list(DEFAULT_FINAL_OUTPUT_SUFFIXES)
+    history: bool = True
+    running_jobs: bool = True
+    patterns: list[str] = []
+
+
+class CleanupCategory(BaseModel):
+    """Base per-category rule: on/off plus a staleness threshold in days."""
+
+    enabled: bool = True
+    older_than_days: int = Field(default=30, ge=0)
+
+
+class StateDbCleanup(CleanupCategory):
+    """<client>/.state/<job_id>.db — the largest single files on disk."""
+
+    require_job_status: list[JobStatusFilter] = ["completed"]
+    keep_unknown: bool = True
+
+
+class LogsCleanup(CleanupCategory):
+    """<client>/.logs/<config-stem>.log and its .log.N rotations."""
+
+    require_job_status: list[JobStatusFilter] = ["completed"]
+    keep_unknown: bool = True
+    # Rotations are superseded by the live log and carry no unique summary, so
+    # they age out sooner than the primary .log file.
+    rotated_older_than_days: int = Field(default=7, ge=0)
+
+
+class JsonCleanup(CleanupCategory):
+    """<job>/JSON/*.json raw API responses."""
+
+    older_than_days: int = Field(default=14, ge=0)
+    # transforms/base.py::make_csv_output_path is a pure path rewrite, so "was this
+    # converted?" is answered exactly by the sibling CSV's existence — not a guess.
+    require_csv_sibling: bool = True
+
+
+class IntervalCsvCleanup(CleanupCategory):
+    """<job>/CSV/*.csv per-interval transforms, 1:1 with the JSON files."""
+
+    require_final_output: bool = True
+    require_final_output_newer: bool = True
+
+
+class ProcessedJsonCleanup(CleanupCategory):
+    """<job>/JSON/_processed/*.json moved aside by post_process.move_json_to_processed."""
+
+    older_than_days: int = Field(default=14, ge=0)
+
+
+class ZipArchivesCleanup(CleanupCategory):
+    """<job>/*.zip produced by post_processing.zip_csvs_after_concat."""
+
+    enabled: bool = False
+    older_than_days: int = Field(default=90, ge=0)
+
+
+class TrashCleanup(CleanupCategory):
+    """<client>/<quarantine_folder>/<timestamp>/ batches from earlier runs.
+
+    Purging quarantine is the only path by which cleanup permanently destroys a
+    file, and it only ever reaches files that appeared in a previous run's report.
+    """
+
+    older_than_days: int = Field(default=14, ge=0)
+
+
+class CleanupCategories(BaseModel):
+    # The YAML key is "json", but a field of that name shadows BaseModel.json —
+    # same builtin-shadowing trap as RsidSource.rsid_list/alias="list", solved the
+    # same way, so configs stay readable without the Pydantic warning.
+    model_config = ConfigDict(populate_by_name=True)
+
+    state_db: StateDbCleanup = Field(default_factory=StateDbCleanup)
+    logs: LogsCleanup = Field(default_factory=LogsCleanup)
+    json_files: JsonCleanup = Field(default_factory=JsonCleanup, alias="json")
+    interval_csv: IntervalCsvCleanup = Field(default_factory=IntervalCsvCleanup)
+    processed_json: ProcessedJsonCleanup = Field(default_factory=ProcessedJsonCleanup)
+    zip_archives: ZipArchivesCleanup = Field(default_factory=ZipArchivesCleanup)
+    trash: TrashCleanup = Field(default_factory=TrashCleanup)
+
+
+class CleanupReport(BaseModel):
+    console: bool = True
+    write_to: str | None = ".history/cleanup"
+    formats: list[Literal["markdown", "json"]] = ["markdown", "json"]
+    top_n_largest_kept: int = Field(default=20, ge=0)
+
+
+class CleanupJobConfig(BaseModel):
+    job_type: Literal["cleanup"]
+    description: str = ""
+    target: CleanupTarget = Field(default_factory=CleanupTarget)
+    defaults: CleanupDefaults = Field(default_factory=CleanupDefaults)
+    protect: CleanupProtect = Field(default_factory=CleanupProtect)
+    categories: CleanupCategories = Field(default_factory=CleanupCategories)
+    report: CleanupReport = Field(default_factory=CleanupReport)
+
+    @model_validator(mode="after")
+    def _check_quarantine_folder(self) -> "CleanupJobConfig":
+        folder = self.defaults.quarantine_folder.strip()
+        if not folder:
+            raise ValueError("defaults.quarantine_folder must not be empty")
+        if Path(folder).is_absolute() or len(Path(folder).parts) != 1:
+            raise ValueError(
+                "defaults.quarantine_folder must be a single folder name relative to the "
+                f"client folder (e.g. '_trash'), got: {folder!r}"
+            )
+        return self
+
+
+# ---------------------------------------------------------------------------
 # Discriminated union — the public type for a loaded config
 # ---------------------------------------------------------------------------
 
@@ -383,6 +552,7 @@ JobConfig = Annotated[
     | LookupGenerationJobConfig
     | RsidUpdateJobConfig
     | SchemaDiscoveryJobConfig
-    | CompositeJobConfig,
+    | CompositeJobConfig
+    | CleanupJobConfig,
     Field(discriminator="job_type"),
 ]

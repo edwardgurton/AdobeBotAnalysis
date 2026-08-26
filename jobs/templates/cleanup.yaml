@@ -1,0 +1,89 @@
+job_type: cleanup
+description: "Reclaim disk space in the Adobe_Downloads tree"
+
+# Cleanup is deliberately separate from every other job type: it never calls the
+# Adobe API, never writes state, and cannot appear as a composite step. Run it with
+#   adobe-downloader clean --config jobs/my_cleanup.yaml
+# `run` will refuse a cleanup config.
+
+target:
+  base_folder: "C:/Adobe_Downloads"
+  clients: []                  # [] = every client folder found under base_folder
+  jobs: []                     # [] = every job folder; else an allow-list of job_name folders
+  exclude_jobs: []             # job folders to skip even when `jobs` is empty
+
+defaults:
+  dry_run: true                # MUST be set false before anything is touched
+  action: quarantine           # quarantine | delete
+  quarantine_folder: "_trash"  # single folder name, relative to <base_folder>/<client>
+  absolute_min_age_days: 7     # hard floor — nothing younger is ever removed,
+                               # however permissive a category threshold below is
+
+protect:
+  final_outputs: true          # never remove a concatenated output, at any age
+  final_output_prefixes:       # <PREFIX>_<job_name>...csv in the job folder root
+    - INVESTIGATION
+    - VALIDATION
+    - COMPARE
+    - FINALMETRICS
+    - REPORT
+    - SUMMARY
+    - OUTPUT
+  final_output_suffixes:       # the no-job_name fallback, which lands inside CSV/
+    - "_concat.csv"
+  history: true                # .history/ (job_history.jsonl + archived configs) untouchable
+  running_jobs: true           # skip logs/DBs of jobs with no completed_at
+  patterns: []                 # extra fnmatch patterns, always kept (e.g. "*_MASTER.csv")
+
+categories:
+
+  # SQLite state DBs — the largest single files on disk (277 MB and 124 MB on
+  # Legend as of 2026-08-26). One row per API request, so a 270k-request job is huge.
+  state_db:
+    enabled: true
+    older_than_days: 30
+    require_job_status: [completed]   # completed | failed | any
+    keep_unknown: true                # a DB with no job_history record is kept
+
+  # Rotating job logs, capped at 10 MB x 6 per job.
+  logs:
+    enabled: true
+    older_than_days: 30
+    require_job_status: [completed]
+    keep_unknown: true
+    rotated_older_than_days: 7        # .log.1 .. .log.5 age out sooner than the live .log
+
+  # Raw API responses. Deleted only when the CSV the transform produced from this
+  # exact file is present — a path-for-path check, not a guess.
+  json:
+    enabled: true
+    older_than_days: 14
+    require_csv_sibling: true
+
+  # Per-interval CSVs, 1:1 with the JSON files. Deleted only when a final
+  # concatenated output exists in the job root and post-dates this CSV.
+  interval_csv:
+    enabled: true
+    older_than_days: 30
+    require_final_output: true
+    require_final_output_newer: true
+
+  processed_json:
+    enabled: true
+    older_than_days: 14
+
+  zip_archives:
+    enabled: false
+    older_than_days: 90
+
+  # Purging quarantine is the only path by which cleanup destroys a file
+  # permanently, and it only reaches files a previous run already reported.
+  trash:
+    enabled: true
+    older_than_days: 14
+
+report:
+  console: true
+  write_to: ".history/cleanup"   # relative to <base_folder>/<client>; null = console only
+  formats: [markdown, json]
+  top_n_largest_kept: 20         # the "why am I still at 3 GB?" list

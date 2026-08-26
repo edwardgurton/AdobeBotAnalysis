@@ -51,8 +51,12 @@ def validate(config: Path, check_credentials: bool) -> None:
         click.secho(f"Failed to load config: {exc}", fg="red", bold=True)
         sys.exit(1)
 
+    # Cleanup jobs never call the API, so they carry no client and no credentials.
+    client: str | None = getattr(job, "client", None)
+
     click.secho(f"  job_type   : {job.job_type}", fg="cyan")
-    click.secho(f"  client     : {job.client}", fg="cyan")
+    if client is not None:
+        click.secho(f"  client     : {client}", fg="cyan")
     if job.description:
         click.secho(f"  description: {job.description}", fg="cyan")
 
@@ -66,9 +70,9 @@ def validate(config: Path, check_credentials: bool) -> None:
     for warning in job_name_warnings:
         click.secho(f"  Warning: {warning}", fg="yellow")
 
-    if check_credentials and not credentials_exist(job.client):
+    if check_credentials and client is not None and not credentials_exist(client):
         click.secho(
-            f"  Warning: no credentials file found for client '{job.client}'",
+            f"  Warning: no credentials file found for client '{client}'",
             fg="yellow",
         )
 
@@ -145,6 +149,7 @@ def run(config: Path, report: str | None, no_resume: bool, test_mode: bool, debu
     from adobe_downloader.config.loader import load_config
     from adobe_downloader.config.report_definitions import load_report_group, load_report_registry
     from adobe_downloader.config.schema import (
+        CleanupJobConfig,
         CompositeJobConfig,
         LookupGenerationJobConfig,
         ReportDownloadConfig,
@@ -177,6 +182,15 @@ def run(config: Path, report: str | None, no_resume: bool, test_mode: bool, debu
 
     for warning in check_job_name_length(job):
         click.secho(f"Warning: {warning}", fg="yellow")
+
+    if isinstance(job, CleanupJobConfig):
+        # Cleanup deletes files; keeping it off `run` means a mistyped config path
+        # in a batch script can't destroy output where a download was intended.
+        click.secho(
+            f"This is a cleanup config. Run it with:\n    adobe-downloader clean --config {config}",
+            fg="yellow",
+        )
+        sys.exit(1)
 
     if isinstance(job, SegmentCreationJobConfig):
         _run_segment_creation_job(job, debug=debug)
