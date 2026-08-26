@@ -188,7 +188,7 @@ Template: `jobs/templates/cleanup.yaml`.
 | `defaults.action` | `"quarantine"` \| `"delete"` | no | Default `"quarantine"` |
 | `defaults.quarantine_folder` | str | no | Default `"_trash"`; must be a single name relative to the client folder |
 | `defaults.absolute_min_age_days` | int | no | Default `7`. Hard floor — no category threshold can undercut it |
-| `protect.final_outputs` | bool | no | Default `true` |
+| `protect.final_outputs` | bool | no | Default `true`. `true` = kept forever; `false` = disposition falls through to `categories.final_outputs` |
 | `protect.final_output_prefixes` | list[str] | no | Default: `INVESTIGATION`, `VALIDATION`, `COMPARE`, `FINALMETRICS`, `REPORT`, `SUMMARY`, `OUTPUT` |
 | `protect.final_output_suffixes` | list[str] | no | Default `["_concat.csv"]` |
 | `protect.history` | bool | no | Default `true`; `.history/` is never entered |
@@ -213,6 +213,7 @@ Template: `jobs/templates/cleanup.yaml`.
 | `processed_json` | 14d | — |
 | `zip_archives` | 90d | Disabled by default |
 | `trash` | 14d | Purges old quarantine batches; always a hard delete |
+| `final_outputs` | 90d | Disabled by default; only consulted when `protect.final_outputs: false` |
 
 #### How removal is justified
 
@@ -223,7 +224,9 @@ Template: `jobs/templates/cleanup.yaml`.
 
 #### Never removed
 
-`.history/` in full; anything matching a final-output prefix or `_concat.csv` suffix, wherever it sits; anything younger than `absolute_min_age_days`; and anything the scanner cannot classify into a known category — unrecognised files are reported as `unclassified` and left alone. Cleanup never removes a file it cannot name.
+`.history/` in full; anything younger than `absolute_min_age_days`; and anything the scanner cannot classify into a known category — unrecognised files are reported as `unclassified` and left alone. Cleanup never removes a file it cannot name.
+
+A file matching a final-output prefix or `_concat.csv` suffix is kept forever while `protect.final_outputs: true` (the default). Setting it to `false` does not stop the file being recognised as a final output — it hands disposition to `categories.final_outputs`, which is disabled by default, so a deliverable only ages out once both switches are explicitly turned on.
 
 #### The report
 

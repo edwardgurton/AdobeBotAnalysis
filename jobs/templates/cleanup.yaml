@@ -20,7 +20,8 @@ defaults:
                                # however permissive a category threshold below is
 
 protect:
-  final_outputs: true          # never remove a concatenated output, at any age
+  final_outputs: true          # true = never remove a concatenated output, at any age.
+                                # false = disposition falls through to categories.final_outputs below
   final_output_prefixes:       # <PREFIX>_<job_name>...csv in the job folder root
     - INVESTIGATION
     - VALIDATION
@@ -81,6 +82,12 @@ categories:
   trash:
     enabled: true
     older_than_days: 14
+
+  # Only consulted when protect.final_outputs above is false. Disabled by
+  # default -- ageing out a deliverable requires opting into both switches.
+  final_outputs:
+    enabled: false
+    older_than_days: 90
 
 report:
   console: true

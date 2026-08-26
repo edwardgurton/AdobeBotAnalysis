@@ -326,6 +326,58 @@ def test_custom_protect_pattern_is_honoured(tree: Path) -> None:
 
 
 # ---------------------------------------------------------------------------
+# Final outputs age out once protect.final_outputs is turned off
+# ---------------------------------------------------------------------------
+
+
+def test_final_output_category_disabled_by_default() -> None:
+    """Ageing out a deliverable requires opting into two separate switches."""
+    assert _cfg().categories.final_outputs.enabled is False
+
+
+def test_final_output_still_recognized_when_protection_disabled(tree: Path) -> None:
+    """Turning off protect.final_outputs must not stop the file being *identified*
+    as a final output -- it only changes what happens to it next. Without the
+    category opt-in it is still kept, just via the category-disabled gate rather
+    than falling through to 'unclassified'."""
+    plan = _plan(tree, protect={"final_outputs": False})
+    v = _verdict_for(plan, "COMPARE_MyJob_rule1.csv")
+    assert v.file.category == cl.CATEGORY_FINAL_OUTPUT
+    assert v.remove is False
+    assert v.reason == cl.KEEP_CATEGORY_DISABLED
+
+
+def test_final_output_ages_out_once_both_switches_are_set(tree: Path) -> None:
+    plan = _plan(
+        tree,
+        protect={"final_outputs": False},
+        categories={"final_outputs": {"enabled": True, "older_than_days": 30}},
+    )
+    v = _verdict_for(plan, "COMPARE_MyJob_rule1.csv")  # 999 days old
+    assert v.remove is True
+    assert v.reason == cl.REMOVE_STALE
+
+
+def test_final_output_within_threshold_is_kept_when_aged_by_category(tree: Path) -> None:
+    plan = _plan(
+        tree,
+        protect={"final_outputs": False},
+        categories={"final_outputs": {"enabled": True, "older_than_days": 100}},
+    )
+    v = _verdict_for(plan, "VALIDATION_Restale.csv")  # 90 days old
+    assert v.remove is False
+    assert v.reason == cl.KEEP_TOO_RECENT
+
+
+def test_interval_csv_concat_evidence_still_works_when_protection_disabled(tree: Path) -> None:
+    """_collect_final_outputs must keep recognising final outputs by name even
+    when protect.final_outputs is False, or every interval CSV would wrongly
+    read as un-concatenated."""
+    plan = _plan(tree, protect={"final_outputs": False})
+    assert _verdict_for(plan, "a.csv").remove is True
+
+
+# ---------------------------------------------------------------------------
 # JSON: provable conversion
 # ---------------------------------------------------------------------------
 

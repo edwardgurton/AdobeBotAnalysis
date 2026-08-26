@@ -258,9 +258,11 @@ def is_final_output(name: str, protect: CleanupProtect) -> bool:
     fallback is ``<step_id>_concat.csv`` written *inside* the CSV/ folder among
     the disposable per-interval files -- hence the suffix check, which is
     location-independent on purpose.
+
+    Recognition is independent of protect.final_outputs -- that flag only
+    decides disposition (kept forever vs. aged out by categories.final_outputs),
+    never whether a file is identified as a final output in the first place.
     """
-    if not protect.final_outputs:
-        return False
     if not name.lower().endswith(".csv"):
         return False
     if any(name.endswith(suffix) for suffix in protect.final_output_suffixes):
@@ -270,6 +272,29 @@ def is_final_output(name: str, protect: CleanupProtect) -> bool:
 
 def matches_protected_pattern(name: str, protect: CleanupProtect) -> bool:
     return any(fnmatch.fnmatch(name, pattern) for pattern in protect.patterns)
+
+
+def _final_output_verdict(
+    path: Path,
+    size: int,
+    mtime: float,
+    client: str,
+    job_name: str | None,
+    protect: CleanupProtect,
+    cfg: CleanupJobConfig,
+    now: float,
+) -> Verdict:
+    """Verdict for a file identified as a final output.
+
+    protect.final_outputs true keeps it forever, exactly as before. False hands
+    disposition to categories.final_outputs, so a deliverable can be aged out
+    once an operator has explicitly opted into both switches.
+    """
+    scanned = ScannedFile(path, size, mtime, CATEGORY_FINAL_OUTPUT, client, job_name)
+    if protect.final_outputs:
+        return Verdict(scanned, remove=False, reason=KEEP_PROTECTED_FINAL_OUTPUT)
+    gate = _age_gate(scanned, cfg.categories.final_outputs, cfg, now)
+    return Verdict(scanned, remove=gate is None, reason=gate or REMOVE_STALE)
 
 
 # ---------------------------------------------------------------------------
@@ -481,11 +506,7 @@ def _scan_interval_csvs(
     for path, size, mtime in _scan_dir(csv_dir):
         # The no-job_name concat fallback lives in here alongside its own inputs.
         if is_final_output(path.name, protect):
-            yield Verdict(
-                ScannedFile(path, size, mtime, CATEGORY_FINAL_OUTPUT, client, job_name),
-                remove=False,
-                reason=KEEP_PROTECTED_FINAL_OUTPUT,
-            )
+            yield _final_output_verdict(path, size, mtime, client, job_name, protect, cfg, now)
             continue
         if matches_protected_pattern(path.name, protect):
             yield Verdict(
@@ -525,16 +546,12 @@ def _scan_job_root(
     cfg: CleanupJobConfig,
     now: float,
 ) -> Iterator[Verdict]:
-    """Root-level artefacts: final outputs (always kept) and zip archives."""
+    """Root-level artefacts: final outputs (kept or aged out) and zip archives."""
     category = cfg.categories.zip_archives
     protect = cfg.protect
     for path, size, mtime in _scan_dir(job_dir):
         if is_final_output(path.name, protect):
-            yield Verdict(
-                ScannedFile(path, size, mtime, CATEGORY_FINAL_OUTPUT, client, job_name),
-                remove=False,
-                reason=KEEP_PROTECTED_FINAL_OUTPUT,
-            )
+            yield _final_output_verdict(path, size, mtime, client, job_name, protect, cfg, now)
             continue
         if matches_protected_pattern(path.name, protect):
             yield Verdict(

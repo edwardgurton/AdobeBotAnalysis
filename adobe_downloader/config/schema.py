@@ -426,6 +426,9 @@ class CleanupDefaults(BaseModel):
 class CleanupProtect(BaseModel):
     """Never-delete rules. Applied before any category rule is consulted."""
 
+    # True: a recognised final output is kept forever, no age check.
+    # False: recognition still applies, but disposition falls through to the
+    # categories.final_outputs age gate instead.
     final_outputs: bool = True
     final_output_prefixes: list[str] = list(DEFAULT_FINAL_OUTPUT_PREFIXES)
     final_output_suffixes: list[str] = list(DEFAULT_FINAL_OUTPUT_SUFFIXES)
@@ -497,6 +500,18 @@ class TrashCleanup(CleanupCategory):
     older_than_days: int = Field(default=14, ge=0)
 
 
+class FinalOutputCleanup(CleanupCategory):
+    """Concatenated outputs, once protect.final_outputs is set to false.
+
+    Disabled by default: a final output only ages out when the operator has
+    both turned off the permanent protect.final_outputs guard and switched this
+    category on, so removal stays opt-in on two separate fields.
+    """
+
+    enabled: bool = False
+    older_than_days: int = Field(default=90, ge=0)
+
+
 class CleanupCategories(BaseModel):
     # The YAML key is "json", but a field of that name shadows BaseModel.json —
     # same builtin-shadowing trap as RsidSource.rsid_list/alias="list", solved the
@@ -510,6 +525,7 @@ class CleanupCategories(BaseModel):
     processed_json: ProcessedJsonCleanup = Field(default_factory=ProcessedJsonCleanup)
     zip_archives: ZipArchivesCleanup = Field(default_factory=ZipArchivesCleanup)
     trash: TrashCleanup = Field(default_factory=TrashCleanup)
+    final_outputs: FinalOutputCleanup = Field(default_factory=FinalOutputCleanup)
 
 
 class CleanupReport(BaseModel):
