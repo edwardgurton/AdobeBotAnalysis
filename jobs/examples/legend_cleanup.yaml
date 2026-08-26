@@ -1,0 +1,95 @@
+job_type: cleanup
+description: "Legend - reclaim disk in C:/Adobe_Downloads, keeping all concatenated outputs"
+
+# Run with:
+#   adobe-downloader clean --config jobs/examples/legend_cleanup.yaml
+# Review the report, then set defaults.dry_run: false and re-run with --confirm.
+#
+# Measured against the real Legend tree on 2026-08-26 (933,512 files, 16.0 GB):
+#   removable  5.8 GB  - 154,584 JSON, 103,763 interval CSV, 49 logs, 12 state DBs
+#   protected  5.0 GB  - 155 concatenated outputs, kept regardless of age
+# The two largest state DBs (264 MB and 119 MB) were correctly held back: one by
+# the seven-day floor, one by the thirty-day state_db threshold.
+
+target:
+  base_folder: "C:/Adobe_Downloads"
+  clients: [Legend]
+  jobs: []
+  exclude_jobs: []
+
+defaults:
+  dry_run: true
+  action: quarantine
+  quarantine_folder: "_trash"
+  absolute_min_age_days: 7
+
+protect:
+  final_outputs: true
+  final_output_prefixes:
+    - INVESTIGATION
+    - VALIDATION
+    - COMPARE
+    - FINALMETRICS
+    - REPORT
+    - SUMMARY
+    - OUTPUT
+  final_output_suffixes:
+    - "_concat.csv"
+  history: true
+  running_jobs: true
+  patterns: []
+
+categories:
+
+  # Legend's state DBs are the largest single files on disk - one job with 270k
+  # requests produced a 264 MB DB. Completed jobs only: a failed job's DB is what
+  # you need to diagnose or resume it.
+  state_db:
+    enabled: true
+    older_than_days: 30
+    require_job_status: [completed]
+    keep_unknown: true
+
+  # Rotating logs run to 60 MB per job (10 MB x 6). The rotations carry nothing
+  # the live log does not, so they go after a week.
+  logs:
+    enabled: true
+    older_than_days: 30
+    require_job_status: [completed]
+    keep_unknown: true
+    rotated_older_than_days: 7
+
+  # Raw API responses, removed only where the CSV transformed from that exact
+  # file is present. The bulk of the reclaimable space.
+  json:
+    enabled: true
+    older_than_days: 14
+    require_csv_sibling: true
+
+  # Per-interval CSVs, kept until a concatenated output in the job root post-dates
+  # them. Jobs that downloaded but never concatenated are left completely alone.
+  interval_csv:
+    enabled: true
+    older_than_days: 30
+    require_final_output: true
+    require_final_output_newer: true
+
+  processed_json:
+    enabled: true
+    older_than_days: 14
+
+  # One 65 MB zip exists on Legend (INVESTIGATION_BotInv250k26Q2V2_...zip).
+  # Left off: it is a packaged deliverable, not an intermediate.
+  zip_archives:
+    enabled: false
+    older_than_days: 90
+
+  trash:
+    enabled: true
+    older_than_days: 14
+
+report:
+  console: true
+  write_to: ".history/cleanup"
+  formats: [markdown, json]
+  top_n_largest_kept: 20

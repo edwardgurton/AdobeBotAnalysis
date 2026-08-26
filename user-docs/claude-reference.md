@@ -16,7 +16,8 @@ Dense reference for answering operational questions. All field names, types, and
 | `adobe-downloader transform` | `-j/--json-dir PATH` `-p/--pattern GLOB` `--concat/--no-concat` `--concat-output PATH` | Transform existing JSON files to CSV; optionally concatenate |
 | `adobe-downloader validate-output` | `-c/--config PATH` `--retry/--no-retry` `--dry-run/--no-dry-run` `--debug` | Check all expected output files exist and are non-empty; `--retry` re-downloads missing files |
 | `adobe-downloader history` | `-c/--client NAME` `-o/--output-base PATH` `--last N` `--status STR` `--since DATE` | Show recent job history from the job log |
-| `adobe-downloader cleanup` | `-c/--client NAME` `-o/--output-base PATH` `--older-than Nd` `--type TYPE` `--confirm` | Remove old files by type (`processed-json`, `logs`, `state`); requires `--confirm` |
+| `adobe-downloader clean` | `-c/--config PATH` `--confirm` `--debug` | Reclaim disk space in an output tree. Dry run unless the config sets `dry_run: false` **and** `--confirm` is passed |
+| `adobe-downloader cleanup` | `-c/--client NAME` `-o/--output-base PATH` `--older-than Nd` `--type TYPE` `--confirm` | **Deprecated** — use `clean`. Only scans three fixed folders directly under `<client>/`, so it never sees per-job JSON/CSV |
 | `adobe-downloader get-segment` | `-c/--client NAME` `-s/--segment-id ID` `-o/--output PATH` | Fetch a segment definition from Adobe API and save as JSON |
 | `adobe-downloader search-lookup` | `-d/--dimension NAME` `-v/--value STR` | Search a local lookup file for a dimension value's numeric ID |
 | `adobe-downloader list-users` | `-c/--client NAME` | List Adobe Analytics users for a client |
@@ -166,6 +167,69 @@ Orchestrates multiple steps sequentially with inter-step output references. Step
 | `test_mode` | bool | no | Propagated to all steps |
 | `test_limits` | `TestLimits` | no | |
 | `output.base_folder` | str | no | Default `C:/Adobe_Downloads` (for state DB) |
+
+---
+
+### `cleanup`
+
+Reclaims disk space in an output tree. Makes no API calls, writes no state, and is **not** a valid composite step — run it with `adobe-downloader clean`, never `run`. Passing a cleanup config to `run` exits 1 with a pointer, so a mistyped path in a batch script cannot delete output where a download was intended.
+
+Template: `jobs/templates/cleanup.yaml`.
+
+| Field | Type | Required | Notes |
+|---|---|---|---|
+| `job_type` | `"cleanup"` | yes | Discriminator |
+| `description` | str | no | Free-text label |
+| `target.base_folder` | str | no | Default `C:/Adobe_Downloads` |
+| `target.clients` | list[str] | no | Empty = every client folder found |
+| `target.jobs` | list[str] | no | Empty = every job folder; else an allow-list of `job_name` folders |
+| `target.exclude_jobs` | list[str] | no | Job folders to skip even when `jobs` is empty |
+| `defaults.dry_run` | bool | no | Default `true` |
+| `defaults.action` | `"quarantine"` \| `"delete"` | no | Default `"quarantine"` |
+| `defaults.quarantine_folder` | str | no | Default `"_trash"`; must be a single name relative to the client folder |
+| `defaults.absolute_min_age_days` | int | no | Default `7`. Hard floor — no category threshold can undercut it |
+| `protect.final_outputs` | bool | no | Default `true` |
+| `protect.final_output_prefixes` | list[str] | no | Default: `INVESTIGATION`, `VALIDATION`, `COMPARE`, `FINALMETRICS`, `REPORT`, `SUMMARY`, `OUTPUT` |
+| `protect.final_output_suffixes` | list[str] | no | Default `["_concat.csv"]` |
+| `protect.history` | bool | no | Default `true`; `.history/` is never entered |
+| `protect.running_jobs` | bool | no | Default `true` |
+| `protect.patterns` | list[str] | no | Extra fnmatch patterns, always kept |
+| `categories.*` | see below | no | Per-category on/off plus a staleness threshold |
+| `report.console` | bool | no | Default `true` |
+| `report.write_to` | str \| null | no | Default `".history/cleanup"`, relative to `<base>/<client>`; `null` = console only |
+| `report.formats` | list | no | Default `["markdown", "json"]` |
+| `report.top_n_largest_kept` | int | no | Default `20` |
+
+**Deleting requires two independent opt-ins:** `dry_run: false` in the config *and* `--confirm` on the command line. Either alone runs dry, and the command says which one is missing.
+
+#### Categories
+
+| Category | Default age | Extra conditions |
+|---|---|---|
+| `state_db` | 30d | `require_job_status: [completed]`, `keep_unknown: true` |
+| `logs` | 30d | Same status gate, plus `rotated_older_than_days: 7` for `.log.1`…`.log.N` |
+| `json` | 14d | `require_csv_sibling: true` |
+| `interval_csv` | 30d | `require_final_output: true`, `require_final_output_newer: true` |
+| `processed_json` | 14d | — |
+| `zip_archives` | 90d | Disabled by default |
+| `trash` | 14d | Purges old quarantine batches; always a hard delete |
+
+#### How removal is justified
+
+- **JSON** — `transforms/base.py::make_csv_output_path` is a pure path rewrite (`JSON/x.json` → `CSV/x.csv`), so the sibling CSV's existence *proves* that exact file was transformed. Not a heuristic.
+- **Interval CSVs** — no per-file provenance is recorded, so this is structural: a final concatenated output must exist in the job root *and* post-date the CSV. A final output older than the CSV cannot contain it (the job was re-run), so those are kept with reason `final_output_older_than_csv`.
+- **State DBs and logs** — joined to real completion status via `.history/job_history.jsonl`. DBs are keyed by `<job_id>`, logs by `<config stem>`. Anything with no history record is kept by default.
+- **Quarantine batches** age from their **folder timestamp**, not the files inside them: `shutil.move` preserves mtime, so a 60-day-old file is still 60 days old the instant it lands in quarantine.
+
+#### Never removed
+
+`.history/` in full; anything matching a final-output prefix or `_concat.csv` suffix, wherever it sits; anything younger than `absolute_min_age_days`; and anything the scanner cannot classify into a known category — unrecognised files are reported as `unclassified` and left alone. Cleanup never removes a file it cannot name.
+
+#### The report
+
+Console plus optional Markdown and JSON under `<base>/<client>/.history/cleanup/`. Beyond counts and bytes removed, kept files are broken down **by reason** (`protected:final_output`, `too_recent`, `no_csv_sibling`, `no_final_output`, `job_not_completed`, `job_unknown`, `category_disabled`, `in_use`, `unclassified`, …) with a largest-first list — which is what answers "why am I still at 3 GB". Quarantined and deleted totals are reported separately, and reclaimed bytes count deletions only, since a quarantined file still occupies the volume until a later run purges it.
+
+Reports are summary-level by design: a per-file listing runs to hundreds of thousands of rows on a real tree, and when files are quarantined the batch folder is itself the per-file record.
 
 ---
 
