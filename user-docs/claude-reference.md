@@ -222,6 +222,36 @@ Template: `jobs/templates/cleanup.yaml`.
 - **State DBs and logs** — joined to real completion status via `.history/job_history.jsonl`. DBs are keyed by `<job_id>`, logs by `<config stem>`. Anything with no history record is kept by default.
 - **Quarantine batches** age from their **folder timestamp**, not the files inside them: `shutil.move` preserves mtime, so a 60-day-old file is still 60 days old the instant it lands in quarantine.
 
+#### Threshold ordering: the evidence chain
+
+Removal evidence forms a chain — each stage is what proves the next one is safe to delete:
+
+- a **JSON** is removable only while its **sibling CSV** exists (proof it was transformed)
+- an **interval CSV** is removable only while a **final output newer than it** exists (proof it was concatenated)
+
+So thresholds must satisfy:
+
+```
+json.older_than_days  <=  interval_csv.older_than_days  <=  final_outputs.older_than_days
+```
+
+Break the ordering and the evidence disappears first, stranding the dependent files: they are kept as `no_csv_sibling` or `no_final_output` on every future run and never become removable again. It fails safe — data is kept, never wrongly deleted — but it leaks silently, so `clean` warns when a config violates it. The defaults (`json` 14d, `interval_csv` 30d) already satisfy the chain.
+
+This only bites *across* runs. Within a single run the scan is a separate phase, so every verdict is computed against the pre-deletion tree — deleting a final output and its CSVs in the same run is fine.
+
+#### `absolute_min_age_days` is a floor, not a fallback
+
+It is checked *in addition to* the per-category threshold, never instead of it, so the effective age is `max(absolute_min_age_days, older_than_days)`:
+
+| `absolute_min_age_days` | category `older_than_days` | Effective |
+|---:|---:|---:|
+| 7 | 30 | **30** — floor does nothing |
+| 7 | 3 | **7** — floor wins |
+| 7 | 0 | **7** — floor wins |
+| 0 | 3 | **3** |
+
+It can only ever make cleanup *more* conservative. Categories remain fully independent of each other, so mixed thresholds are fine — but anything you want removed at under `absolute_min_age_days` needs that floor lowered too, or it is silently clamped. `clean` warns and names any category being clamped this way.
+
 #### Never removed
 
 `.history/` in full; anything younger than `absolute_min_age_days`; and anything the scanner cannot classify into a known category — unrecognised files are reported as `unclassified` and left alone. Cleanup never removes a file it cannot name.
