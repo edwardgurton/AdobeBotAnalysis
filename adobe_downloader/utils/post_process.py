@@ -132,6 +132,13 @@ def cleanup_old_files(
 
     *file_type* must be one of: ``processed-json``, ``logs``, ``state``.
     Returns the count of deleted files.
+
+    Deprecated. ``flows/cleanup.py`` supersedes this: it recurses into job
+    folders, protects concatenated outputs, checks that a JSON was actually
+    transformed before removing it, and reports sizes and reasons. This function
+    only looks at three fixed folders directly under ``<client>/`` and so misses
+    the per-job JSON and CSV piles that hold most of the disk. Kept for the
+    existing ``cleanup`` command; prefer ``adobe-downloader clean``.
     """
     if file_type not in _CLEANUP_TYPES:
         raise ValueError(

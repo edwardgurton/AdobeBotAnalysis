@@ -1162,8 +1162,20 @@ def cleanup(
     file_type: str,
     confirm: bool,
 ) -> None:
-    """Remove old processed files. Always requires --confirm to delete."""
+    """Remove old processed files (deprecated: use 'clean').
+
+    Superseded by 'adobe-downloader clean', which recurses into job folders,
+    protects concatenated outputs, and reports sizes and reasons. This command
+    only ever looked at three fixed folders directly under <client>/, so it never
+    saw the per-job JSON and CSV piles that hold most of the disk.
+    """
     from adobe_downloader.utils.post_process import cleanup_old_files
+
+    click.secho(
+        "Warning: 'cleanup' is deprecated and does not scan job folders. "
+        "Use 'adobe-downloader clean --config <cfg>' instead.",
+        fg="yellow",
+    )
 
     # Parse "30d" -> 30
     older_than = older_than.strip()

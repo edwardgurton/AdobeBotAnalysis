@@ -891,3 +891,23 @@ def test_clean_refuses_a_non_cleanup_config(tmp_path: Path) -> None:
     result = _invoke(["clean", "--config", str(path)])
     assert result.exit_code == 1
     assert "requires a cleanup config" in result.output
+
+
+def test_legacy_cleanup_command_warns_and_still_works(tmp_path: Path) -> None:
+    """The old command keeps working, but points at its replacement."""
+    result = _invoke(
+        [
+            "cleanup",
+            "--client",
+            "Legend",
+            "--output-base",
+            str(tmp_path),
+            "--older-than",
+            "30d",
+            "--type",
+            "logs",
+        ]
+    )
+    assert result.exit_code == 0
+    assert "deprecated" in result.output
+    assert "clean --config" in result.output
