@@ -1,0 +1,105 @@
+job_type: cleanup
+description: "Legend - routine maintenance: age out everything, final outputs included, at 30 days"
+
+# Routine sweep, intended to run on a schedule. Unlike legend_cleanup.yaml, this
+# one DOES remove concatenated outputs once they pass 30 days.
+#
+#   adobe-downloader clean --config jobs/examples/legend_cleanup_routine.yaml
+#   # review the report, then:
+#   adobe-downloader clean --config jobs/examples/legend_cleanup_routine.yaml --confirm
+#
+# Removal still needs dry_run: false below AND --confirm on the command line.
+
+target:
+  base_folder: "C:/Adobe_Downloads"
+  clients: [Legend]
+  jobs: []
+  exclude_jobs: []
+
+defaults:
+  dry_run: false             # paired with --confirm; neither alone deletes anything
+  action: quarantine         # reversible: files land in Legend/_trash/<timestamp>/
+  quarantine_folder: "_trash"
+
+  # A floor, NOT a fallback: it raises any shorter category threshold to match.
+  # Lowered from the default 7 so the 3-day json rule below actually takes effect.
+  absolute_min_age_days: 3
+
+protect:
+  # Turned OFF so concatenated outputs are no longer kept forever. This is one of
+  # the two switches guarding them - categories.final_outputs.enabled is the other.
+  final_outputs: false
+
+  final_output_prefixes:
+    - INVESTIGATION
+    - VALIDATION
+    - COMPARE
+    - FINALMETRICS
+    - REPORT
+    - SUMMARY
+    - OUTPUT
+  final_output_suffixes:
+    - "_concat.csv"
+  history: true              # .history/ stays untouchable
+  running_jobs: true
+  patterns: []               # e.g. "*_MASTER.csv" to spare specific deliverables
+
+# Thresholds must satisfy  json <= interval_csv <= final_outputs.
+#
+# Removal evidence forms a chain: a JSON may go only while its sibling CSV exists,
+# and a CSV only while a newer final output exists. If a stage outlives the thing
+# that vouches for it, the dependent files lose their evidence and are kept
+# forever as no_csv_sibling / no_final_output. `clean` warns if this is violated.
+categories:
+
+  # 3d <= 7d <= 30d - the chain holds.
+  json:
+    enabled: true
+    older_than_days: 3
+    require_csv_sibling: true
+
+  interval_csv:
+    enabled: true
+    older_than_days: 7
+    require_final_output: true
+    require_final_output_newer: true
+
+  # The deliverables. Both switches are on, so these now age out.
+  final_outputs:
+    enabled: true
+    older_than_days: 30
+
+  processed_json:
+    enabled: true
+    older_than_days: 3
+
+  # Completed jobs only - a failed job's DB and log are what you need to
+  # diagnose or resume it, so those are kept whatever their age.
+  state_db:
+    enabled: true
+    older_than_days: 14
+    require_job_status: [completed]
+    keep_unknown: true
+
+  logs:
+    enabled: true
+    older_than_days: 14
+    require_job_status: [completed]
+    keep_unknown: true
+    rotated_older_than_days: 3
+
+  zip_archives:
+    enabled: true
+    older_than_days: 30
+
+  # Quarantine batches age from their folder timestamp, so this really is 14 days
+  # of grace after the move - not 14 days from each file's original mtime.
+  trash:
+    enabled: true
+    older_than_days: 14
+
+report:
+  console: true
+  write_to: ".history/cleanup"
+  formats: [markdown, json]
+  top_n_largest_kept: 20

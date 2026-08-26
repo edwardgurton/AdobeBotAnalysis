@@ -1229,7 +1229,13 @@ def clean(config: Path, confirm: bool, debug: bool) -> None:
 
     from adobe_downloader.config.loader import load_config
     from adobe_downloader.config.schema import CleanupJobConfig
-    from adobe_downloader.flows.cleanup import execute, human_bytes, render_console, scan
+    from adobe_downloader.flows.cleanup import (
+        config_warnings,
+        execute,
+        human_bytes,
+        render_console,
+        scan,
+    )
     from adobe_downloader.flows.cleanup import write_reports as write_cleanup_reports
     from adobe_downloader.utils.logging import setup_logging
 
@@ -1262,6 +1268,9 @@ def clean(config: Path, confirm: bool, debug: bool) -> None:
             "Config sets dry_run: false, but --confirm was not passed - running dry.",
             fg="yellow",
         )
+
+    for warning in config_warnings(job):
+        click.secho(f"Warning: {warning}", fg="yellow")
 
     timestamp = datetime.now().strftime("%Y-%m-%d_%H%M%S")
 

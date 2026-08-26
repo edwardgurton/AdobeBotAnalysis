@@ -866,11 +866,15 @@ def render_console(
 
     top = plan.largest_kept(cfg.report.top_n_largest_kept)
     if top:
-        lines += ["", f"Largest {len(top)} kept:"]
+        lines += [
+            "",
+            f"Largest {len(top)} kept:",
+            f"    {'':>12}  {'category':<14}{'reason':<28}file",
+        ]
         for verdict in top:
             lines.append(
                 f"    {human_bytes(verdict.file.size):>12}  "
-                f"{verdict.reason:<28}{verdict.file.path.name}"
+                f"{verdict.file.category:<14}{verdict.reason:<28}{verdict.file.path.name}"
             )
 
     if not dry_run:
@@ -995,13 +999,13 @@ def render_markdown(
             "",
             f"## Largest {len(top)} kept",
             "",
-            "| Size | Reason | File |",
-            "|---:|---|---|",
+            "| Size | Category | Reason | File |",
+            "|---:|---|---|---|",
         ]
         for verdict in top:
             lines.append(
-                f"| {human_bytes(verdict.file.size)} | {verdict.reason} "
-                f"| `{verdict.file.path.name}` |"
+                f"| {human_bytes(verdict.file.size)} | {verdict.file.category} "
+                f"| {verdict.reason} | `{verdict.file.path.name}` |"
             )
 
     if not dry_run:
@@ -1062,3 +1066,89 @@ def write_reports(
             written.append(path)
 
     return written
+
+
+# ---------------------------------------------------------------------------
+# Config sanity checks
+# ---------------------------------------------------------------------------
+
+
+def config_warnings(cfg: CleanupJobConfig) -> list[str]:
+    """Non-fatal problems with a cleanup config, as human-readable strings.
+
+    Removal evidence forms a chain: a JSON is removable only while its sibling
+    CSV exists, and a CSV only while a final output newer than it exists. Each
+    stage must therefore clear no later than the thing that vouches for it, i.e.
+
+        json <= interval_csv <= final_outputs
+
+    Break that ordering and files are stranded: the evidence disappears first, so
+    the dependent files are kept with reason no_csv_sibling / no_final_output on
+    every future run. It fails safe -- data is kept, never wrongly deleted -- but
+    it leaks silently, which is exactly what a warning is for.
+    """
+    warnings: list[str] = []
+    categories = cfg.categories
+
+    if categories.final_outputs.enabled and cfg.protect.final_outputs:
+        warnings.append(
+            "categories.final_outputs is enabled but protect.final_outputs is still true, "
+            "so concatenated outputs are kept forever and the category has no effect. "
+            "Set protect.final_outputs: false as well to let them age out."
+        )
+
+    if (
+        categories.json_files.enabled
+        and categories.interval_csv.enabled
+        and categories.json_files.require_csv_sibling
+        and categories.json_files.older_than_days > categories.interval_csv.older_than_days
+    ):
+        warnings.append(
+            f"json.older_than_days ({categories.json_files.older_than_days}d) is greater than "
+            f"interval_csv.older_than_days ({categories.interval_csv.older_than_days}d). "
+            "CSVs would be removed while their JSON is still too recent to go, and those "
+            "JSONs then lose the sibling that proves they were transformed - they would be "
+            "kept as no_csv_sibling forever. Set json.older_than_days no higher than "
+            "interval_csv.older_than_days."
+        )
+
+    if (
+        categories.final_outputs.enabled
+        and not cfg.protect.final_outputs
+        and categories.interval_csv.enabled
+        and categories.interval_csv.require_final_output
+        and categories.final_outputs.older_than_days < categories.interval_csv.older_than_days
+    ):
+        warnings.append(
+            f"final_outputs.older_than_days ({categories.final_outputs.older_than_days}d) is less "
+            f"than interval_csv.older_than_days ({categories.interval_csv.older_than_days}d). "
+            "Final outputs would be removed while their per-interval CSVs are still too recent "
+            "to go, and those CSVs then lose the evidence that they were concatenated - they "
+            "would be kept as no_final_output forever. Set final_outputs.older_than_days no "
+            "lower than interval_csv.older_than_days."
+        )
+
+    floor = cfg.defaults.absolute_min_age_days
+    clamped = [
+        name
+        for name, category in (
+            ("state_db", categories.state_db),
+            ("logs", categories.logs),
+            ("json", categories.json_files),
+            ("interval_csv", categories.interval_csv),
+            ("processed_json", categories.processed_json),
+            ("zip_archives", categories.zip_archives),
+            ("trash", categories.trash),
+            ("final_outputs", categories.final_outputs),
+        )
+        if category.enabled and category.older_than_days < floor
+    ]
+    if clamped:
+        warnings.append(
+            f"defaults.absolute_min_age_days ({floor}d) is a floor, not a fallback - it raises "
+            f"any shorter category threshold to {floor}d. These are being clamped and will not "
+            f"behave as written: {', '.join(clamped)}. Lower absolute_min_age_days to let them "
+            "take effect."
+        )
+
+    return warnings

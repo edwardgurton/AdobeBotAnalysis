@@ -963,3 +963,190 @@ def test_legacy_cleanup_command_warns_and_still_works(tmp_path: Path) -> None:
     assert result.exit_code == 0
     assert "deprecated" in result.output
     assert "clean --config" in result.output
+
+
+# ===========================================================================
+# Config sanity warnings
+# ===========================================================================
+
+
+def _warnings(**overrides: object) -> list[str]:
+    return cl.config_warnings(_cfg(**overrides))
+
+
+def test_default_config_warns_about_nothing() -> None:
+    assert _warnings() == []
+
+
+def test_shipped_example_configs_are_warning_free() -> None:
+    for name in ("legend_cleanup.yaml", "legend_cleanup_routine.yaml"):
+        cfg = load_config(Path("jobs/examples") / name)
+        assert isinstance(cfg, CleanupJobConfig)
+        assert cl.config_warnings(cfg) == [], f"{name} should not warn"
+
+
+def test_enabling_final_outputs_without_lowering_the_guard_warns() -> None:
+    """Both switches are needed; flipping only one silently does nothing."""
+    found = _warnings(categories={"final_outputs": {"enabled": True}})
+    assert len(found) == 1
+    assert "protect.final_outputs is still true" in found[0]
+
+
+def test_no_warning_once_both_switches_are_set() -> None:
+    assert (
+        _warnings(
+            protect={"final_outputs": False},
+            categories={"final_outputs": {"enabled": True, "older_than_days": 30}},
+        )
+        == []
+    )
+
+
+def test_json_outliving_its_csv_evidence_warns() -> None:
+    """CSVs would go first, stranding the JSON with no sibling to vouch for it."""
+    found = _warnings(
+        categories={
+            "json": {"older_than_days": 30},
+            "interval_csv": {"older_than_days": 14},
+        }
+    )
+    assert len(found) == 1
+    assert "no_csv_sibling" in found[0]
+
+
+def test_final_output_outliving_its_csv_dependents_warns() -> None:
+    """Final outputs would go first, stranding CSVs with no concatenation evidence."""
+    found = _warnings(
+        protect={"final_outputs": False},
+        categories={
+            "final_outputs": {"enabled": True, "older_than_days": 7},
+            "interval_csv": {"older_than_days": 30},
+        },
+    )
+    assert len(found) == 1
+    assert "no_final_output" in found[0]
+
+
+def test_evidence_chain_warnings_are_skipped_when_the_check_is_off() -> None:
+    """No sibling requirement means no chain to break."""
+    assert (
+        _warnings(
+            categories={
+                "json": {"older_than_days": 30, "require_csv_sibling": False},
+                "interval_csv": {"older_than_days": 14},
+            }
+        )
+        == []
+    )
+
+
+def test_clamped_categories_are_named(tree: Path) -> None:
+    """The floor silently raises shorter thresholds, so say which ones."""
+    found = _warnings(
+        defaults={"absolute_min_age_days": 30},
+        categories={"json": {"older_than_days": 3}, "logs": {"older_than_days": 5}},
+    )
+    assert len(found) == 1
+    assert "floor, not a fallback" in found[0]
+    assert "json" in found[0]
+    assert "logs" in found[0]
+
+
+def test_disabled_categories_are_not_reported_as_clamped() -> None:
+    """Only enabled categories can be clamped, so a disabled one must not be named.
+
+    Every other category is lifted clear of the floor here so `json` is the sole
+    candidate; if it were reported, the list would be non-empty.
+    """
+    above_floor = {"older_than_days": 60}
+    assert (
+        _warnings(
+            defaults={"absolute_min_age_days": 30},
+            categories={
+                "json": {"enabled": False, "older_than_days": 3},
+                "interval_csv": above_floor,
+                "processed_json": above_floor,
+                "state_db": above_floor,
+                "logs": {"older_than_days": 60, "rotated_older_than_days": 60},
+                "trash": above_floor,
+            },
+        )
+        == []
+    )
+
+
+def test_clean_surfaces_config_warnings(tree: Path, tmp_path: Path) -> None:
+    cfg_path = _write_cfg(tmp_path, tree, categories={"final_outputs": {"enabled": True}})
+    result = _invoke(["clean", "--config", str(cfg_path)])
+    assert result.exit_code == 0
+    assert "protect.final_outputs is still true" in result.output
+
+
+# ===========================================================================
+# Ageing out final outputs
+# ===========================================================================
+
+
+def _both_switches(days: int = 30) -> dict[str, object]:
+    return {
+        "protect": {"final_outputs": False},
+        "categories": {"final_outputs": {"enabled": True, "older_than_days": days}},
+    }
+
+
+def test_final_output_still_kept_with_only_the_category_enabled(tree: Path) -> None:
+    """One switch is not enough - the 999-day-old output survives."""
+    plan = _plan(tree, categories={"final_outputs": {"enabled": True}})
+    v = _verdict_for(plan, "COMPARE_MyJob_rule1.csv")
+    assert v.remove is False
+    assert v.reason == cl.KEEP_PROTECTED_FINAL_OUTPUT
+
+
+def test_final_output_still_kept_with_only_the_guard_lowered(tree: Path) -> None:
+    """The other switch alone is not enough either."""
+    plan = _plan(tree, protect={"final_outputs": False})
+    v = _verdict_for(plan, "COMPARE_MyJob_rule1.csv")
+    assert v.remove is False
+    assert v.reason == cl.KEEP_CATEGORY_DISABLED
+
+
+def test_final_output_ages_out_with_both_switches(tree: Path) -> None:
+    plan = _plan(tree, **_both_switches(30))
+    v = _verdict_for(plan, "COMPARE_MyJob_rule1.csv")
+    assert v.remove is True
+    assert v.file.category == cl.CATEGORY_FINAL_OUTPUT
+
+
+def test_recent_final_output_survives_its_own_threshold(tree: Path) -> None:
+    """The Restale job's output is 90 days old; a 365-day rule spares it."""
+    plan = _plan(tree, **_both_switches(365))
+    v = _verdict_for(plan, "VALIDATION_Restale.csv")
+    assert v.remove is False
+    assert v.reason == cl.KEEP_TOO_RECENT
+
+
+def test_concat_fallback_in_csv_folder_also_ages_out(tree: Path) -> None:
+    """The no-job_name output lives among the CSVs but follows final_outputs rules."""
+    plan = _plan(tree, **_both_switches(30))
+    assert _verdict_for(plan, "stray_concat.csv").remove is True
+
+
+def test_ageing_final_outputs_does_not_strand_their_csvs_in_one_run(tree: Path) -> None:
+    """Scan is a separate phase, so CSVs are judged while the output still exists."""
+    plan = _plan(tree, **_both_switches(30))
+    assert _verdict_for(plan, "COMPARE_MyJob_rule1.csv").remove is True
+    assert _verdict_for(plan, "a.csv").remove is True
+
+
+def test_deleting_final_outputs_is_still_reversible(tree: Path) -> None:
+    _cfg_, _plan_, result = _run(tree, **_both_switches(30))
+    moved = tree / "Legend" / "_trash" / _TS / "MyJob" / "COMPARE_MyJob_rule1.csv"
+    assert moved.is_file()
+    assert result.quarantined > 0
+
+
+def test_history_survives_even_with_every_switch_flipped(tree: Path) -> None:
+    """No combination of settings reaches the audit trail."""
+    _run(tree, **_both_switches(0))
+    assert (tree / "Legend" / ".history" / "job_history.jsonl").is_file()
+    assert (tree / "Legend" / ".history" / "configs" / "old.yaml").is_file()
