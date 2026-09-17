@@ -7,3 +7,13 @@ credentials/
 .claude/settings.local.json
 .claude/settings.local.json
 .claude/settings.local.json
+data/rsid_lists/archive/
+data/segment_lists
+logs/
+jobs/inputs/bot_compare_lists/
+jobs/inputs/segment_creation_lists/
+jobs/inputs/bot_rule_lists/
+test/fixtures/transforms/
+data/report_suite_lists
+jobs/*.yaml
+jobs/completed-jobs/
