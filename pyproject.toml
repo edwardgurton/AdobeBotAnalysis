@@ -20,6 +20,8 @@ adobe-downloader = "adobe_downloader.cli:main"
 
 [project.optional-dependencies]
 dev = ["pytest>=8", "pytest-asyncio>=0.23"]
+# Only the standalone credential broker (broker/adobe_broker.py) needs this.
+broker = ["keyring>=24"]
 
 [tool.setuptools.packages.find]
 where = ["."]
