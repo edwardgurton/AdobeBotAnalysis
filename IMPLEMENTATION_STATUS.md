@@ -17,9 +17,9 @@ Status legend: `☐ todo` · `🔄 in-progress` · `✅ done` · `⚠️ blocked
 
 **Active step:** *(all steps complete)*
 
-**Last commit:** `Add categories.final_outputs so aged concatenated outputs can be removed` — fixes `protect.final_outputs: false` silently keeping final outputs forever as `unclassified`; 665 tests passing
+**Last commit:** `Deny Claude access to credential files, env vars, keychain and broker` — credentials moved out of the codebase into a local keychain-backed broker; 710 tests passing
 
-**Next concrete action:** Run the user's `jobs/legend_cleanup_DELETE_OLD_CONCATS.yaml` (dry run — already `protect.final_outputs: false` + `categories.final_outputs: {enabled: true, older_than_days: 30}`), review the report, then set `dry_run: false` and re-run with `--confirm`.
+**Next concrete action:** User stores the four keychain entries and starts `broker/adobe_broker.py` in their own terminal (see `README.md`), then runs `adobe-downloader list-rsids --client Legend` to validate live.
 
 **In-flight (uncommitted) work:** *(none)*
 
@@ -512,3 +512,12 @@ Status legend: `☐ todo` · `🔄 in-progress` · `✅ done` · `⚠️ blocked
 - **State of the Legend tree:** two real `--confirm` runs happened on 2026-08-26 (14:22, 18:27). Batch `_trash/2026-08-26_142251` holds 923,676 files and **zero** final outputs (conservative config; deliverables all protected). Batch `_trash/2026-08-26_182734` holds **117 final outputs (3.9 GB)** — final-output ageing was enabled. Live tree retains 42 final outputs (1.2 GB). User elected to leave the quarantine as is; with `trash.older_than_days: 14` those 117 are permanently purged by the first `--confirm` run after ~2026-09-09.
 - **Known gap (deliberately not built):** there is no `restore` command. Quarantine is reversible only by hand-moving files out of a batch. Offered and declined this session; worth revisiting if quarantine is ever used as a safety net rather than a staging area for deletion.
 - **Next action:** *(none)*
+
+
+### 2026-09-25 (credential broker)
+- **Worked on:** Moving Adobe credentials out of the codebase
+- **Commits:** `Add local credential broker for Adobe Analytics`, `Route all API calls through the broker; remove credential loading`, `Docs: credential broker setup and keychain storage`, `Deny Claude access to credential files, env vars, keychain and broker` (4 commits)
+- **Done this session:** New standalone `broker/adobe_broker.py` (not part of the package; optional `broker` extra) reads `client_id`/`client_secret`/`org_id`/`company_id` from the OS keychain (service `adobe-downloader-broker`), caches and refreshes the IMS token, and forwards `127.0.0.1:8765/<path>` to `analytics.adobe.io/api/<company_id>/<path>` with auth headers added. GET/POST only; rejects traversal paths, non-local `Host`, any `Origin`, non-JSON bodies. Never logs or returns secrets, tokens or headers. `AdobeClient()` now takes no client name; base URL from `ADOBE_API_BASE_URL`, default the broker; paths are company-relative; `BrokerUnavailableError` if unreachable. Removed `core/auth.py`, `load_credentials`, `credentials_exist`, `validate --check-credentials`, header debug logging, credential migration step, `credentials/clientLegend.yaml`, `legacy_js/config/client_configs/*` (user-approved exception to "do not modify legacy_js"), `jobs/templates/client_config_template.yaml`. Added 27 tests (710 total); `ruff`/`mypy` at or below baseline.
+- **Security note:** `legacy_js/config/client_configs/clientLegend.yaml` was tracked since the initial commit and pushed to GitHub, so it remains in history. User has rotated the client secret, which makes the old value inert.
+- **Guardrail limits:** `.claude/settings.json` deny rules are pattern-based, not a sandbox. Any local process (Claude included) can still call Adobe *through* the broker — that is the intended trade-off; it just cannot obtain the token.
+- **Next action:** User validates live with the broker running.
