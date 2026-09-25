@@ -26,6 +26,7 @@ These are non-negotiable:
 - **Configuration over code.** Every job is a YAML config validated by Pydantic at load time. Never hard-code job parameters in Python.
 - **Every API request is tracked** in the SQLite state DB before it executes. No exceptions.
 - **The tool never silently deletes data.** Cleanup is opt-in and explicit.
+- **No credentials in the codebase.** All Adobe calls go through `AdobeClient` to the local broker (`broker/adobe_broker.py`), which the user runs themselves. Never start, edit or bypass the broker, read keychain entries, dump env vars, or add header/token logging. If the broker is unreachable, ask the user to start it.
 
 ## Code style
 
@@ -38,7 +39,7 @@ These are non-negotiable:
 ## Git conventions
 
 - Work on `main`. One commit per logical change.
-- Never commit anything from `jobs/` (run configs), `credentials/`, or any output folder.
+- Never commit anything from `jobs/` (run configs) or any output folder.
 
 ## Segment filtering policy (Legend client)
 
@@ -74,6 +75,7 @@ Full details: `user-docs/claude-reference.md` → Segment Filtering Policy. Segm
 
 - **User docs:** `user-docs/` — HTML manual, Claude reference, technical reference
 - **Legacy JS source:** `legacy_js/` — reference only, do not modify
+- **Credential broker:** `broker/adobe_broker.py` — standalone; setup in `README.md`
 - **Test fixtures:** `tests/fixtures/`
 - **Reference data:** `data/` (RSID lists, segment lists, lookups, bot rule lists)
 - **Semantic layer:** `data/semantic_layer/` — curated dimension/metric annotations

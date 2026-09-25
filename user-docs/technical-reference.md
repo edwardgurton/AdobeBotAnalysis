@@ -24,19 +24,23 @@ This document describes the internal architecture and data flow of `adobe-downlo
      │ uses                         │ uses
 ┌────▼────────────┐        ┌────────▼─────────────────────────────┐
 │  state_manager  │        │  core/                               │
-│  (SQLite DB)    │        │   auth.py          (OAuth tokens)    │
-│                 │        │   api_client.py    (httpx wrapper)   │
+│  (SQLite DB)    │        │                 │        │   api_client.py    (httpx wrapper)   │
 │  jobs table     │        │   rate_limiter.py  (sliding window)  │
 │  requests table │        │   request_builder.py (body assembly) │
 │  step_state     │        └────────────┬─────────────────────────┘
-└─────────────────┘                     │ HTTPS
+└─────────────────┘                     │ HTTP (127.0.0.1 only)
+                              ┌─────────▼───────────────────────┐
+                              │  broker/adobe_broker.py         │
+                              │  keychain creds + IMS token     │
+                              └─────────┬───────────────────────┘
+                                        │ HTTPS + auth headers
                               ┌─────────▼───────────┐
                               │  Adobe Analytics API │
                               │  analytics.adobe.io  │
                               └──────────────────────┘
      ┌──────────────────────────────────────────────────┐
      │  config/ (YAML → Pydantic)                       │
-     │   loader.py             (credentials + job YAML) │
+     │   loader.py             (job YAML)               │
      │   report_definitions.py (report registry)        │
      │   schema.py             (Pydantic models)        │
      └──────────────────────────────────────────────────┘
@@ -52,52 +56,41 @@ Config feeds into every flow via YAML files loaded and validated by Pydantic at 
 
 ---
 
-## Auth Flow (`core/auth.py`)
+## Credential Broker (`broker/adobe_broker.py`)
 
-`auth.py` is a thin module containing a single async function: `fetch_token`. It has no class and no caching — caching is the responsibility of `AdobeClient`.
+The main package holds no credentials and never sees an access token. All authentication lives in a standalone script, `broker/adobe_broker.py`, which the user runs in a separate terminal (see `README.md`). It is not part of the `adobe_downloader` package and needs the optional `keyring` dependency (`pip install -e ".[broker]"`).
 
-**Token fetch**: An HTTP POST is made to `https://ims-na1.adobelogin.com/ims/token/v3` with a `client_credentials` grant type. The scope sent is `openid,AdobeID,additional_info.projectedProductContext`. On success, the JSON response provides `access_token` and `expires_in` (seconds).
+**Credentials**: read at startup from the OS keychain via `keyring`, service `adobe-downloader-broker`, keys `client_id`, `client_secret`, `org_id`, `company_id`. Missing entries are reported by key name only.
 
-**Expiry calculation**: The expiry timestamp is recorded as a monotonic clock value: `time.monotonic() + expires_in - 300`. The 300-second buffer (`_EXPIRY_BUFFER`) means the token is considered stale 5 minutes before its nominal expiry, so it is refreshed proactively rather than waiting for a 401.
+**Token management**: the broker POSTs a `client_credentials` grant to `https://ims-na1.adobelogin.com/ims/token/v3` (scope `openid,AdobeID,additional_info.projectedProductContext`), caches the token in memory behind a lock, and treats it as stale 300 seconds (`REFRESH_BUFFER_SECONDS`) before nominal expiry. If Adobe still answers 401, the broker refreshes once and retries.
 
-**Credentials file format**: `load_credentials` in `config/loader.py` reads `credentials/client{name}.yaml` (falling back to `credentials/{name}.yaml`). The YAML must contain an `adobe` key:
+**Forwarding**: listens on `127.0.0.1:8765` (port configurable with `--port`; the bind address is not). A request for `/<path>?<query>` is sent to `https://analytics.adobe.io/api/<company_id>/<path>?<query>` with `Authorization`, `x-api-key`, `x-proxy-global-company-id` and `x-gw-ims-org-id` added. Only GET and POST are supported. Caller headers other than `Content-Type`/`Accept` are dropped; only the upstream status, body, `Content-Type` and `Retry-After` are returned.
 
-```yaml
-adobe:
-  clientID: "your-client-id"
-  clientSecret: "your-client-secret"
-  adobeOrgID: "your-org-id@AdobeOrg"
-  globalCompanyID: "your-company-id"
-```
-
-`AdobeClient.__init__` extracts all four fields from this dict. The client ID doubles as the `x-api-key` header on every API request.
+**Safety rules**: never logs or returns the secret, the token or any headers — log lines are `METHOD /path -> status`, and error bodies are `{"error": "broker: ..."}` built from fixed strings (exception type names only, never upstream messages). Paths with `..`, backslashes or absolute URLs are rejected. Requests with a non-local `Host` header or any `Origin` header are rejected (defends against browser pages reaching localhost), and POST bodies must be `application/json`. `GET /_broker/health` reports status and token lifetime without the token.
 
 ---
 
 ## API Client (`core/api_client.py`)
 
-`AdobeClient` is the single entry point for all Adobe Analytics API calls. It is instantiated once per job with a `client_name` string and owns its own `httpx.AsyncClient` (120-second timeout) and `SlidingWindowRateLimiter`.
+`AdobeClient` is the single entry point for all Adobe Analytics API calls. It is instantiated once per job (`AdobeClient()`, optionally with an explicit `base_url`) and owns its own `httpx.AsyncClient` (600-second timeout) and `SlidingWindowRateLimiter`.
 
-**Token management**: `_get_token()` checks `time.monotonic() >= self._token_expiry` on every call. If the token is absent or stale, it awaits `fetch_token` and caches the result. No locking is applied — in practice, the single async task calling `_get_token` at a time means there is no race.
+**Base URL**: resolved by `resolve_base_url()` — explicit argument, then the `ADOBE_API_BASE_URL` environment variable, then `DEFAULT_API_BASE_URL` (`http://127.0.0.1:8765`, the local broker). Endpoint paths are relative to the company root (e.g. `"reports"`, `"segments/{id}"`); the broker prefixes the company ID.
 
-**Request headers**: Every request carries four headers assembled in `_headers()`:
-- `Authorization: Bearer <token>`
-- `x-api-key: <clientID>`
-- `x-proxy-global-company-id: <globalCompanyID>`
-- `x-gw-ims-org-id: <adobeOrgID>`
+**No auth in the client**: `AdobeClient` sends no auth headers and holds no token, secret or company ID. If the broker cannot be reached, requests raise `BrokerUnavailableError` with a hint to start it.
 
-**`_get` / `_post` pattern**: Both methods follow the same structure: obtain a token, log the request at DEBUG level, define an inner `_call` coroutine decorated with the tenacity retry, then `await _call()`. The actual HTTP verb is delegated to `self._rate_limiter.execute(self._http.get, ...)` or `self._http.post`. After the response returns, `r.raise_for_status()` is called inside `_call` inside a try/except so HTTP errors are logged at DEBUG before re-raising. The `httpx.HTTPStatusError` is then caught by the tenacity retry predicate.
+**`_get` / `_post` pattern**: Both methods follow the same structure: build the URL from the relative path, log the request at DEBUG level, define an inner `_call` coroutine decorated with the tenacity retry, then `await _call()`. The HTTP verb goes through `_send()`, which delegates to `self._rate_limiter.execute(...)`. After the response returns, `r.raise_for_status()` is called inside `_call` inside a try/except so HTTP errors are logged at DEBUG before re-raising. The `httpx.HTTPStatusError` is then caught by the tenacity retry predicate.
 
 **Debug logging**: When the root logger is at DEBUG level (triggered by `--debug`), `_get` and `_post` emit:
 - `DEBUG  GET/POST <url>`
-- `DEBUG    headers: {... Authorization: Bearer *** ...}` (token is always masked)
 - `DEBUG    params: {...}` (GET requests with query params only)
-- `DEBUG    body:\n{...pretty JSON...}` (POST only, capped at 20 000 characters)
+- `DEBUG    body:
+{...pretty JSON...}` (POST only, capped at 20 000 characters)
 
 On any HTTP error response:
-- `DEBUG    response <status> <reason>\n<body text>` (capped at 20 000 characters)
+- `DEBUG    response <status> <reason>
+<body text>` (capped at 20 000 characters)
 
-The module-level helper `_sanitize_headers` performs the token masking. The body cap constant `_BODY_LOG_LIMIT = 20_000` can be raised if you need to inspect larger responses.
+Request headers are never logged. The body cap constant `_BODY_LOG_LIMIT = 20_000` can be raised if you need to inspect larger responses.
 
 **Public API methods**:
 - `get_report(request_body)` — POST to `/reports`; returns the JSON response dict.

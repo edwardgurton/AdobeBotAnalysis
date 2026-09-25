@@ -362,7 +362,7 @@
       <ul>
         <li>Python 3.12 or later</li>
         <li>Access to the <code>AdobeBotAnalysis</code> GitHub repository</li>
-        <li>Adobe Analytics API credentials for the client you are working with</li>
+        <li>Adobe Analytics OAuth Server-to-Server credentials, stored in your OS keychain (see <code>README.md</code>)</li>
       </ul>
 
       <h3>Install the package</h3>
@@ -377,23 +377,19 @@
         <p style="margin-top:0.6rem">Substitute <code>python -m adobe_downloader</code> for <code>adobe-downloader</code> in every command shown in this manual.</p>
       </div>
 
-      <h3>Credentials file</h3>
-      <p>Each client needs a credentials file at:</p>
-      <pre><code>credentials/client&lt;ClientName&gt;.yaml</code></pre>
-      <p>For example, the Legend client uses <code>credentials/clientLegend.yaml</code>. The file contains Adobe API credentials in the following format:</p>
-      <pre><code>adobe:
-  clientID: &lt;your-client-id&gt;
-  clientSecret: &lt;your-client-secret&gt;
-  adobeOrgID: &lt;your-org-id&gt;@AdobeOrg
-  globalCompanyID: &lt;company-id&gt;
-  rsid: &lt;a-default-rsid&gt;</code></pre>
+      <h3>Credentials and the local broker</h3>
+      <p>The tool itself holds no Adobe credentials. Every API call goes to a small <strong>credential broker</strong> running on your machine (<code>broker/adobe_broker.py</code>). The broker reads the OAuth client ID and secret from your OS keychain, gets and refreshes the access token, and forwards requests to Adobe with the auth headers added. Tokens and secrets never reach the tool, its logs or Claude.</p>
+      <p>One-off setup and how to start the broker are described in <code>README.md</code> at the repo root. In short:</p>
+      <pre><code>pip install -e ".[broker]"
+python broker/adobe_broker.py        # leave running in its own terminal</code></pre>
+      <p>By default the tool talks to the broker at <code>http://127.0.0.1:8765</code>. To use a different address, set the <code>ADOBE_API_BASE_URL</code> environment variable.</p>
 
       <div class="callout warn">
-        <p><strong>Security:</strong> The <code>credentials/</code> directory is excluded from git commits. Never commit credential files. If you are setting up a new environment, copy the credentials file from the team's secure storage.</p>
+        <p><strong>Security:</strong> Start the broker yourself, in your own terminal &mdash; not through Claude. Never put credentials in files inside the repository.</p>
       </div>
 
-      <h3>Verify credentials</h3>
-      <p>To confirm your credentials are valid, list all report suites for a client:</p>
+      <h3>Verify the connection</h3>
+      <p>With the broker running, confirm everything works by listing all report suites:</p>
       <pre><code>adobe-downloader list-rsids --client Legend</code></pre>
 
       <p>To list all Adobe Analytics users available to the client:</p>
@@ -517,7 +513,6 @@ Casinoorg</code></pre>
           <thead><tr><th>Flag</th><th>Default</th><th>Description</th></tr></thead>
           <tbody>
             <tr><td><code>--config / -c</code></td><td><span class="pill req">required</span></td><td>Path to the config file to validate.</td></tr>
-            <tr><td><code>--check-credentials / --no-check-credentials</code></td><td><code>True</code></td><td>Warn if the credentials file for the config's client is missing.</td></tr>
           </tbody>
         </table>
       </div>
@@ -1099,7 +1094,7 @@ C:/Adobe_Downloads/Legend/casinoorg_seo_homepage_bot_investigation_90d/INVESTIGA
           <thead><tr><th>Field</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
           <tbody>
             <tr><td><code>job_type</code></td><td>string</td><td><span class="pill req">required</span></td><td>Discriminator. One of: <code>report_download</code>, <code>transform_concat</code>, <code>segment_creation</code>, <code>lookup_generation</code>, <code>rsid_update</code>, <code>composite</code>.</td></tr>
-            <tr><td><code>client</code></td><td>string</td><td><span class="pill req">required</span></td><td>Client name, must match a file <code>credentials/client&lt;Name&gt;.yaml</code>.</td></tr>
+            <tr><td><code>client</code></td><td>string</td><td><span class="pill req">required</span></td><td>Client name, used in output folder and file names.</td></tr>
             <tr><td><code>description</code></td><td>string</td><td><code>""</code></td><td>Free-text description shown in validate output and history.</td></tr>
             <tr><td><code>output.base_folder</code></td><td>string</td><td><span class="pill req">required</span></td><td>Root directory for all output. Client sub-folder is appended automatically.</td></tr>
             <tr><td><code>output.job_name</code></td><td>string or null</td><td><code>null</code></td><td>Optional investigation name. Inserts a <code>&lt;job_name&gt;/</code> subfolder for JSON/CSV output and names a composite job's final concatenated CSV. See <a href="#composite-job-name">Naming with job_name</a>.</td></tr>
@@ -1507,7 +1502,6 @@ adobe-downloader validate-output --config jobs/... --retry --debug</code></pre>
       <p>For every API call (GET and POST):</p>
       <ul>
         <li><strong>Method + URL</strong></li>
-        <li><strong>Request headers</strong> — the Authorization token is always masked as <code>Bearer ***</code>; all other headers are shown verbatim.</li>
         <li><strong>Request body</strong> (POST only) — pretty-printed JSON, capped at 20 000 characters.</li>
       </ul>
       <p>On any HTTP error (4xx or 5xx):</p>
@@ -1529,7 +1523,7 @@ adobe-downloader validate-output --config jobs/... --retry --debug</code></pre>
       <pre><code>adobe-downloader run --config jobs/casinoorg_seo_homepage_bot_investigation_90d_full.yaml --debug</code></pre>
 
       <div class="callout warn">
-        <p><strong>Token security:</strong> Debug output includes all request headers except the Authorization token, which is always replaced with <code>Bearer ***</code>. Never share raw debug output that still contains credentials.</p>
+        <p><strong>Token security:</strong> Debug output never includes request headers. Auth headers are added by the local broker, so the tool never sees a token to print.</p>
       </div>
     </section>
 
@@ -1542,9 +1536,13 @@ adobe-downloader validate-output --config jobs/... --retry --debug</code></pre>
       <p><strong>Cause:</strong> A required field is missing, a value has the wrong type, or a mutually exclusive combination is set (e.g. both <code>report_ref</code> and <code>report_group</code>).</p>
       <p><strong>Fix:</strong> Read the error message carefully. The field path (e.g. <code>rsids -&gt; source</code>) tells you exactly what is wrong. Run <code>validate</code> after every edit until it passes.</p>
 
-      <h3>No credentials file found</h3>
-      <p><strong>Symptom:</strong> Warning: <code>no credentials file found for client 'X'</code>, or <code>FileNotFoundError</code> at run time.</p>
-      <p><strong>Fix:</strong> Ensure <code>credentials/client&lt;Name&gt;.yaml</code> exists (case-sensitive). The client name in the config must match the suffix of the credentials filename exactly.</p>
+      <h3>Cannot reach the credential broker</h3>
+      <p><strong>Symptom:</strong> <code>Cannot reach the Adobe credential broker at http://127.0.0.1:8765</code>.</p>
+      <p><strong>Fix:</strong> Start <code>python broker/adobe_broker.py</code> in a separate terminal and leave it running. If you changed its port, set <code>ADOBE_API_BASE_URL</code> to match.</p>
+
+      <h3>Broker reports an IMS token failure</h3>
+      <p><strong>Symptom:</strong> HTTP 502 with <code>broker: token request to Adobe IMS failed</code>, or the broker exits at startup with the same message.</p>
+      <p><strong>Fix:</strong> The keychain credentials are wrong or have been rotated. Update the entries as described in <code>README.md</code> and restart the broker.</p>
 
       <h3>RSID file not found</h3>
       <p><strong>Symptom:</strong> <code>RSID file not found: data/rsid_lists/legend_investigation.txt</code>.</p>
@@ -1607,11 +1605,11 @@ adobe-downloader validate-output --config jobs/... --retry --debug</code></pre>
             <tr>
               <td><code>adobe-downloader run</code></td>
               <td><code>-c</code> config, <code>-r</code> report, <code>--no-resume</code>, <code>--test</code>, <code>--debug</code></td>
-              <td>Execute a job (any type). Primary command. <code>--debug</code> prints all API request headers, bodies, and error responses to the console.</td>
+              <td>Execute a job (any type). Primary command. <code>--debug</code> prints all API request URLs, bodies, and error responses to the console.</td>
             </tr>
             <tr>
               <td><code>adobe-downloader validate</code></td>
-              <td><code>-c</code> config, <code>--[no-]check-credentials</code></td>
+              <td><code>-c</code> config</td>
               <td>Validate a config file against the schema. Exits 0 on success, 1 on schema error, 2 on file-reference warnings.</td>
             </tr>
             <tr>

@@ -8,7 +8,7 @@ Dense reference for answering operational questions. All field names, types, and
 
 | Command | Key Flags | Purpose |
 |---|---|---|
-| `adobe-downloader validate` | `-c/--config PATH` `--check-credentials/--no-check-credentials` | Parse YAML, run Pydantic validation, verify referenced files exist; warns if credentials missing |
+| `adobe-downloader validate` | `-c/--config PATH` | Parse YAML, run Pydantic validation, verify referenced files exist |
 | `adobe-downloader run` | `-c/--config PATH` `-r/--report NAME` `--no-resume` `--test` `--debug` | Execute a job: report_download, segment_creation, lookup_generation, rsid_update, or composite |
 | `adobe-downloader status` | `-c/--config PATH` | Print SQLite state for a report_download job (counts by status, last errors) |
 | `adobe-downloader retry` | `-c/--config PATH` `--failed-only` | Re-queue failed (or all pending+failed) requests for re-download |
@@ -76,7 +76,7 @@ Downloads Adobe Analytics ranked or summary reports for one or more RSIDs, date 
 | Field | Type | Required | Notes |
 |---|---|---|---|
 | `job_type` | `"report_download"` | yes | Discriminator |
-| `client` | str | yes | Matches `credentials/<client>.json` |
+| `client` | str | yes | Client label used in output names (credentials come from the local broker) |
 | `description` | str | no | Free-text label |
 | `report_ref` | str | one of three | Single named report key (from report_definitions registry) |
 | `report_group` | str | one of three | All reports in a group YAML file |
@@ -999,8 +999,8 @@ concat:
 | Symptom | Likely cause | Fix |
 |---|---|---|
 | `Failed to load config: Schema validation failed` | Missing required field, wrong type, or mutually exclusive fields | Run `adobe-downloader validate -c <config>` for detailed field-level errors |
-| `No credentials file found for client 'X'` | `credentials/X.json` is missing or misnamed | Create or rename the credentials file to match `client:` in the config |
-| `401 Unauthorized` on API calls | Adobe access token expired or credentials wrong | Re-authenticate; check `credentials/<client>.json` has valid `client_id`, `client_secret`, `org_id` |
+| `Cannot reach the Adobe credential broker at ...` | The broker is not running (or `ADOBE_API_BASE_URL` points elsewhere) | Ask the user to start `python broker/adobe_broker.py` in their own terminal. Never start it, read its keychain entries, or inspect env vars yourself |
+| `502` with `broker: token request to Adobe IMS failed` | Keychain credentials wrong or rotated | Ask the user to update the keychain entries (see `README.md`) and restart the broker |
 | `429 Too Many Requests` / rate limit errors | Too many concurrent requests | Reduce `batch_size` (e.g. from 12 to 6) |
 | `report_ref 'X' not found in report_definitions/` | Report name misspelled or not in any YAML in `report_definitions/` | Check `report_definitions/*.yaml` for correct name; use `report_group` if you want all reports in a group |
 | Missing output JSON files after download | Some requests failed; state shows them as `failed` | Run `adobe-downloader status -c <config>` to see failures; run `adobe-downloader retry -c <config> --failed-only` to re-queue |
