@@ -6,7 +6,7 @@ Run from the repo root:
     python scripts/migrate_data.py [--dry-run]
 
 Reads from: legacy_js/
-Writes to:  data/, jobs/inputs/, jobs/templates/, docs/reference/, credentials/
+Writes to:  data/, jobs/inputs/, jobs/templates/, docs/reference/
 
 Never deletes source files. Migration is append-only.
 """
@@ -252,26 +252,8 @@ def main() -> None:
             "*.csv",
         )
 
-    # 11. Client config template → jobs/templates/
-    log("\n[11] Client config template -> jobs/templates/")
-    copy_file(
-        LEGACY / "config" / "client_configs" / "clientTemplate.yaml",
-        REPO_ROOT / "jobs" / "templates" / "client_config_template.yaml",
-    )
-
-    # 12. Legend credentials → credentials/ (gitignored)
-    log("\n[12] Legend credentials -> credentials/")
-    legend_creds = LEGACY / "config" / "client_configs" / "clientLegend.yaml"
-    if legend_creds.exists():
-        copy_file(legend_creds, REPO_ROOT / "credentials" / "clientLegend.yaml")
-    # Ensure credentials/ is in .gitignore
-    gitignore = REPO_ROOT / ".gitignore"
-    gitignore_text = gitignore.read_text(encoding="utf-8") if gitignore.exists() else ""
-    if "credentials/" not in gitignore_text:
-        if not DRY_RUN:
-            with gitignore.open("a", encoding="utf-8") as f:
-                f.write("\n# OAuth credentials — never commit\ncredentials/\n")
-        log("  added credentials/ to .gitignore")
+    # 11-12. (Removed) Client configs and credentials are no longer migrated: Adobe
+    # credentials live in the OS keychain and are used only by broker/adobe_broker.py.
 
     # 13. General reference docs → docs/reference/
     log("\n[13] General reference docs -> docs/reference/")

@@ -20,18 +20,8 @@ def _make_response(payload: Any, status_code: int = 200) -> MagicMock:
 
 
 def _make_client() -> AdobeClient:
-    with patch("adobe_downloader.core.api_client.load_credentials") as mock_creds, patch(
-        "adobe_downloader.core.api_client.fetch_token"
-    ), patch("adobe_downloader.core.api_client.httpx.AsyncClient"):
-        mock_creds.return_value = {
-            "adobe": {
-                "clientID": "cid",
-                "clientSecret": "csec",
-                "adobeOrgID": "org",
-                "globalCompanyID": "company",
-            }
-        }
-        return AdobeClient("TestClient")
+    with patch("adobe_downloader.core.api_client.httpx.AsyncClient"):
+        return AdobeClient()
 
 
 # ---------------------------------------------------------------------------

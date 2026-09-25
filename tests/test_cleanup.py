@@ -187,7 +187,7 @@ def test_cleanup_is_not_a_valid_composite_step() -> None:
 
 
 def test_validate_accepts_a_cleanup_config(tmp_path: Path) -> None:
-    """`validate` must handle a config that has no client and no credentials."""
+    """`validate` must handle a config that has no client."""
     from click.testing import CliRunner
 
     from adobe_downloader.cli import main
@@ -195,12 +195,10 @@ def test_validate_accepts_a_cleanup_config(tmp_path: Path) -> None:
     cfg = tmp_path / "my_cleanup.yaml"
     cfg.write_text("job_type: cleanup\ndescription: tidy up\n", encoding="utf-8")
 
-    result = CliRunner().invoke(main, ["validate", "--config", str(cfg), "--check-credentials"])
+    result = CliRunner().invoke(main, ["validate", "--config", str(cfg)])
     assert result.exit_code == 0, result.output
     assert "Validation passed" in result.output
     assert "cleanup" in result.output
-    # No client means no credentials line to print, and no crash looking for one.
-    assert "credentials file found" not in result.output
 
 
 # ===========================================================================

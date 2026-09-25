@@ -11,7 +11,6 @@ from adobe_downloader import __version__
 from adobe_downloader.config.loader import (
     check_job_name_length,
     check_referenced_files,
-    credentials_exist,
     load_config,
 )
 
@@ -30,12 +29,7 @@ def main() -> None:
     type=click.Path(exists=True, path_type=Path),
     help="Path to the job config YAML file.",
 )
-@click.option(
-    "--check-credentials/--no-check-credentials",
-    default=True,
-    help="Warn if credentials file is missing for the config's client.",
-)
-def validate(config: Path, check_credentials: bool) -> None:
+def validate(config: Path) -> None:
     """Validate a config file: parse YAML, check Pydantic schema, verify referenced files."""
     click.echo(f"Validating: {config}")
 
@@ -51,7 +45,7 @@ def validate(config: Path, check_credentials: bool) -> None:
         click.secho(f"Failed to load config: {exc}", fg="red", bold=True)
         sys.exit(1)
 
-    # Cleanup jobs never call the API, so they carry no client and no credentials.
+    # Cleanup jobs never call the API, so they carry no client.
     client: str | None = getattr(job, "client", None)
 
     click.secho(f"  job_type   : {job.job_type}", fg="cyan")
@@ -70,12 +64,6 @@ def validate(config: Path, check_credentials: bool) -> None:
     for warning in job_name_warnings:
         click.secho(f"  Warning: {warning}", fg="yellow")
 
-    if check_credentials and client is not None and not credentials_exist(client):
-        click.secho(
-            f"  Warning: no credentials file found for client '{client}'",
-            fg="yellow",
-        )
-
     if file_errors or job_name_warnings:
         click.secho("Validation completed with warnings.", fg="yellow")
         sys.exit(2)
@@ -84,13 +72,13 @@ def validate(config: Path, check_credentials: bool) -> None:
 
 
 @main.command("list-users")
-@click.option("--client", "-c", required=True, help="Client name (matches credentials file).")
+@click.option("--client", "-c", required=True, help="Client name.")
 def list_users(client: str) -> None:
     """List Adobe Analytics users for a client."""
     from adobe_downloader.core.api_client import AdobeClient
 
     async def _run() -> list[dict]:  # type: ignore[type-arg]
-        ac = AdobeClient(client)
+        ac = AdobeClient()
         try:
             return await ac.get_users()
         finally:
@@ -324,7 +312,7 @@ def run(config: Path, report: str | None, no_resume: bool, test_mode: bool, debu
     async def _run() -> None:
         from adobe_downloader.flows.report_download import run_report_download
 
-        ac = AdobeClient(job.client)
+        ac = AdobeClient()
         try:
             result = await run_report_download(
                 client=ac,
@@ -444,7 +432,7 @@ def _run_composite_job(
         click.echo(f"  [{step_id}] {msg}")
 
     async def _run() -> None:
-        ac = AdobeClient(job.client)
+        ac = AdobeClient()
         try:
             await run_composite_job(
                 job=job,
@@ -552,7 +540,7 @@ def _run_rsid_update_job(job: object, *, debug: bool = False) -> None:
         click.secho(f"  {status:<4} {rsid}", fg=fg)
 
     async def _run() -> None:
-        ac = AdobeClient(job.client)
+        ac = AdobeClient()
         try:
             result = await run_rsid_update(
                 client=ac,
@@ -623,7 +611,7 @@ def _run_segment_creation_job(job: object, *, debug: bool = False) -> None:
     click.echo(f"Share with : {sc.share_with_users or '(none)'}")
 
     async def _run() -> None:
-        ac = AdobeClient(job.client)
+        ac = AdobeClient()
         try:
             result = await run_segment_creation(
                 client=ac,
@@ -693,7 +681,7 @@ def _run_lookup_generation_job(job: object, *, debug: bool = False) -> None:
         click.echo(f"Segments   : {lg.segments}")
 
     async def _run() -> Path:
-        ac = AdobeClient(job.client)
+        ac = AdobeClient()
         try:
             return await run_lookup_generation(
                 client=ac,
@@ -735,7 +723,7 @@ def get_segment(client: str, segment_id: str, output: Path | None) -> None:
         output = Path("data") / "saved_segments" / f"{segment_id}.json"
 
     async def _run() -> None:
-        ac = AdobeClient(client)
+        ac = AdobeClient()
         try:
             data = await save_segment(ac, segment_id, output)
         finally:
@@ -1392,7 +1380,7 @@ def validate_output(config: Path, retry: bool, dry_run: bool, debug: bool) -> No
         job_id = compute_job_id(config, config_hash)
         db_path = state_db_path(job.output.base_folder, job.client, job_id)
         sm = StateManager(db_path, job_id, config, config_hash)
-        ac = AdobeClient(job.client)
+        ac = AdobeClient()
 
     result = asyncio.run(run_validate_output(job, retry=retry, dry_run=dry_run, ac=ac, sm=sm))
 
@@ -1422,7 +1410,7 @@ def validate_output(config: Path, retry: bool, dry_run: bool, debug: bool) -> No
 
 
 @main.command("update-rsids")
-@click.option("--client", "-c", required=True, help="Client name (matches credentials file).")
+@click.option("--client", "-c", required=True, help="Client name.")
 @click.option("--from", "from_date", required=True, help="Start date YYYY-MM-DD.")
 @click.option("--to", "to_date", required=True, help="End date YYYY-MM-DD.")
 @click.option(
@@ -1507,7 +1495,7 @@ def update_rsids(
         click.secho(f"  {status:<4} {rsid}", fg=fg)
 
     async def _run() -> None:
-        ac = AdobeClient(client)
+        ac = AdobeClient()
         try:
             result = await run_rsid_update(
                 client=ac,
@@ -1579,7 +1567,7 @@ def schema_fetch(config: Path) -> None:
     click.echo(f"Force   : {job.force_refresh}")
 
     async def _run() -> None:
-        ac = AdobeClient(job.client)
+        ac = AdobeClient()
         try:
             await run_schema_discovery(ac, job)
         finally:
@@ -1699,7 +1687,7 @@ def schema_status(ttl: int) -> None:
 
 
 @main.command("list-rsids")
-@click.option("--client", "-c", required=True, help="Client name (matches credentials file).")
+@click.option("--client", "-c", required=True, help="Client name.")
 @click.option(
     "--include-virtual/--no-include-virtual",
     default=False,
@@ -1714,7 +1702,7 @@ def list_rsids(client: str, include_virtual: bool) -> None:
     from adobe_downloader.flows.rsid_update import clean_suite_name
 
     async def _run() -> list[dict]:  # type: ignore[type-arg]
-        ac = AdobeClient(client)
+        ac = AdobeClient()
         try:
             raw = await ac.get_report_suites()
         finally:

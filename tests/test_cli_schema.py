@@ -150,17 +150,17 @@ def test_schema_fetch_success(runner: CliRunner, tmp_path: Path) -> None:
     mock_run.assert_awaited_once()
 
 
-def test_schema_fetch_credential_error(runner: CliRunner, tmp_path: Path) -> None:
+def test_schema_fetch_client_error(runner: CliRunner, tmp_path: Path) -> None:
     config = _write_schema_config(tmp_path)
 
     with patch(
         "adobe_downloader.core.api_client.AdobeClient",
-        side_effect=FileNotFoundError("credentials not found"),
+        side_effect=RuntimeError("broker unreachable"),
     ):
         result = runner.invoke(main, ["schema", "fetch", "-c", str(config)])
 
     assert result.exit_code == 1
-    assert "credentials not found" in result.output
+    assert "broker unreachable" in result.output
 
 
 # ---------------------------------------------------------------------------

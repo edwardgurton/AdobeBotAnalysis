@@ -1,4 +1,4 @@
-"""Config and credential loading."""
+"""Config loading and validation."""
 
 from pathlib import Path
 from typing import Any
@@ -9,7 +9,6 @@ from pydantic import TypeAdapter
 from adobe_downloader.config.schema import CompositeJobConfig, JobConfig, ReportDownloadConfig
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
-_CREDENTIALS_DIR = _REPO_ROOT / "credentials"
 
 _job_config_adapter: TypeAdapter[JobConfig] = TypeAdapter(JobConfig)
 
@@ -101,28 +100,3 @@ def check_job_name_length(config: JobConfig) -> list[str]:
             _check(config.output.job_name, "output")
 
     return warnings
-
-
-def load_credentials(client: str) -> dict[str, Any]:
-    """Load client credentials YAML. Returns the parsed dict."""
-    path = _CREDENTIALS_DIR / f"client{client}.yaml"
-    if not path.exists():
-        # Fall back to exact filename match
-        path = _CREDENTIALS_DIR / f"{client}.yaml"
-    if not path.exists():
-        raise FileNotFoundError(
-            f"Credentials file not found for client '{client}'. "
-            f"Expected: {_CREDENTIALS_DIR / f'client{client}.yaml'}"
-        )
-    with path.open(encoding="utf-8") as fh:
-        data: Any = yaml.safe_load(fh)
-    if not isinstance(data, dict):
-        raise ValueError(f"Credentials file must be a YAML mapping: {path}")
-    return data  # type: ignore[return-value]
-
-
-def credentials_exist(client: str) -> bool:
-    """Return True if a credentials file exists for this client."""
-    return (_CREDENTIALS_DIR / f"client{client}.yaml").exists() or (
-        _CREDENTIALS_DIR / f"{client}.yaml"
-    ).exists()

@@ -9,8 +9,6 @@ from typing import Any
 
 logger = logging.getLogger(__name__)
 
-_API_BASE = "https://analytics.adobe.io/api"
-
 
 async def save_segment(
     client: Any,
@@ -22,7 +20,7 @@ async def save_segment(
     Returns the raw segment dict from the API.
     """
     resp = await client._get(  # type: ignore[attr-defined]
-        f"{_API_BASE}/{client._company_id}/segments/{segment_id}",
+        f"segments/{segment_id}",
         params={"expansion": "definition,rsid,owner,tags"},
     )
     data: dict = resp.json()
