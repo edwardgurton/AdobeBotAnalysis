@@ -11,6 +11,47 @@
       "Bash(adobe-downloader validate *)",
       "Bash(adobe-downloader schema *)",
       "Bash(pip show *)"
+    ],
+    "deny": [
+      "Read(./credentials/**)",
+      "Read(./legacy_js/config/client_configs/**)",
+      "Read(**/.env)",
+      "Read(**/.env.*)",
+      "Edit(./credentials/**)",
+      "Edit(./broker/**)",
+      "Write(./broker/**)",
+
+      "Bash(env)",
+      "Bash(env *)",
+      "Bash(printenv)",
+      "Bash(printenv *)",
+      "Bash(set)",
+      "Bash(export -p)",
+      "Bash(declare -x*)",
+      "Bash(*os.environ*)",
+      "Bash(*getenv*)",
+      "Bash(*/proc/*/environ*)",
+      "Bash(*keyring*)",
+      "Bash(*adobe_broker*)",
+      "Bash(cmdkey*)",
+      "Bash(*Get-StoredCredential*)",
+      "Bash(*PasswordVault*)",
+      "Bash(security find-*)",
+      "Bash(security dump-keychain*)",
+      "Bash(secret-tool *)",
+
+      "PowerShell(*env:*)",
+      "PowerShell(*Env:*)",
+      "PowerShell(*ENV:*)",
+      "PowerShell(*GetEnvironmentVariable*)",
+      "PowerShell(*os.environ*)",
+      "PowerShell(*getenv*)",
+      "PowerShell(*keyring*)",
+      "PowerShell(*adobe_broker*)",
+      "PowerShell(cmdkey*)",
+      "PowerShell(*Get-StoredCredential*)",
+      "PowerShell(*PasswordVault*)",
+      "PowerShell(*CredRead*)"
     ]
   }
 }
