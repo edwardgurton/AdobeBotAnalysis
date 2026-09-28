@@ -3,6 +3,11 @@
 Python CLI for downloading, transforming and managing Adobe Analytics report data.
 Full documentation is in [`user-docs/`](user-docs/).
 
+**New here?** Follow the step-by-step **Setup** section of
+[`user-docs/user-manual.html`](user-docs/user-manual.html) (open it in a browser). It goes
+from a fresh clone to your first successful job. What follows below is the short version of
+the credential steps.
+
 ## Adobe credentials and the local broker
 
 The tool holds no Adobe credentials. Every API call goes to a local **credential broker**

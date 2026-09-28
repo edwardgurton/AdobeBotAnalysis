@@ -282,6 +282,14 @@
       <li><span class="nav-group-label">Getting Started</span></li>
       <li><a href="#overview">Overview</a></li>
       <li><a href="#setup">Setup</a></li>
+      <li><a class="indent" href="#setup-prereqs">1. Prerequisites</a></li>
+      <li><a class="indent" href="#setup-install">2. Install</a></li>
+      <li><a class="indent" href="#setup-values">3. Adobe values</a></li>
+      <li><a class="indent" href="#setup-keychain">4. Keychain</a></li>
+      <li><a class="indent" href="#setup-broker">5. Start the broker</a></li>
+      <li><a class="indent" href="#setup-verify">6. Check connection</a></li>
+      <li><a class="indent" href="#setup-first-job">7. First job</a></li>
+      <li><a class="indent" href="#setup-everyday">Everyday use</a></li>
       <li><a href="#concepts">Key Concepts</a></li>
 
       <li><span class="nav-group-label">Running Jobs</span></li>
@@ -312,7 +320,7 @@
   <main id="main">
 
     <h1>adobe-downloader</h1>
-    <p class="muted">Station10 internal tool &mdash; User Manual &mdash; May 2026</p>
+    <p class="muted">Station10 internal tool &mdash; User Manual &mdash; September 2026</p>
 
     <hr>
 
@@ -325,7 +333,7 @@
       <h3>Core abstraction</h3>
       <p>Everything the tool does is driven by a <strong>YAML config file</strong>. Each config file describes one <em>job</em>: what data to pull, which RSIDs to query, what date range to cover, and how to transform the output. Once the config is written and validated, running the job is a single command:</p>
 
-      <pre><code>adobe-downloader run --config jobs/examples/legend_bot_investigation_jan25.yaml</code></pre>
+      <pre><code>adobe-downloader run --config jobs/my_first_job.yaml</code></pre>
 
       <p>The tool is safe to interrupt and re-run. Every API request is tracked in a SQLite state database; completed requests are skipped automatically on resume so you never download the same file twice.</p>
 
@@ -358,42 +366,154 @@
     <section id="setup">
       <h2>Setup</h2>
 
-      <h3>Prerequisites</h3>
+      <p>Follow these steps in order the first time you use the tool. Setup takes about 15 minutes. Once it's done, day-to-day use is two terminals: one running the broker, one running jobs (see <a href="#setup-everyday">Everyday use</a>).</p>
+
+      <h3>How credentials work</h3>
+      <p>The tool itself never holds Adobe credentials. Every API call goes to a small <strong>credential broker</strong> that runs on your own machine (<code>broker/adobe_broker.py</code>):</p>
+      <pre><code>adobe-downloader  --&gt;  broker on 127.0.0.1:8765  --&gt;  Adobe Analytics API
+                       (reads your OS keychain,
+                        adds the access token)</code></pre>
+      <p>You store your Adobe credentials once in your operating system's keychain (Credential Manager on Windows, Keychain on macOS). The broker reads them, gets an access token from Adobe, renews it automatically, and adds it to each request. The token and secret never appear in the repository, in logs, in the tool's output or to Claude.</p>
+
+      <h3 id="setup-prereqs">Step 1 &mdash; Check the prerequisites</h3>
       <ul>
-        <li>Python 3.12 or later</li>
-        <li>Access to the <code>AdobeBotAnalysis</code> GitHub repository</li>
-        <li>Adobe Analytics OAuth Server-to-Server credentials, stored in your OS keychain (see <code>README.md</code>)</li>
+        <li><strong>Python 3.12 or later.</strong> Check with <code>python --version</code>.</li>
+        <li><strong>Git</strong>, and access to the <code>AdobeBotAnalysis</code> GitHub repository.</li>
+        <li><strong>Access to the Adobe Developer Console project</strong> that holds the client's <em>OAuth Server-to-Server</em> credential, so you can read the client ID and secret. If you don't have it, ask the Adobe admin to add you as a developer on the project.</li>
+        <li>The project's service account must be assigned to an Adobe Analytics product profile. This is an admin task and is normally already done for existing clients.</li>
       </ul>
 
-      <h3>Install the package</h3>
-      <p>From the repository root, install in editable mode:</p>
-      <pre><code>pip install -e .</code></pre>
-      <p>This registers the <code>adobe-downloader</code> command. Verify it works:</p>
+      <h3 id="setup-install">Step 2 &mdash; Get the code and install it</h3>
+      <p>Open a terminal (PowerShell on Windows, Terminal on macOS) and run:</p>
+      <pre><code>git clone https://github.com/edwardgurton/AdobeBotAnalysis.git
+cd AdobeBotAnalysis
+python -m venv .venv</code></pre>
+      <p>Activate the virtual environment. You need to do this in every new terminal you open for the tool:</p>
+      <pre><code># Windows (PowerShell)
+.venv\Scripts\Activate.ps1
+
+# macOS
+source .venv/bin/activate</code></pre>
+      <p>Your prompt now starts with <code>(.venv)</code>. Install the tool together with the broker's extra dependency:</p>
+      <pre><code>pip install -e ".[broker]"</code></pre>
+      <p>Check it installed:</p>
       <pre><code>adobe-downloader --version</code></pre>
 
       <div class="callout warn">
-        <p><strong>Windows:</strong> If you see a warning that the script is not on PATH, or if <code>adobe-downloader</code> is not recognised as a command, use the <code>python -m</code> form instead. It works identically:</p>
+        <p><strong>Windows:</strong> If PowerShell refuses to run <code>Activate.ps1</code> with a message about execution policy, run <code>Set-ExecutionPolicy -Scope CurrentUser RemoteSigned</code> once, then try again.</p>
+        <p>If <code>adobe-downloader</code> is not recognised as a command, use the <code>python -m</code> form instead. It works identically:</p>
         <pre style="margin:0.5rem 0 0">python -m adobe_downloader --version</pre>
         <p style="margin-top:0.6rem">Substitute <code>python -m adobe_downloader</code> for <code>adobe-downloader</code> in every command shown in this manual.</p>
       </div>
 
-      <h3>Credentials and the local broker</h3>
-      <p>The tool itself holds no Adobe credentials. Every API call goes to a small <strong>credential broker</strong> running on your machine (<code>broker/adobe_broker.py</code>). The broker reads the OAuth client ID and secret from your OS keychain, gets and refreshes the access token, and forwards requests to Adobe with the auth headers added. Tokens and secrets never reach the tool, its logs or Claude.</p>
-      <p>One-off setup and how to start the broker are described in <code>README.md</code> at the repo root. In short:</p>
-      <pre><code>pip install -e ".[broker]"
-python broker/adobe_broker.py        # leave running in its own terminal</code></pre>
-      <p>By default the tool talks to the broker at <code>http://127.0.0.1:8765</code>. To use a different address, set the <code>ADOBE_API_BASE_URL</code> environment variable.</p>
+      <h3 id="setup-values">Step 3 &mdash; Collect your four Adobe values</h3>
+      <p>Most of these come from the <a href="https://developer.adobe.com/console">Adobe Developer Console</a>: open <strong>Projects</strong>, choose the client's project, then open the <strong>OAuth Server-to-Server</strong> credential.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Value</th><th>Keychain key</th><th>Where to find it</th><th>Secret?</th></tr></thead>
+          <tbody>
+            <tr><td>Client ID</td><td><code>client_id</code></td><td>Credential page &rarr; <em>Client ID</em></td><td>No</td></tr>
+            <tr><td>Client secret</td><td><code>client_secret</code></td><td>Credential page &rarr; <em>Retrieve client secret</em></td><td><strong>Yes</strong></td></tr>
+            <tr><td>Organization ID</td><td><code>org_id</code></td><td>Credential page &rarr; <em>Organization ID</em> (ends in <code>@AdobeOrg</code>)</td><td>No</td></tr>
+            <tr><td>Global company ID</td><td><code>company_id</code></td><td>Not shown in the Developer Console. Ask your Adobe Analytics admin or a colleague who already uses the tool. It's a short identifier, not a secret.</td><td>No</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Keep the Developer Console tab open. You'll paste each value straight into the next step. Don't save the secret in a text file, email or chat message.</p>
 
+      <h3 id="setup-keychain">Step 4 &mdash; Store the values in your keychain</h3>
+      <p>In your activated terminal, run these four commands one at a time. Each one asks for a value:</p>
+      <pre><code>python -m keyring set adobe-downloader-broker client_id
+python -m keyring set adobe-downloader-broker client_secret
+python -m keyring set adobe-downloader-broker org_id
+python -m keyring set adobe-downloader-broker company_id</code></pre>
+      <p>You'll see a prompt like <code>Password for 'client_id' in 'adobe-downloader-broker':</code>. Paste the value (right-click or Ctrl+V in PowerShell, Cmd+V on macOS) and press Enter.</p>
+      <div class="callout">
+        <p><strong>Nothing appears when you paste. That's expected.</strong> The input is hidden so the value never shows on screen or in your shell history. If you think you pasted the wrong thing, just run the same command again; it overwrites the old value.</p>
+      </div>
+      <p>To check the entries exist without revealing them, open <strong>Credential Manager &rarr; Windows Credentials</strong> on Windows, or <strong>Keychain Access</strong> on macOS, and search for <code>adobe-downloader-broker</code>. You should see four entries. The real test is Step 5: the broker tells you exactly which entries, if any, are missing.</p>
+
+      <h3 id="setup-broker">Step 5 &mdash; Start the broker</h3>
+      <p>Open a <strong>second terminal</strong>, go to the repository folder, activate the virtual environment and start the broker:</p>
+      <pre><code>cd AdobeBotAnalysis
+.venv\Scripts\Activate.ps1          # macOS: source .venv/bin/activate
+python broker/adobe_broker.py</code></pre>
+      <p>If everything is set up correctly, you'll see two lines like these, and then the terminal waits:</p>
+      <pre><code>2026-09-28 09:14:02,118 INFO obtained access token (valid for about 1439 min)
+2026-09-28 09:14:02,120 INFO broker listening on http://127.0.0.1:8765</code></pre>
+      <p><strong>Leave this terminal open.</strong> The broker has to keep running while you use the tool. Each API request appears as one line, e.g. <code>POST /reports -&gt; 200</code>. If it exits straight away with an error instead, see <a href="#troubleshooting">Troubleshooting</a>. The message tells you what's wrong, such as which keychain entry is missing.</p>
       <div class="callout warn">
-        <p><strong>Security:</strong> Start the broker yourself, in your own terminal &mdash; not through Claude. Never put credentials in files inside the repository.</p>
+        <p><strong>Security:</strong> Start the broker yourself, in your own terminal. Don't ask Claude or any other assistant to start it; the project's Claude settings deliberately block that. The broker only accepts connections from your own machine.</p>
       </div>
 
-      <h3>Verify the connection</h3>
-      <p>With the broker running, confirm everything works by listing all report suites:</p>
+      <h3 id="setup-verify">Step 6 &mdash; Check the tool can reach Adobe</h3>
+      <p>Go back to your <strong>first terminal</strong> (the one not running the broker) and list the client's report suites:</p>
       <pre><code>adobe-downloader list-rsids --client Legend</code></pre>
-
-      <p>To list all Adobe Analytics users available to the client:</p>
+      <p>You should see <code>Found N report suite(s):</code> followed by one line per report suite: the RSID, then its name. In the broker terminal, a matching <code>GET /collections/suites -&gt; 200</code> line appears.</p>
+      <p>Optionally, list the Analytics users visible to the client too:</p>
       <pre><code>adobe-downloader list-users --client Legend</code></pre>
+      <p>To check the broker on its own, without the tool, open <code>http://127.0.0.1:8765/_broker/health</code> in a terminal:</p>
+      <pre><code># Windows (PowerShell)
+Invoke-RestMethod http://127.0.0.1:8765/_broker/health
+
+# macOS
+curl http://127.0.0.1:8765/_broker/health</code></pre>
+      <p>It reports <code>status: ok</code> and how long the current token has left. It never shows the token itself.</p>
+
+      <h3 id="setup-first-job">Step 7 &mdash; Run your first job</h3>
+      <p>Jobs are YAML files. Create <code>jobs/my_first_job.yaml</code>; files directly in <code>jobs/</code> are never committed to git. Paste this in:</p>
+      <pre><code>job_type: report_download
+client: Legend
+description: "First run: topline metrics for one report suite, one week"
+
+report_ref: toplineMetricsForRsidValidation
+
+rsids:
+  source: single
+  single: "your-rsid-here"        # copy an RSID from the list-rsids output
+
+interval: full
+
+date_range:
+  from: "2026-09-01"
+  to: "2026-09-07"
+
+transform:
+  enabled: true
+  type: summary_total
+  concat: true
+
+output:
+  base_folder: "C:/Adobe_Downloads"  # any folder on your machine</code></pre>
+      <p>Replace <code>your-rsid-here</code> with an RSID from the first column of the <code>list-rsids</code> output, and set <code>base_folder</code> to a folder you want output written to. Then check the config and run it in test mode:</p>
+      <pre><code>adobe-downloader validate --config jobs/my_first_job.yaml
+adobe-downloader run --config jobs/my_first_job.yaml --test</code></pre>
+      <p><code>validate</code> should end with <code>Validation passed.</code>. After <code>run</code> finishes, the downloaded JSON is in <code>&lt;base_folder&gt;/Legend/JSON/</code> and the CSV in <code>&lt;base_folder&gt;/Legend/CSV/</code>. See <a href="#concepts">Output folder layout</a> for the full structure.</p>
+      <div class="callout success">
+        <p><strong>That's setup done.</strong> Next, read <a href="#concepts">Key Concepts</a>, then the example configs in <code>jobs/examples/</code>.</p>
+      </div>
+      <div class="callout warn">
+        <p><strong>Before running the example configs:</strong> most examples refer to report suites by friendly name (e.g. <code>Casinous</code>) through the RSID list files in <code>data/rsid_lists/</code>. Translating those names needs a lookup file in <code>data/report_suite_lists/</code>, which isn't in git and is generated by the <a href="#flow-rsid-update">RSID Update</a> flow. Check with a colleague before your first RSID update, because it also rewrites the shared RSID list files.</p>
+      </div>
+
+      <h3 id="setup-everyday">Everyday use</h3>
+      <ol>
+        <li><strong>Terminal 1:</strong> <code>cd AdobeBotAnalysis</code>, activate the virtual environment, then run <code>python broker/adobe_broker.py</code>. Leave it running.</li>
+        <li><strong>Terminal 2:</strong> <code>cd AdobeBotAnalysis</code>, activate the virtual environment, then run your jobs.</li>
+        <li>When you're finished, press <strong>Ctrl+C</strong> in terminal 1 to stop the broker.</li>
+      </ol>
+      <p>The broker renews its token automatically, so it can stay running all day. If you use Claude Code with this project, start the broker yourself before asking Claude to run jobs; Claude can use the running broker but can't start it.</p>
+
+      <h4>Changing the secret</h4>
+      <p>When the client secret is rotated in the Developer Console, run <code>python -m keyring set adobe-downloader-broker client_secret</code> again with the new value, then stop the broker (Ctrl+C) and start it again.</p>
+
+      <h4>Using a different port</h4>
+      <p>If port 8765 is already in use, start the broker with <code>python broker/adobe_broker.py --port 9000</code>. Then, in the terminal where you run jobs, tell the tool where to find it:</p>
+      <pre><code># Windows (PowerShell) - lasts for this terminal session
+$env:ADOBE_API_BASE_URL = "http://127.0.0.1:9000"
+
+# macOS
+export ADOBE_API_BASE_URL=http://127.0.0.1:9000</code></pre>
 
       <h3>Where to run commands from</h3>
       <p>Always run <code>adobe-downloader</code> from the repository root. The tool resolves <code>data/</code> paths relative to the current working directory, so running from a different location will cause file-not-found errors.</p>
@@ -507,7 +627,7 @@ Casinoorg</code></pre>
 
       <h3>validate</h3>
       <p>Parse and schema-check a config file without running any downloads. Always run this first when writing a new config.</p>
-      <pre><code>adobe-downloader validate --config jobs/examples/legend_bot_investigation_jan25.yaml</code></pre>
+      <pre><code>adobe-downloader validate --config jobs/my_first_job.yaml</code></pre>
       <div class="table-wrap">
         <table>
           <thead><tr><th>Flag</th><th>Default</th><th>Description</th></tr></thead>
@@ -520,7 +640,7 @@ Casinoorg</code></pre>
 
       <h3>status</h3>
       <p>Print the current state of a <code>report_download</code> job (completed / pending / failed counts).</p>
-      <pre><code>adobe-downloader status --config jobs/examples/legend_bot_investigation_jan25.yaml</code></pre>
+      <pre><code>adobe-downloader status --config jobs/my_first_job.yaml</code></pre>
 
       <h3>retry</h3>
       <p>Re-queue failed (or all non-completed) requests so they will be attempted on the next <code>run</code>.</p>
@@ -708,7 +828,7 @@ concat:
   enabled: true
   file_pattern: ".*\.csv$"
   custom_headers: null   # override column headers by index if needed
-  # file_name_extra: "<label>"   # inserted right after job_name in the output filename
+  # file_name_extra: "&lt;label&gt;"   # inserted right after job_name in the output filename
 
 output:
   base_folder: "/Users/edwardgurton/Documents/Work/Adobe Downloads"</code></pre>
@@ -1465,7 +1585,7 @@ test_limits:
   max_date_intervals: 1
   max_segments: 2</code></pre>
       <p>Or pass <code>--test</code> on the CLI (overrides the config setting):</p>
-      <pre><code>adobe-downloader run --config jobs/examples/legend_bot_investigation_jan25.yaml --test</code></pre>
+      <pre><code>adobe-downloader run --config jobs/my_first_job.yaml --test</code></pre>
 
       <h3>Recommended test config settings</h3>
       <div class="table-wrap">
@@ -1538,11 +1658,27 @@ adobe-downloader validate-output --config jobs/... --retry --debug</code></pre>
 
       <h3>Cannot reach the credential broker</h3>
       <p><strong>Symptom:</strong> <code>Cannot reach the Adobe credential broker at http://127.0.0.1:8765</code>.</p>
-      <p><strong>Fix:</strong> Start <code>python broker/adobe_broker.py</code> in a separate terminal and leave it running. If you changed its port, set <code>ADOBE_API_BASE_URL</code> to match.</p>
+      <p><strong>Fix:</strong> The broker isn't running, or is running on a different port. Start it in a separate terminal and leave it running (<a href="#setup-broker">Setup step 5</a>). If you started it with <code>--port</code>, set <code>ADOBE_API_BASE_URL</code> to match (<a href="#setup-everyday">Using a different port</a>).</p>
 
-      <h3>Broker reports an IMS token failure</h3>
-      <p><strong>Symptom:</strong> HTTP 502 with <code>broker: token request to Adobe IMS failed</code>, or the broker exits at startup with the same message.</p>
-      <p><strong>Fix:</strong> The keychain credentials are wrong or have been rotated. Update the entries as described in <code>README.md</code> and restart the broker.</p>
+      <h3>Broker exits: missing keychain entries</h3>
+      <p><strong>Symptom:</strong> <code>missing keychain entries under service 'adobe-downloader-broker': org_id, company_id</code> (or similar).</p>
+      <p><strong>Fix:</strong> The listed entries were never stored, or were stored under a different name. Re-run the <code>python -m keyring set adobe-downloader-broker &lt;key&gt;</code> command for each listed key (<a href="#setup-keychain">Setup step 4</a>). Key names are case-sensitive.</p>
+
+      <h3>Broker exits: IMS token failure</h3>
+      <p><strong>Symptom:</strong> <code>token request to Adobe IMS failed (HTTP 400)</code> or <code>(HTTP 401)</code> at startup, or HTTP 502 with the same message while jobs are running.</p>
+      <p><strong>Fix:</strong> Adobe rejected the client ID or secret. The usual causes are a typo when pasting, or a secret that has been rotated. Store both values again (<a href="#setup-keychain">Setup step 4</a>) and restart the broker.</p>
+
+      <h3>Broker exits: keyring is not installed</h3>
+      <p><strong>Symptom:</strong> <code>the 'keyring' package is not installed</code>, or <code>No module named keyring</code> when storing values.</p>
+      <p><strong>Fix:</strong> The virtual environment isn't active, or the broker extra wasn't installed. Activate <code>.venv</code> and run <code>pip install -e ".[broker]"</code> (<a href="#setup-install">Setup step 2</a>).</p>
+
+      <h3>Broker won't start: address already in use</h3>
+      <p><strong>Symptom:</strong> the broker exits with <code>OSError</code> mentioning the address or port already being in use.</p>
+      <p><strong>Fix:</strong> Another broker is probably already running in a different terminal, so use that one. Otherwise, start it on another port and set <code>ADOBE_API_BASE_URL</code> (<a href="#setup-everyday">Using a different port</a>).</p>
+
+      <h3>403 Forbidden from Adobe on every request</h3>
+      <p><strong>Symptom:</strong> the broker starts fine, but requests fail with HTTP 403 and the broker logs lines like <code>GET /collections/suites -&gt; 403</code>.</p>
+      <p><strong>Fix:</strong> The token is valid, but the service account isn't allowed to use Analytics for this company. Check the <code>company_id</code> keychain entry is right. Then ask the Adobe admin to confirm the project's service account is assigned to an Analytics product profile. (A 403 on only <em>some</em> requests is different; see <a href="#debug-mode">Debug Mode</a>.)</p>
 
       <h3>RSID file not found</h3>
       <p><strong>Symptom:</strong> <code>RSID file not found: data/rsid_lists/legend_investigation.txt</code>.</p>
