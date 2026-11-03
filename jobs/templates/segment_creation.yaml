@@ -6,6 +6,7 @@ segment_creation:
   input_csv: data/segment_creation_lists/<segment-creation-list>.csv
   share_with_users:
     - "200419062"              # Adobe user ID to share with
+  # candidate_tag: BotRuleCandidates  # default; Adobe tag on validate segments, read by bot-rule-number
   test_mode_row: null          # set to a row number (1-based) to test a single row
   compare_list_path: data/bot_compare_lists/
   validate_list_path: data/bot_rule_lists/

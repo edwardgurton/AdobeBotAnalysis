@@ -19,6 +19,7 @@ Dense reference for answering operational questions. All field names, types, and
 | `adobe-downloader clean` | `-c/--config PATH` `--confirm` `--debug` | Reclaim disk space in an output tree. Dry run unless the config sets `dry_run: false` **and** `--confirm` is passed |
 | `adobe-downloader cleanup` | `-c/--client NAME` `-o/--output-base PATH` `--older-than Nd` `--type TYPE` `--confirm` | **Deprecated** — use `clean`. Only scans three fixed folders directly under `<client>/`, so it never sees per-job JSON/CSV |
 | `adobe-downloader get-segment` | `-c/--client NAME` `-s/--segment-id ID` `-o/--output PATH` | Fetch a segment definition from Adobe API and save as JSON |
+| `adobe-downloader bot-rule-number` | `-c/--client NAME` `--next` `--tag NAME` | Print only the highest leading 4-digit number among segments tagged `BotRuleCandidates` (`--next` = +1; 0 if none). Tries `includeType=all`, falls back to `shared` on 400/403. Use it for `SegmentCreationList_Final!B4` instead of a manual Adobe lookup |
 | `adobe-downloader search-lookup` | `-d/--dimension NAME` `-v/--value STR` | Search a local lookup file for a dimension value's numeric ID |
 | `adobe-downloader list-users` | `-c/--client NAME` | List Adobe Analytics users for a client |
 | `adobe-downloader list-rsids` | `-c/--client NAME` `--include-virtual/--no-include-virtual` | Fetch and display all report suites for a client |
@@ -118,6 +119,7 @@ Reads a bot rule CSV, creates Adobe segments via API, writes compare/validate/se
 | `client` | str | yes | |
 | `segment_creation.input_csv` | str | yes | Path to bot rule CSV |
 | `segment_creation.share_with_users` | list[str] | no | Adobe user IDs to share created segments with |
+| `segment_creation.candidate_tag` | str | no | Default `BotRuleCandidates` (`DEFAULT_CANDIDATE_TAG` in `config/schema.py`). Tag on validate segments; source for `bot-rule-number`. Never retype the string elsewhere |
 | `segment_creation.test_mode_row` | int | no | 1-based; test a single row only |
 | `segment_creation.compare_list_path` | str | no | Output path for compare list file |
 | `segment_creation.validate_list_path` | str | no | Output path for validate list file |

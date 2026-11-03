@@ -954,6 +954,20 @@ output:
       <h3>share_with_users</h3>
       <p>A list of Adobe user IDs (numeric strings) who will have the created segments shared with them. Find valid IDs with:</p>
       <pre><code>adobe-downloader list-users --client Legend</code></pre>
+
+      <h3 id="bot-rule-number">Finding the next bot rule number</h3>
+      <p>Validate segments are named <code>NNNN BOT RULE: …</code>, where <code>NNNN</code> is a 4-digit bot rule number, and carry the Adobe tag <code>BotRuleCandidates</code>. Before you build a new segment creation list, look up the highest number already in use:</p>
+      <pre><code>adobe-downloader bot-rule-number --client Legend          # highest number in use, e.g. 256
+adobe-downloader bot-rule-number --client Legend --next   # next free number, e.g. 257</code></pre>
+      <p>The command prints only the integer, so you can paste it straight into the Bot Rule Compare workbook (<code>SegmentCreationList_Final!B4</code>) instead of searching Adobe by hand.</p>
+      <ul>
+        <li>It looks at every segment tagged <code>BotRuleCandidates</code> and reads the first 4 characters of each name. Names that don't start with exactly 4 digits (for example <code>BOTCOMPARE_…</code> or <code>12 BOT…</code>) are ignored. If none match, it prints <code>0</code>.</li>
+        <li>It asks Adobe for all users' segments (<code>includeType=all</code>, which needs admin rights). If Adobe refuses, it falls back to your own segments plus those shared with you (<code>includeType=shared</code>) and logs a warning. In that case, segments owned by colleagues and not shared with you are not counted.</li>
+        <li>A segment only counts if it is tagged. An untagged validate segment's number can be reused.</li>
+        <li>The numbers are housekeeping. Nothing stops two people taking the same number at the same time.</li>
+        <li>Use <code>--tag NAME</code> to search a different tag. The default comes from <code>segment_creation.candidate_tag</code>.</li>
+      </ul>
+      <p>Like every Adobe call, this needs the local credential broker to be running.</p>
     </section>
 
     <!-- ============================================================== -->
@@ -1341,6 +1355,7 @@ C:/Adobe_Downloads/Legend/casinoorg_seo_homepage_bot_investigation_90d/INVESTIGA
           <tbody>
             <tr><td><code>segment_creation.input_csv</code></td><td>string</td><td><span class="pill req">required</span></td><td>Path to the input CSV file listing bot rules to create as segments. See <a href="#segment-creation-csv-format">Input CSV format</a> for the required columns.</td></tr>
             <tr><td><code>segment_creation.share_with_users</code></td><td>list[string]</td><td>[]</td><td>Adobe user IDs to share created segments with.</td></tr>
+            <tr><td><code>segment_creation.candidate_tag</code></td><td>string</td><td><code>BotRuleCandidates</code></td><td>Adobe tag carried by bot rule validate segments. <a href="#bot-rule-number"><code>bot-rule-number</code></a> searches this tag. Leave it at the default.</td></tr>
             <tr><td><code>segment_creation.test_mode_row</code></td><td>int or null</td><td>null</td><td>If set, only process this 1-based row number (for testing).</td></tr>
             <tr><td><code>segment_creation.compare_list_path</code></td><td>string</td><td>null</td><td>Directory to write the Compare bot rules JSON list.</td></tr>
             <tr><td><code>segment_creation.validate_list_path</code></td><td>string</td><td>null</td><td>Directory to write the Validate bot rules JSON list.</td></tr>
@@ -1802,6 +1817,11 @@ adobe-downloader validate-output --config jobs/... --retry --debug</code></pre>
               <td><code>adobe-downloader get-segment</code></td>
               <td><code>-c</code> client, <code>-s</code> segment-id, <code>-o</code> output</td>
               <td>Fetch a segment definition from the Adobe API and save it locally as JSON.</td>
+            </tr>
+            <tr>
+              <td><code>adobe-downloader bot-rule-number</code></td>
+              <td><code>-c</code> client, <code>--next</code>, <code>--tag</code></td>
+              <td>Print the highest 4-digit bot rule number among segments tagged <code>BotRuleCandidates</code> (or the next free one with <code>--next</code>). See <a href="#bot-rule-number">Finding the next bot rule number</a>.</td>
             </tr>
             <tr>
               <td><code>adobe-downloader search-lookup</code></td>

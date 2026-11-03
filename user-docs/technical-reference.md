@@ -78,7 +78,7 @@ The main package holds no credentials and never sees an access token. All authen
 
 **No auth in the client**: `AdobeClient` sends no auth headers and holds no token, secret or company ID. If the broker cannot be reached, requests raise `BrokerUnavailableError` with a hint to start it.
 
-**`_get` / `_post` pattern**: Both methods follow the same structure: build the URL from the relative path, log the request at DEBUG level, define an inner `_call` coroutine decorated with the tenacity retry, then `await _call()`. The HTTP verb goes through `_send()`, which delegates to `self._rate_limiter.execute(...)`. After the response returns, `r.raise_for_status()` is called inside `_call` inside a try/except so HTTP errors are logged at DEBUG before re-raising. The `httpx.HTTPStatusError` is then caught by the tenacity retry predicate.
+**`_request` pattern**: `_get`, `_post` and `_put` are thin wrappers around `_request(method, path, **kwargs)`, which builds the URL from the relative path, logs the request at DEBUG level, defines an inner `_call` coroutine decorated with the tenacity retry, then `await _call()`. The HTTP call goes through `_send()`, which passes `self._http.request` and the method to `self._rate_limiter.execute(...)`. After the response returns, `r.raise_for_status()` is called inside `_call` inside a try/except so HTTP errors are logged at DEBUG before re-raising. The `httpx.HTTPStatusError` is then caught by the tenacity retry predicate.
 
 **Debug logging**: When the root logger is at DEBUG level (triggered by `--debug`), `_get` and `_post` emit:
 - `DEBUG  GET/POST <url>`
@@ -97,6 +97,9 @@ Request headers are never logged. The body cap constant `_BODY_LOG_LIMIT = 20_00
 - `get_report_suites(limit=1000)` — GET to `/collections/suites`.
 - `create_segment(segment_def)` — POST to `/segments`.
 - `share_segment(segment_id, user_ids)` — POST to `/componentmetadata/shares` once per user ID.
+- `list_segments(tag_names=None, include_type=None, expansion=None, limit=1000)` — paginated GET to `/segments` with `tagNames` (comma-joined), `includeType` and `expansion`, iterating until `lastPage=True`.
+- `get_segment_tags(segment_id)` — GET to `/componentmetadata/tags/search?componentType=segment&componentIds=<id>`.
+- `tag_segment(segment_id, tags)` — adds tags without removing existing ones. `PUT /componentmetadata/tags/tagitems` replaces a component's whole tag list, so it reads the current tags first and PUTs the merged list. It sends no PUT when every tag is already present (idempotent). Returns the resulting tag names. Needs the broker to forward PUT.
 - `get_users()` — paginated GET to `/users`, iterates until `lastPage=True`.
 - `get_authenticated_user()` — GET to `/users/me`.
 
@@ -447,6 +450,18 @@ Three output files are produced:
 **`validate_list_file`** (`{list_name}_validate.csv`): Same structure, but for `Validate` / `Validate - Special` rows, with just `DimSegmentId, botRuleName` — no `reportToIgnore` column, since bot_validation never reads it. This is the file a bot_validation `report_download` step points its `bot_rules:` field at — that single field drives the per-rule download filter, the filename anchor, and (if `split_by_bot_rule` is set) the split labeling, so no separate `segments:` block is needed. The bot rule name transformation uses `transform_to_validate_bot_rule_name`, which additionally converts non-alphanumeric characters (other than `_`) to hyphens.
 
 Both CSV formats are the input format expected by `parse_bot_rule_csv` in `bot_rule_compare.py`.
+
+---
+
+## Bot Rule Numbers (`segments/bot_rule_numbers.py`)
+
+Validate segments are named `NNNN BOT RULE: …` and tagged with `DEFAULT_CANDIDATE_TAG` (`"BotRuleCandidates"`, defined once in `config/schema.py` and used as the default of `segment_creation.candidate_tag`).
+
+- `parse_bot_rule_number(name)`: matches `^(\d{4})(?!\d)`. It returns the integer, or `None` for names like `BOTCOMPARE_…`, `12 BOT…` or `12345…`.
+- `highest_bot_rule_number(names)`: the max over parsed numbers, or 0.
+- `get_highest_bot_rule_candidate_number(client, tag=DEFAULT_CANDIDATE_TAG)`: calls `client.list_segments(tag_names=[tag], include_type=…)` with `"all"` first. On HTTP 400/403 it logs a warning and retries with `"shared"`. Other errors propagate.
+
+There is no lock, so two concurrent callers can get the same number. That's accepted because the numbers are housekeeping. Exposed as `adobe-downloader bot-rule-number`, which prints only the integer. Like the other utility commands (`list-users`, `get-segment`), it doesn't write to the job state DB, which is tied to job configs.
 
 ---
 
