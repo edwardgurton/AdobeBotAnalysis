@@ -148,6 +148,7 @@ DEFAULT_CANDIDATE_TAG = "BotRuleCandidates"
 class SegmentCreationConfig(BaseModel):
     input_csv: str
     candidate_tag: str = DEFAULT_CANDIDATE_TAG
+    renumber_validates: bool = True
     share_with_users: list[str] = []
     test_mode_row: int | None = None
     compare_list_path: str | None = None

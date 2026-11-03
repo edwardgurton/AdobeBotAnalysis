@@ -332,6 +332,7 @@ async def _run_segment_creation_step(
     sm: Any,
     ac: Any,
 ) -> dict[str, Any]:
+    from adobe_downloader.config.schema import DEFAULT_CANDIDATE_TAG
     from adobe_downloader.flows.segment_creation import run_segment_creation
     from adobe_downloader.utils.rsid_lookup import find_latest_rsid_file
 
@@ -367,6 +368,8 @@ async def _run_segment_creation_step(
         lookup_base=lookup_base,
         rsid_lookup_file=rsid_file,
         test_mode_row=test_mode_row,
+        renumber_validates=bool(sc_raw.get("renumber_validates", True)),
+        candidate_tag=str(sc_raw.get("candidate_tag", DEFAULT_CANDIDATE_TAG)),
     )
 
     if result.error_count:
@@ -380,6 +383,8 @@ async def _run_segment_creation_step(
         "compare_list_file": str(result.compare_list_file) if result.compare_list_file else None,
         "validate_list_file": str(result.validate_list_file) if result.validate_list_file else None,
         "created_count": result.created_count,
+        "tag_failures": result.tag_failures,
+        "special_validate_names": result.special_validate_names,
     }
 
 

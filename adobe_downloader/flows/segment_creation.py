@@ -10,6 +10,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
+from adobe_downloader.config.schema import DEFAULT_CANDIDATE_TAG
+
 logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
@@ -59,6 +61,77 @@ class SegmentCreationResult:
     special_count: int = 0
     error_count: int = 0
     errors: list[str] = field(default_factory=list)
+    # Created validate segments that could not be tagged with the candidate tag.
+    # The segment exists and is in the output lists; tag it by hand in Adobe.
+    tag_failures: list[str] = field(default_factory=list)
+    # Final names of Validate - Special rows, to be created by hand in Adobe.
+    special_validate_names: list[str] = field(default_factory=list)
+
+
+# ---------------------------------------------------------------------------
+# Bot rule numbering
+# ---------------------------------------------------------------------------
+
+VALIDATE_TYPES = frozenset(["Validate", "Validate - Special"])
+_LEADING_NUMBER_RE = re.compile(r"^\d{4}(?!\d)")
+
+
+def apply_bot_rule_number(segment_name: str, number: int) -> str:
+    """Return *segment_name* with its leading 4-digit number set to *number*.
+
+    A name that already starts with 4 digits has them replaced; any other name
+    gets ``NNNN `` prepended.
+    """
+    formatted = f"{number:04d}"
+    if _LEADING_NUMBER_RE.match(segment_name):
+        return formatted + segment_name[4:]
+    return f"{formatted} {segment_name}"
+
+
+def renumber_validate_rows(rows: list[_CsvRow], start: int) -> int:
+    """Number every Validate / Validate - Special row in list order from *start*.
+
+    Mutates ``segment_name`` on those rows. Compare rows are left alone.
+    Returns the number of rows renumbered.
+    """
+    number = start
+    for row in rows:
+        if row.compare_validate not in VALIDATE_TYPES:
+            continue
+        new_name = apply_bot_rule_number(row.segment_name, number)
+        if new_name != row.segment_name:
+            logger.debug("Row %d renamed: %r -> %r", row.row_num, row.segment_name, new_name)
+        row.segment_name = new_name
+        number += 1
+    return number - start
+
+
+async def _renumber_from_adobe(client: Any, rows: list[_CsvRow], candidate_tag: str) -> None:
+    """Renumber validate rows from the highest tagged number in Adobe.
+
+    On any failure the Excel numbers are kept and a warning is logged (backup path).
+    """
+    from adobe_downloader.segments.bot_rule_numbers import get_highest_bot_rule_candidate_number
+
+    if not any(row.compare_validate in VALIDATE_TYPES for row in rows):
+        return
+    try:
+        highest = await get_highest_bot_rule_candidate_number(client, candidate_tag)
+    except Exception as exc:
+        logger.warning(
+            "Could not look up the highest %s number (%s); keeping the numbers from the input CSV",
+            candidate_tag,
+            exc,
+        )
+        return
+    count = renumber_validate_rows(rows, highest + 1)
+    logger.info(
+        "Bot rule numbers: %04d-%04d (highest tagged %s was %04d)",
+        highest + 1,
+        highest + count,
+        candidate_tag,
+        highest,
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -229,6 +302,8 @@ async def run_segment_creation(
     lookup_base: Path,
     rsid_lookup_file: Path,
     test_mode_row: int | None = None,
+    renumber_validates: bool = True,
+    candidate_tag: str = DEFAULT_CANDIDATE_TAG,
 ) -> SegmentCreationResult:
     """Create segments from *input_csv* and write the 3 output files.
 
@@ -242,6 +317,11 @@ async def run_segment_creation(
         lookup_base: Base directory containing ``{dim}/lookup.txt`` files.
         rsid_lookup_file: Path to the ``rsid:CleanName`` lookup file.
         test_mode_row: If set, only process this 1-indexed row (no API calls made).
+        renumber_validates: Replace the leading bot rule number on every Validate and
+            Validate - Special row with the next free number from Adobe (highest
+            number among segments tagged *candidate_tag*, plus one).
+        candidate_tag: Tag added to every created Validate segment, and used to
+            find the highest existing bot rule number.
 
     Returns:
         :class:`SegmentCreationResult` with output paths and counters.
@@ -274,6 +354,9 @@ async def run_segment_creation(
             compare_list_file=None,
             validate_list_file=None,
         )
+
+    if renumber_validates:
+        await _renumber_from_adobe(client, rows, candidate_tag)
 
     compare_rows: list[dict[str, str]] = []
     validate_rows: list[dict[str, str]] = []
@@ -321,6 +404,17 @@ async def run_segment_creation(
                 if share_with_users:
                     await client.share_segment(seg_id, share_with_users)
 
+                # Tag validates so the next run's number lookup sees them. A failure
+                # here must not drop the (already created) segment from the lists.
+                if not is_compare and candidate_tag:
+                    try:
+                        await client.tag_segment(seg_id, [candidate_tag])
+                        logger.info("  Tagged: %s", candidate_tag)
+                    except Exception as exc:
+                        msg = f"Row {row.row_num} ({row.segment_name}, {seg_id}): {exc}"
+                        logger.warning("  Could not tag %s: %s", candidate_tag, msg)
+                        result.tag_failures.append(msg)
+
                 bot_rule_name = bot_rule_fn(row.segment_name)
                 report_to_ignore = "|".join(dim for dim, _ in row.dimensions())
                 all_segments.append({"id": seg_id, "name": row.segment_name})
@@ -328,6 +422,8 @@ async def run_segment_creation(
 
             if is_special:
                 result.special_count += 1
+                if not is_compare:
+                    result.special_validate_names.append(row.segment_name)
 
             if is_compare:
                 compare_rows.append(
@@ -364,6 +460,24 @@ async def run_segment_creation(
         _write_segment_list(out, all_segments)
         result.segment_list_file = out
         logger.info("Segment list JSON -> %s (%d segments)", out, len(all_segments))
+
+    if result.special_validate_names:
+        logger.info(
+            "Create these Validate - Special segments in Adobe under exactly these names, "
+            "tag each %s, then replace UPDATE-SEGMENT-ID in the validate CSV:",
+            candidate_tag,
+        )
+        for name in result.special_validate_names:
+            logger.info("  %s", name)
+
+    if result.tag_failures:
+        logger.warning(
+            "%d created segment(s) could not be tagged %s; tag them in Adobe:",
+            len(result.tag_failures),
+            candidate_tag,
+        )
+        for msg in result.tag_failures:
+            logger.warning("  %s", msg)
 
     return result
 

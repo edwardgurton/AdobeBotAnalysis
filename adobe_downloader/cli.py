@@ -623,6 +623,8 @@ def _run_segment_creation_job(job: object, *, debug: bool = False) -> None:
                 lookup_base=lookup_base,
                 rsid_lookup_file=rsid_file,
                 test_mode_row=sc.test_mode_row,
+                renumber_validates=sc.renumber_validates,
+                candidate_tag=sc.candidate_tag,
             )
         finally:
             await ac.close()
@@ -633,6 +635,15 @@ def _run_segment_creation_job(job: object, *, debug: bool = False) -> None:
             f"Errors: {result.error_count}",
             fg="green" if result.error_count == 0 else "yellow",
         )
+        if result.special_validate_names:
+            click.echo(
+                f"  Create these in Adobe under exactly these names and tag each "
+                f"{sc.candidate_tag}:"
+            )
+            for name in result.special_validate_names:
+                click.echo(f"    {name}")
+        for msg in result.tag_failures:
+            click.secho(f"  NOT TAGGED {sc.candidate_tag}: {msg}", fg="yellow")
         if result.compare_list_file:
             click.echo(f"  Compare  -> {result.compare_list_file}")
         if result.validate_list_file:
