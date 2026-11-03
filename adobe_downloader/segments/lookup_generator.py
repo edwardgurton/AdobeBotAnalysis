@@ -81,11 +81,7 @@ def merge_into_lookup_file(
 
 def _rows_to_pairs(rows: list[dict[str, Any]]) -> dict[str, str]:
     """Extract value→itemId pairs from API response rows, skipping incomplete rows."""
-    return {
-        row["value"]: str(row["itemId"])
-        for row in rows
-        if "value" in row and "itemId" in row
-    }
+    return {row["value"]: str(row["itemId"]) for row in rows if "value" in row and "itemId" in row}
 
 
 async def generate_lookup_file(
@@ -120,6 +116,8 @@ async def generate_lookup_file(
 
     pairs = _rows_to_pairs(rows)
     dest = output_path or (lookup_base / clean / "lookup.txt")
-    write_lookup_file(dest, pairs, dimension, client_name, rsid, date_range.from_date, date_range.to)
+    write_lookup_file(
+        dest, pairs, dimension, client_name, rsid, date_range.from_date, date_range.to
+    )
     _log.info("Lookup file written: %s (%d pairs)", dest, len(pairs))
     return dest

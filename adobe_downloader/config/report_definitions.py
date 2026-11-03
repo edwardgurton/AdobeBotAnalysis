@@ -36,9 +36,7 @@ class ReportDefinitionFile(BaseModel):
     group: str | None = None
     description: str = ""
     transform_type: str | None = None
-    defaults: ReportDefinitionDefaults = Field(
-        default_factory=ReportDefinitionDefaults
-    )
+    defaults: ReportDefinitionDefaults = Field(default_factory=ReportDefinitionDefaults)
     reports: dict[str, ReportEntry]
 
     def resolve(self, report_name: str) -> ReportDefinitionInline:
@@ -47,25 +45,11 @@ class ReportDefinitionFile(BaseModel):
         return ReportDefinitionInline(
             name=report_name,
             dimension=entry.dimension,
-            row_limit=(
-                entry.row_limit
-                if entry.row_limit is not None
-                else self.defaults.row_limit
-            ),
-            segments=(
-                entry.segments
-                if entry.segments is not None
-                else self.defaults.segments
-            ),
-            metrics=(
-                entry.metrics
-                if entry.metrics is not None
-                else self.defaults.metrics
-            ),
+            row_limit=(entry.row_limit if entry.row_limit is not None else self.defaults.row_limit),
+            segments=(entry.segments if entry.segments is not None else self.defaults.segments),
+            metrics=(entry.metrics if entry.metrics is not None else self.defaults.metrics),
             csv_headers=(
-                entry.csv_headers
-                if entry.csv_headers is not None
-                else self.defaults.csv_headers
+                entry.csv_headers if entry.csv_headers is not None else self.defaults.csv_headers
             ),
             shared=entry.shared,
         )

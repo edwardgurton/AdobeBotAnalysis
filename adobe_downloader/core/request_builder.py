@@ -19,15 +19,12 @@ def build_request(
     global_filters: list[dict[str, Any]] = [
         {
             "type": "dateRange",
-            "dateRange": (
-                f"{date_range.from_date}T00:00:00.000"
-                f"/{date_range.to}T00:00:00.000"
-            ),
+            "dateRange": (f"{date_range.from_date}T00:00:00.000/{date_range.to}T00:00:00.000"),
         }
     ]
     for seg_id in report_def.segments:
         global_filters.append({"type": "segment", "segmentId": seg_id})
-    for seg_id in (segments or []):
+    for seg_id in segments or []:
         global_filters.append({"type": "segment", "segmentId": seg_id})
 
     metrics: list[dict[str, Any]] = [

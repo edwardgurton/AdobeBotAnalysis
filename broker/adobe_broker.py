@@ -16,7 +16,7 @@ Guarantees:
 - Never logs or returns the client secret, the access token or any request headers,
   including in error messages. Logs record method, path and status only.
 - Caller-supplied headers are discarded except ``Content-Type`` and ``Accept``.
-- Only GET and POST are forwarded, only to the Analytics API host.
+- Only GET, POST and PUT are forwarded, only to the Analytics API host.
 
 Keychain entries (service ``adobe-downloader-broker``): ``client_id``, ``client_secret``,
 ``org_id``, ``company_id``. See README.md for how to set them.
@@ -53,6 +53,10 @@ ANALYTICS_API_ROOT = "https://analytics.adobe.io/api"
 REFRESH_BUFFER_SECONDS = 300  # refresh this long before the token's nominal expiry
 MAX_BODY_BYTES = 10 * 1024 * 1024
 UPSTREAM_TIMEOUT_SECONDS = 600
+
+# HTTP methods the broker will forward, and the subset that may carry a request body.
+_ALLOWED_METHODS = ("GET", "POST", "PUT")
+_METHODS_WITH_BODY = ("POST", "PUT")
 
 # Only these caller headers are forwarded upstream; everything else is dropped.
 _FORWARDED_REQUEST_HEADERS = ("Content-Type", "Accept")
@@ -213,6 +217,8 @@ class Forwarder:
     def forward(
         self, method: str, raw_path: str, caller_headers: dict[str, str], body: bytes | None
     ) -> httpx.Response:
+        if method not in _ALLOWED_METHODS:
+            raise BrokerError(405, "method not allowed")
         url = self.upstream_url(raw_path)
         passthrough = {
             name: caller_headers[name]
@@ -249,6 +255,9 @@ class BrokerHandler(BaseHTTPRequestHandler):
     def do_POST(self) -> None:
         self._handle("POST")
 
+    def do_PUT(self) -> None:
+        self._handle("PUT")
+
     def _handle(self, method: str) -> None:
         status = 500
         try:
@@ -256,7 +265,7 @@ class BrokerHandler(BaseHTTPRequestHandler):
             if self.path == "/_broker/health":
                 status = self._health()
                 return
-            body = self._read_body() if method == "POST" else None
+            body = self._read_body() if method in _METHODS_WITH_BODY else None
             caller_headers = {
                 name: value
                 for name in _FORWARDED_REQUEST_HEADERS
@@ -281,7 +290,7 @@ class BrokerHandler(BaseHTTPRequestHandler):
             log.info("%s %s -> %d", method, urlsplit(self.path).path, status)
 
     def _check_local_caller(self) -> None:
-        # Defend against browser pages (DNS rebinding / cross-site POSTs) reaching the broker.
+        # Defend against browser pages (DNS rebinding / cross-site requests) reaching the broker.
         allowed_hosts = {f"127.0.0.1:{self.server.port}", f"localhost:{self.server.port}"}
         if self.headers.get("Host") not in allowed_hosts:
             raise BrokerError(403, "unexpected Host header")

@@ -36,9 +36,7 @@ async def validate_report_metrics(
         response = await client.get_report(body)
         column_errors = response.get("columns", {}).get("columnErrors", [])
         bad_metrics = sorted(
-            col_to_metric[e["columnId"]]
-            for e in column_errors
-            if e["columnId"] in col_to_metric
+            col_to_metric[e["columnId"]] for e in column_errors if e["columnId"] in col_to_metric
         )
         if bad_metrics:
             problems.append(f"  {rsid}: {', '.join(bad_metrics)}")
@@ -77,10 +75,7 @@ def _build_probe_request(
             }
         ],
         "metricContainer": {
-            "metrics": [
-                {"columnId": str(i), "id": mid}
-                for i, mid in enumerate(metric_ids)
-            ]
+            "metrics": [{"columnId": str(i), "id": mid} for i, mid in enumerate(metric_ids)]
         },
         "dimension": "variables/page",
         "settings": {

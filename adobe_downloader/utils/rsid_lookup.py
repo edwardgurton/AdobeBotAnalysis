@@ -23,9 +23,7 @@ def load_rsid_lookup(file_path: Path) -> dict[str, str]:
 
 def find_latest_rsid_file(rsid_dir: Path) -> Path | None:
     """Return the most recently modified .txt file in *rsid_dir*."""
-    candidates = [
-        p for p in rsid_dir.glob("*.txt") if not p.name.startswith("_")
-    ]
+    candidates = [p for p in rsid_dir.glob("*.txt") if not p.name.startswith("_")]
     if not candidates:
         return None
     return max(candidates, key=lambda p: p.stat().st_mtime)
