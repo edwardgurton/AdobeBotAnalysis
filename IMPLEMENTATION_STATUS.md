@@ -15,15 +15,15 @@ Status legend: `☐ todo` · `🔄 in-progress` · `✅ done` · `⚠️ blocked
 
 ## Current State
 
-**Active step:** *(all steps complete)*
+**Active step:** Master Decision Log plan (`docs/MasterDecisionLog_Plan.md`) — session 1 of 7 (A1 + A2) done; next is session 2 (A3)
 
-**Last commit:** `Deny Claude access to credential files, env vars, keychain and broker` — credentials moved out of the codebase into a local keychain-backed broker; 710 tests passing
+**Last commit:** `Add bot-rule-number lookup and segment tagging (MDL plan A1+A2)` — 729 tests passing
 
-**Next concrete action:** User stores the four keychain entries and starts `broker/adobe_broker.py` in their own terminal (see `README.md`), then runs `adobe-downloader list-rsids --client Legend` to validate live.
+**Next concrete action:** User verifies `adobe-downloader bot-rule-number --client Legend` against live Adobe (expect the current `B4` value, 256 or higher) and adds PUT forwarding to the local proxy so `tag_segment` can run. Then session 2: A3 (renumber + tag validates in `segment_creation`).
 
-**In-flight (uncommitted) work:** *(none)*
+**In-flight (uncommitted) work:** *(none from this session)*. `ruff format` incidentally reformatted 5 untouched files (`config/report_definitions.py`, `core/request_builder.py`, `flows/preflight.py`, `segments/lookup_generator.py`, `utils/rsid_lookup.py`); left uncommitted for the user to keep or discard.
 
-**Blockers:** *(none)*
+**Blockers:** Tagging cannot run live until the proxy forwards PUT (user-owned change).
 
 ---
 
@@ -521,3 +521,14 @@ Status legend: `☐ todo` · `🔄 in-progress` · `✅ done` · `⚠️ blocked
 - **Security note:** `legacy_js/config/client_configs/clientLegend.yaml` was tracked since the initial commit and pushed to GitHub, so it remains in history. User has rotated the client secret, which makes the old value inert.
 - **Guardrail limits:** `.claude/settings.json` deny rules are pattern-based, not a sandbox. Any local process (Claude included) can still call Adobe *through* the broker — that is the intended trade-off; it just cannot obtain the token.
 - **Next action:** User validates live with the broker running.
+
+
+### 2026-11-03 (Master Decision Log plan — session 1: A1 + A2)
+- **Worked on:** `docs/MasterDecisionLog_Plan.md` §3 A1 (highest `BotRuleCandidates` number) and A2 (tagging)
+- **Commits:** `Add bot-rule-number lookup and segment tagging (MDL plan A1+A2)` (1 commit)
+- **Done this session:** `AdobeClient.list_segments` (paged `GET segments`, `tagNames`/`includeType`/`expansion`). `AdobeClient.get_segment_tags` + `tag_segment`: Adobe's `PUT componentmetadata/tags/tagitems` replaces the full tag list, so it reads current tags and merges; skips the PUT when already tagged (idempotent, needed for A7). Client GET/POST/PUT now share one `_request` path via `httpx.AsyncClient.request`. New `segments/bot_rule_numbers.py`: max leading `^\d{4}(?!\d)` across tagged segment names, 0 if none; tries `includeType=all`, falls back to `shared` on 400/403. `DEFAULT_CANDIDATE_TAG = "BotRuleCandidates"` defined once in `config/schema.py` and used as the default of new `segment_creation.candidate_tag`. CLI `bot-rule-number --client X [--next] [--tag]` prints only the integer. 19 new tests in `tests/test_bot_rule_numbers.py`.
+- **Decisions:** User chose plan option (a) — tag via PUT, user adds PUT forwarding to the proxy; `includeType` defaults to `all` with `shared` fallback. Utility lookups don't write to the state DB, following the existing `list-users`/`get-segment` precedent (state DB tracking is tied to job configs).
+- **Validation:** 729 tests passing. `ruff format`/`ruff check` clean on touched files (repo-wide lint has pre-existing debt). `mypy` 52 errors, down from the 53 baseline; none new.
+- **Unverified against live Adobe:** the `tagNames` filter and `includeType` values, the response shape of `componentmetadata/tags/search`, and whether the PUT body needs tag `id`s as well as `name`s.
+- **Next action:** User live-checks `bot-rule-number` and adds PUT forwarding to the proxy; then session 2 (A3). Open plan decision D6 is only needed at session 6.
+
