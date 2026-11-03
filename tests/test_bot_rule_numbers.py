@@ -10,7 +10,7 @@ import pytest
 from click.testing import CliRunner
 
 from adobe_downloader.config.schema import DEFAULT_CANDIDATE_TAG, SegmentCreationConfig
-from adobe_downloader.core.api_client import AdobeClient
+from adobe_downloader.core.api_client import AdobeClient, TagUpdateError
 from adobe_downloader.segments import bot_rule_numbers
 from adobe_downloader.segments.bot_rule_numbers import (
     get_highest_bot_rule_candidate_number,
@@ -139,9 +139,15 @@ _CANDIDATE_TAG = {"id": "6aa1682d979a3131ba22ccf4", "name": DEFAULT_CANDIDATE_TA
 class _FakeAdobe:
     """Minimal stateful stand-in for the segment + tag endpoints."""
 
-    def __init__(self, segment_tags: list[dict[str, str]], apply_put: bool = True) -> None:
+    def __init__(
+        self,
+        segment_tags: list[dict[str, str]],
+        apply_put: bool = True,
+        put_error: str | None = None,
+    ) -> None:
         self.segment_tags = segment_tags
         self.apply_put = apply_put
+        self.put_error = put_error
         self.requests: list[httpx.Request] = []
 
     def __call__(self, request: httpx.Request) -> httpx.Response:
@@ -155,9 +161,18 @@ class _FakeAdobe:
             content = [[_LEGEND_TAG], [_CANDIDATE_TAG]][page]
             return httpx.Response(200, json={"content": content, "lastPage": page == 1})
         if request.method == "PUT" and path == "/componentmetadata/tags/tagitems":
+            item = json.loads(request.content)[0]
+            if self.put_error:
+                # Real Adobe shape: HTTP 200 with a per-item failure status.
+                item["status"] = {
+                    "success": False,
+                    "error": {"errorCode": "unexpected_error", "errorDescription": self.put_error},
+                }
+                return httpx.Response(200, json=[item])
             if self.apply_put:
-                self.segment_tags = json.loads(request.content)[0]["tags"]
-            return httpx.Response(200, json=[])
+                self.segment_tags = item["tags"]
+            item["status"] = {"success": True}
+            return httpx.Response(200, json=[item])
         raise AssertionError(f"unexpected {request.method} {path}")
 
 
@@ -198,7 +213,17 @@ async def test_tag_segment_raises_when_adobe_ignores_the_put() -> None:
     fake = _FakeAdobe([], apply_put=False)
     client = _client(fake)
     try:
-        with pytest.raises(RuntimeError, match="still missing: BotRuleCandidates"):
+        with pytest.raises(TagUpdateError, match="still missing: BotRuleCandidates"):
+            await client.tag_segment("s3938_abc", [DEFAULT_CANDIDATE_TAG])
+    finally:
+        await client.close()
+
+
+async def test_tag_segment_surfaces_adobe_per_item_failure() -> None:
+    fake = _FakeAdobe([], put_error="Non-admins can only tag components they own.")
+    client = _client(fake)
+    try:
+        with pytest.raises(TagUpdateError, match="Non-admins can only tag components they own"):
             await client.tag_segment("s3938_abc", [DEFAULT_CANDIDATE_TAG])
     finally:
         await client.close()

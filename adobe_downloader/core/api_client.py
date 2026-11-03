@@ -32,6 +32,10 @@ class BrokerUnavailableError(RuntimeError):
     """Raised when the credential broker cannot be reached."""
 
 
+class TagUpdateError(RuntimeError):
+    """Raised when Adobe does not apply a tag update (it reports failures with HTTP 200)."""
+
+
 class AdobeClient:
     """Single entry point for all Adobe Analytics API calls.
 
@@ -238,9 +242,10 @@ class AdobeClient:
         Adobe's ``PUT componentmetadata/tags/tagitems`` replaces a component's whole
         tag list and ignores tags given without an ``id``, so the current tags are read
         first, the new tags' IDs are looked up, and the merged list is sent. No PUT is
-        sent when every tag is already present. The result is read back and a
-        ``RuntimeError`` is raised if Adobe did not apply it. Returns the segment's
-        resulting tag names.
+        sent when every tag is already present. Adobe reports failures (e.g. a
+        non-admin tagging a segment it does not own) as HTTP 200 with a per-item
+        ``status``; those, and any tag still missing on read-back, raise
+        :class:`TagUpdateError`. Returns the segment's resulting tag names.
         """
         existing = [t for t in await self.get_segment_tags(segment_id) if t.get("name")]
         existing_names = [str(t["name"]) for t in existing]
@@ -251,7 +256,7 @@ class AdobeClient:
         payload_tags = [{"id": str(t["id"]), "name": str(t["name"])} for t in existing] + [
             {"id": new_ids[name], "name": name} for name in missing
         ]
-        await self._put(
+        resp = await self._put(
             "componentmetadata/tags/tagitems",
             json=[
                 {
@@ -261,10 +266,20 @@ class AdobeClient:
                 }
             ],
         )
+        # Adobe answers 200 even when the update fails; each item carries its own status.
+        body = resp.json()
+        for item in body if isinstance(body, list) else []:
+            status = item.get("status") or {}
+            if status.get("success") is False:
+                error = status.get("error") or {}
+                raise TagUpdateError(
+                    f"Adobe refused to tag {segment_id}: "
+                    f"{error.get('errorDescription') or error.get('errorCode') or 'unknown error'}"
+                )
         after = [str(t["name"]) for t in await self.get_segment_tags(segment_id) if t.get("name")]
         not_applied = [t for t in tags if t not in after]
         if not_applied:
-            raise RuntimeError(
+            raise TagUpdateError(
                 f"Adobe accepted the tag update for {segment_id} but the segment is "
                 f"still missing: {', '.join(not_applied)}"
             )
