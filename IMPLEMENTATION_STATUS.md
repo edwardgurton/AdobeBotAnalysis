@@ -15,15 +15,15 @@ Status legend: `☐ todo` · `🔄 in-progress` · `✅ done` · `⚠️ blocked
 
 ## Current State
 
-**Active step:** Master Decision Log plan (`docs/MasterDecisionLog_Plan.md`) — session 1 of 7 (A1 + A2) done; next is session 2 (A3)
+**Active step:** Master Decision Log plan (`docs/MasterDecisionLog_Plan.md`) — session 1 of 7 (A1 + A2) done and live-tested; next is session 2 (A3)
 
-**Last commit:** `Add bot-rule-number lookup and segment tagging (MDL plan A1+A2)` — 729 tests passing
+**Last commit:** `status: end of session 2026-11-03` — 732 tests passing
 
-**Next concrete action:** User verifies `adobe-downloader bot-rule-number --client Legend` against live Adobe (expect the current `B4` value, 256 or higher) and adds PUT forwarding to the local proxy so `tag_segment` can run. Then session 2: A3 (renumber + tag validates in `segment_creation`).
+**Next concrete action:** Session 2: A3 (renumber validates, and tag the segments that `segment_creation` creates). The first real run will confirm that the technical account can tag segments it owns. Optionally run `adobe-downloader bot-rule-number --client Legend` first and check it matches `B4`.
 
-**In-flight (uncommitted) work:** *(none from this session)*. `ruff format` incidentally reformatted 5 untouched files (`config/report_definitions.py`, `core/request_builder.py`, `flows/preflight.py`, `segments/lookup_generator.py`, `utils/rsid_lookup.py`); left uncommitted for the user to keep or discard.
+**In-flight (uncommitted) work:** *(none from this session)*. `ruff format` incidentally reformatted 5 untouched files (`config/report_definitions.py`, `core/request_builder.py`, `flows/preflight.py`, `segments/lookup_generator.py`, `utils/rsid_lookup.py`); they're left uncommitted for the user to keep or discard. `docs/MasterDecisionLog_Plan.md` is untracked (user's file; updated with D9 this session).
 
-**Blockers:** Tagging cannot run live until the proxy forwards PUT (user-owned change).
+**Blockers:** *(none)*
 
 ---
 
@@ -531,4 +531,7 @@ Status legend: `☐ todo` · `🔄 in-progress` · `✅ done` · `⚠️ blocked
 - **Validation:** 729 tests passing. `ruff format`/`ruff check` clean on touched files (repo-wide lint has pre-existing debt). `mypy` 52 errors, down from the 53 baseline; none new.
 - **Unverified against live Adobe:** the `tagNames` filter and `includeType` values, the response shape of `componentmetadata/tags/search`, and whether the PUT body needs tag `id`s as well as `name`s.
 - **Next action:** User live-checks `bot-rule-number` and adds PUT forwarding to the proxy; then session 2 (A3). Open plan decision D6 is only needed at session 6.
+- **Follow-up, same day (live tagging):** The user added PUT forwarding to the broker. The first live tag call returned 200 but applied nothing. Read-only probes, plus one repeat PUT whose response body was inspected, showed three things. (1) Tags must be sent with their string `id`, because name-only tags are ignored; IDs now come from paginated `componentmetadata/tags`, cached per client. (2) `componentmetadata/tags/search` returns `[]` for tagged segments, so tags are now read via `segments/{id}?expansion=tags`. (3) Adobe reports failures as **HTTP 200 with a per-item `status.success: false`**. The live error was "Non-admins can only tag components they own": the API identity is a non-admin technical account, and the test segment was owned by the user. `tag_segment` now raises `TagUpdateError` with Adobe's message, and also raises if a read-back shows the tag missing. Unknown tags raise `LookupError` and are never created automatically (deliberate: a typo'd tag would otherwise silently split bot rule numbering). Docs updated (user manual, Claude reference, technical reference, `segment_creation` template).
+- **Decision D9 (recorded in the plan):** the technical account stays non-admin. Python tags only the segments it creates (A3). The user tags Special segments by hand in Adobe, and A7 only warns about untagged validate segments instead of tagging them. The user declined an opt-in `create_missing` tags flag.
+- **Commits (follow-up):** `Docs: bot-rule-number command, candidate_tag and tagging client methods`, `Fix tag_segment: send tag IDs, read tags via segment expansion`, `tag_segment: raise on Adobe per-item failure status`, plus the technical-reference fix for PUT support in this status commit.
 
