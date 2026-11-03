@@ -15,13 +15,13 @@ Status legend: `☐ todo` · `🔄 in-progress` · `✅ done` · `⚠️ blocked
 
 ## Current State
 
-**Active step:** Master Decision Log plan (`docs/MasterDecisionLog_Plan.md`) — session 1 of 7 (A1 + A2) done and live-tested; next is session 2 (A3)
+**Active step:** Master Decision Log plan (`docs/MasterDecisionLog_Plan.md`) — sessions 1 (A1 + A2) and 2 (A3) done; next is session 3 (A4 + A5)
 
-**Last commit:** `status: end of session 2026-11-03` — 732 tests passing
+**Last commit:** `status: end of session 2026-11-03` — 742 tests passing (plus 2 flaky `test_broker.py` failures, see Session Log)
 
-**Next concrete action:** Session 2: A3 (renumber validates, and tag the segments that `segment_creation` creates). The first real run will confirm that the technical account can tag segments it owns. Optionally run `adobe-downloader bot-rule-number --client Legend` first and check it matches `B4`.
+**Next concrete action:** Live-check A3 with a real `segment_creation` run: confirm the numbers continue from `bot-rule-number`, and that the technical account can tag segments it created itself. Then session 3: A4 + A5 (Python segment naming from `RuleID` columns, YAML record per segment).
 
-**In-flight (uncommitted) work:** *(none from this session)*. `ruff format` incidentally reformatted 5 untouched files (`config/report_definitions.py`, `core/request_builder.py`, `flows/preflight.py`, `segments/lookup_generator.py`, `utils/rsid_lookup.py`); they're left uncommitted for the user to keep or discard. `docs/MasterDecisionLog_Plan.md` is untracked (user's file; updated with D9 this session).
+**In-flight (uncommitted) work:** *(none from this session)*
 
 **Blockers:** *(none)*
 
@@ -535,3 +535,11 @@ Status legend: `☐ todo` · `🔄 in-progress` · `✅ done` · `⚠️ blocked
 - **Decision D9 (recorded in the plan):** the technical account stays non-admin. Python tags only the segments it creates (A3). The user tags Special segments by hand in Adobe, and A7 only warns about untagged validate segments instead of tagging them. The user declined an opt-in `create_missing` tags flag.
 - **Commits (follow-up):** `Docs: bot-rule-number command, candidate_tag and tagging client methods`, `Fix tag_segment: send tag IDs, read tags via segment expansion`, `tag_segment: raise on Adobe per-item failure status`, plus the technical-reference fix for PUT support in this status commit.
 
+
+### 2026-11-03 (Master Decision Log plan — session 2: A3)
+- **Worked on:** `docs/MasterDecisionLog_Plan.md` §3 A3 (renumber and tag validate segments in `segment_creation`)
+- **Commits:** `Renumber and tag validate segments in segment_creation (MDL plan A3)`, `Docs: renumber_validates and validate tagging in segment_creation`
+- **Done this session:** New `segment_creation.renumber_validates: bool = True`, passed through by the CLI and composite step along with `candidate_tag`. When on, and not in `test_mode_row`, and the list has at least one validate row, `get_highest_bot_rule_candidate_number` is called once. `renumber_validate_rows` then numbers every `Validate` / `Validate - Special` row in list order from highest + 1 (replacing a leading `\d{4}`, or prepending `NNNN `); compares are untouched. Numbers are assigned before any create, so a failed create leaves a gap. Any lookup exception → warning, CSV numbers kept. Created `Validate` segments get `tag_segment(seg_id, [candidate_tag])`; a tag failure goes to `SegmentCreationResult.tag_failures` (logged, CLI prints `NOT TAGGED`) and does not fail the row. `Validate - Special` final names go to `special_validate_names` and are listed at the end with a reminder to create and tag them by hand (D9). Composite step output gains `tag_failures` and `special_validate_names`. 13 new tests in `tests/test_segment_creation_renumber.py`.
+- **Validation:** 742 passed. `ruff format` clean; `ruff check` on touched files matches the HEAD baseline (10 pre-existing findings in `cli.py`, none new). `mypy` 52 errors, unchanged, none in new code. `tests/test_broker.py` rejection-path tests are flaky (`httpx.ReadError`; 2 failures, then 1 on rerun) and unrelated to this change. Not touched, per CLAUDE.md.
+- **Housekeeping:** The user committed the 5 reformatted files, the broker change and the plan doc themselves as `e7605a9` before this session's work.
+- **Next action:** Live run of `segment_creation` on a real round, then session 3 (A4 + A5).
