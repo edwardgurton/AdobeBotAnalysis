@@ -132,51 +132,88 @@ async def test_no_tagged_segments_returns_zero() -> None:
 # ── tag_segment ───────────────────────────────────────────────────────────────
 
 
-async def test_tag_segment_merges_with_existing_tags() -> None:
-    seen: list[httpx.Request] = []
+_LEGEND_TAG = {"id": "aaa111", "name": "Legend"}
+_CANDIDATE_TAG = {"id": "6aa1682d979a3131ba22ccf4", "name": DEFAULT_CANDIDATE_TAG}
 
-    def handler(request: httpx.Request) -> httpx.Response:
-        seen.append(request)
-        if request.method == "GET":
-            return httpx.Response(200, json=[{"id": 7, "name": "Legend"}])
-        return httpx.Response(200, json=[])
 
-    client = _client(handler)
+class _FakeAdobe:
+    """Minimal stateful stand-in for the segment + tag endpoints."""
+
+    def __init__(self, segment_tags: list[dict[str, str]], apply_put: bool = True) -> None:
+        self.segment_tags = segment_tags
+        self.apply_put = apply_put
+        self.requests: list[httpx.Request] = []
+
+    def __call__(self, request: httpx.Request) -> httpx.Response:
+        self.requests.append(request)
+        path = request.url.path
+        if request.method == "GET" and path == "/segments/s3938_abc":
+            assert request.url.params["expansion"] == "tags"
+            return httpx.Response(200, json={"id": "s3938_abc", "tags": self.segment_tags})
+        if request.method == "GET" and path == "/componentmetadata/tags":
+            page = int(request.url.params["page"])
+            content = [[_LEGEND_TAG], [_CANDIDATE_TAG]][page]
+            return httpx.Response(200, json={"content": content, "lastPage": page == 1})
+        if request.method == "PUT" and path == "/componentmetadata/tags/tagitems":
+            if self.apply_put:
+                self.segment_tags = json.loads(request.content)[0]["tags"]
+            return httpx.Response(200, json=[])
+        raise AssertionError(f"unexpected {request.method} {path}")
+
+
+async def test_tag_segment_merges_with_existing_tags_by_id() -> None:
+    fake = _FakeAdobe([_LEGEND_TAG])
+    client = _client(fake)
     try:
         result = await client.tag_segment("s3938_abc", [DEFAULT_CANDIDATE_TAG])
     finally:
         await client.close()
 
     assert result == ["Legend", DEFAULT_CANDIDATE_TAG]
-    get, put = seen
-    assert get.url.path == "/componentmetadata/tags/search"
-    assert get.url.params["componentIds"] == "s3938_abc"
-    assert put.method == "PUT"
-    assert put.url.path == "/componentmetadata/tags/tagitems"
+    (put,) = [r for r in fake.requests if r.method == "PUT"]
     assert json.loads(put.content) == [
         {
             "componentType": "segment",
             "componentId": "s3938_abc",
-            "tags": [{"name": "Legend"}, {"name": DEFAULT_CANDIDATE_TAG}],
+            "tags": [_LEGEND_TAG, _CANDIDATE_TAG],
         }
     ]
+    # Read back after the PUT to confirm it applied.
+    assert fake.requests[-1].url.path == "/segments/s3938_abc"
 
 
 async def test_tag_segment_is_idempotent() -> None:
-    methods: list[str] = []
-
-    def handler(request: httpx.Request) -> httpx.Response:
-        methods.append(request.method)
-        return httpx.Response(200, json=[{"name": DEFAULT_CANDIDATE_TAG}])
-
-    client = _client(handler)
+    fake = _FakeAdobe([_CANDIDATE_TAG])
+    client = _client(fake)
     try:
         result = await client.tag_segment("s3938_abc", [DEFAULT_CANDIDATE_TAG])
     finally:
         await client.close()
 
     assert result == [DEFAULT_CANDIDATE_TAG]
-    assert methods == ["GET"]
+    assert [r.method for r in fake.requests] == ["GET"]
+
+
+async def test_tag_segment_raises_when_adobe_ignores_the_put() -> None:
+    fake = _FakeAdobe([], apply_put=False)
+    client = _client(fake)
+    try:
+        with pytest.raises(RuntimeError, match="still missing: BotRuleCandidates"):
+            await client.tag_segment("s3938_abc", [DEFAULT_CANDIDATE_TAG])
+    finally:
+        await client.close()
+
+
+async def test_tag_segment_unknown_tag_is_not_created() -> None:
+    fake = _FakeAdobe([])
+    client = _client(fake)
+    try:
+        with pytest.raises(LookupError, match="NoSuchTag"):
+            await client.tag_segment("s3938_abc", ["NoSuchTag"])
+    finally:
+        await client.close()
+
+    assert not [r for r in fake.requests if r.method in ("PUT", "POST")]
 
 
 # ── Config + CLI ──────────────────────────────────────────────────────────────

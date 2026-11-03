@@ -98,8 +98,10 @@ Request headers are never logged. The body cap constant `_BODY_LOG_LIMIT = 20_00
 - `create_segment(segment_def)` — POST to `/segments`.
 - `share_segment(segment_id, user_ids)` — POST to `/componentmetadata/shares` once per user ID.
 - `list_segments(tag_names=None, include_type=None, expansion=None, limit=1000)` — paginated GET to `/segments` with `tagNames` (comma-joined), `includeType` and `expansion`, iterating until `lastPage=True`.
-- `get_segment_tags(segment_id)` — GET to `/componentmetadata/tags/search?componentType=segment&componentIds=<id>`.
-- `tag_segment(segment_id, tags)` — adds tags without removing existing ones. `PUT /componentmetadata/tags/tagitems` replaces a component's whole tag list, so it reads the current tags first and PUTs the merged list. It sends no PUT when every tag is already present (idempotent). Returns the resulting tag names. Needs the broker to forward PUT.
+- `get_segment_tags(segment_id)` — GET to `/segments/<id>?expansion=tags` and returns the segment's `tags` (`{"id", "name"}`). `/componentmetadata/tags/search` is not used because it returned `[]` for tagged segments in live testing.
+- `list_tags()` — paginated GET to `/componentmetadata/tags` (every tag in the company, `{"id", "name"}`).
+- `get_tag_ids(names)` — maps tag names to their string IDs from `list_tags()`, cached per client. Raises `LookupError` for an unknown name, because tags are never created automatically.
+- `tag_segment(segment_id, tags)` — adds tags without removing existing ones. `PUT /componentmetadata/tags/tagitems` replaces a component's whole tag list and **silently ignores tags sent without an `id`**: it returns 200 and changes nothing. So `tag_segment` reads the current tags, looks up the new tags' IDs, and PUTs the merged `{"id", "name"}` list. It sends no PUT when every tag is already present (idempotent). It reads the segment back afterwards and raises `RuntimeError` if any requested tag is still missing. Returns the resulting tag names. Needs the broker to forward PUT.
 - `get_users()` — paginated GET to `/users`, iterates until `lastPage=True`.
 - `get_authenticated_user()` — GET to `/users/me`.
 

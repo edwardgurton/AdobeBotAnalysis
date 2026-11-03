@@ -44,6 +44,7 @@ class AdobeClient:
         self._http = httpx.AsyncClient(timeout=600)
         self._rate_limiter = SlidingWindowRateLimiter()
         self._retry = make_retry(self._rate_limiter)
+        self._tag_ids: dict[str, str] | None = None
 
     def _url(self, path: str) -> str:
         return f"{self._base_url}/{path.lstrip('/')}"
@@ -194,40 +195,80 @@ class AdobeClient:
         return items
 
     async def get_segment_tags(self, segment_id: str) -> list[dict[str, Any]]:
-        """Return the tags currently assigned to a segment."""
-        resp = await self._get(
-            "componentmetadata/tags/search",
-            params={"componentType": "segment", "componentIds": segment_id},
-        )
-        data = resp.json()
-        if isinstance(data, dict):
-            data = data.get("content", [])
-        return list(data)
+        """Return the tags (``{"id", "name"}``) currently assigned to a segment."""
+        resp = await self._get(f"segments/{segment_id}", params={"expansion": "tags"})
+        return list(resp.json().get("tags") or [])
+
+    async def list_tags(self, limit: int = 1000) -> list[dict[str, Any]]:
+        """Fetch every tag defined for the company, paginating as needed."""
+        items: list[dict[str, Any]] = []
+        page = 0
+        while True:
+            resp = await self._get("componentmetadata/tags", params={"limit": limit, "page": page})
+            data = resp.json()
+            if isinstance(data, list):
+                items.extend(data)
+                break
+            items.extend(data.get("content", []))
+            if data.get("lastPage", True):
+                break
+            page += 1
+        return items
+
+    async def get_tag_ids(self, names: list[str]) -> dict[str, str]:
+        """Map tag names to Adobe tag IDs. Raises ``LookupError`` for unknown names.
+
+        The full tag list is fetched once per client and cached.
+        """
+        if self._tag_ids is None:
+            self._tag_ids = {
+                str(t["name"]): str(t["id"]) for t in await self.list_tags() if t.get("name")
+            }
+        unknown = [n for n in names if n not in self._tag_ids]
+        if unknown:
+            raise LookupError(
+                f"Tag(s) not found in Adobe Analytics: {', '.join(unknown)}. "
+                "Create the tag in Adobe first; it is never created automatically."
+            )
+        return {n: self._tag_ids[n] for n in names}
 
     async def tag_segment(self, segment_id: str, tags: list[str]) -> list[str]:
         """Add *tags* to a segment, keeping any tags it already has.
 
         Adobe's ``PUT componentmetadata/tags/tagitems`` replaces a component's whole
-        tag list, so the current tags are read first and merged. No PUT is sent when
-        every tag is already present. Returns the segment's resulting tag names.
+        tag list and ignores tags given without an ``id``, so the current tags are read
+        first, the new tags' IDs are looked up, and the merged list is sent. No PUT is
+        sent when every tag is already present. The result is read back and a
+        ``RuntimeError`` is raised if Adobe did not apply it. Returns the segment's
+        resulting tag names.
         """
-        existing = await self.get_segment_tags(segment_id)
-        existing_names = [t["name"] for t in existing if t.get("name")]
+        existing = [t for t in await self.get_segment_tags(segment_id) if t.get("name")]
+        existing_names = [str(t["name"]) for t in existing]
         missing = [t for t in tags if t not in existing_names]
         if not missing:
             return existing_names
-        merged = existing_names + missing
+        new_ids = await self.get_tag_ids(missing)
+        payload_tags = [{"id": str(t["id"]), "name": str(t["name"])} for t in existing] + [
+            {"id": new_ids[name], "name": name} for name in missing
+        ]
         await self._put(
             "componentmetadata/tags/tagitems",
             json=[
                 {
                     "componentType": "segment",
                     "componentId": segment_id,
-                    "tags": [{"name": name} for name in merged],
+                    "tags": payload_tags,
                 }
             ],
         )
-        return merged
+        after = [str(t["name"]) for t in await self.get_segment_tags(segment_id) if t.get("name")]
+        not_applied = [t for t in tags if t not in after]
+        if not_applied:
+            raise RuntimeError(
+                f"Adobe accepted the tag update for {segment_id} but the segment is "
+                f"still missing: {', '.join(not_applied)}"
+            )
+        return after
 
     async def get_dimensions(self, rsid: str) -> list[dict[str, Any]]:
         """Fetch all dimensions for an RSID, including classification dimensions."""
