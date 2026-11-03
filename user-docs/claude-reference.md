@@ -119,7 +119,8 @@ Reads a bot rule CSV, creates Adobe segments via API, writes compare/validate/se
 | `client` | str | yes | |
 | `segment_creation.input_csv` | str | yes | Path to bot rule CSV |
 | `segment_creation.share_with_users` | list[str] | no | Adobe user IDs to share created segments with |
-| `segment_creation.candidate_tag` | str | no | Default `BotRuleCandidates` (`DEFAULT_CANDIDATE_TAG` in `config/schema.py`). Tag on validate segments; source for `bot-rule-number`. Never retype the string elsewhere |
+| `segment_creation.candidate_tag` | str | no | Default `BotRuleCandidates` (`DEFAULT_CANDIDATE_TAG` in `config/schema.py`). Tag on validate segments; source for `bot-rule-number`. Never retype the string elsewhere. Created `Validate` segments are tagged with it |
+| `segment_creation.renumber_validates` | bool | no | Default `true`. Replace/prepend the 4-digit number on every `Validate` / `Validate - Special` row with highest-tagged + 1, +2, … Falls back to the CSV numbers (warning) if the lookup fails. Skipped in `test_mode_row` |
 | `segment_creation.test_mode_row` | int | no | 1-based; test a single row only |
 | `segment_creation.compare_list_path` | str | no | Output path for compare list file |
 | `segment_creation.validate_list_path` | str | no | Output path for validate list file |

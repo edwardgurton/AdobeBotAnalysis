@@ -430,6 +430,10 @@ adobe-downloader add-dimension --name Country --name Countries \
 
 `--name` may repeat to register aliases. The command appends a new entry to `data/segment_creation_dimensions.yaml` (refusing to run if any given name already exists) and, if `--requires-lookup` is set, prints a reminder to populate `data/lookups/<cleaned-variable>/lookup.txt` (via a `lookup_generation` job or by hand).
 
+### Bot rule renumbering (`renumber_validates`, default on)
+
+Before any row is processed (and never in `test_mode_row`), if the list has at least one `Validate` / `Validate - Special` row, `get_highest_bot_rule_candidate_number(client, candidate_tag)` is called once. Every validate row, in list order, then gets `highest + 1`, `highest + 2`, … via `apply_bot_rule_number`: a name starting with exactly 4 digits has them replaced, any other name gets `NNNN ` prepended. Special validate rows take a number like any other; compare rows are untouched. Numbers are assigned before any segment is created, so a row whose create fails leaves a gap. If the lookup raises anything, a warning is logged and the numbers from the input CSV are kept (the Excel backup). `botRuleName` and the segment list JSON are derived from the renumbered name.
+
 ### Row processing
 
 For each non-special row:
@@ -438,8 +442,9 @@ For each non-special row:
 3. `build_condition_segment` is called with the list of resolved `(dimension, value, is_numeric)` conditions to construct the Adobe segment definition dict. A single condition uses a `streq` or `eq` predicate directly in a `visits` container; 2-4 conditions are AND'ed together inside a `hits` container inside a `visits` container. (`build_single_condition_segment`/`build_dual_condition_segment` remain as thin 1- and 2-condition wrappers around `build_condition_segment` for existing callers.)
 4. The segment is created via `client.create_segment(seg_def)`.
 5. Each user ID in `share_with_users` receives a `client.share_segment` call.
+6. `Validate` rows only: `client.tag_segment(seg_id, [candidate_tag])`. A tag failure is logged and appended to `SegmentCreationResult.tag_failures`; it does not count as a row error, so the created segment still appears in the output lists.
 
-For `Compare - Special` / `Validate - Special` rows no API call is made — the segment ID placeholder `"UPDATE-SEGMENT-ID"` is written to the output instead.
+For `Compare - Special` / `Validate - Special` rows no API call is made — the segment ID placeholder `"UPDATE-SEGMENT-ID"` is written to the output instead. The final names of `Validate - Special` rows are collected in `SegmentCreationResult.special_validate_names` and logged at the end, so they can be created (and tagged) by hand in Adobe under exactly that name.
 
 ### Output files
 
