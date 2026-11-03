@@ -702,6 +702,48 @@ def _run_lookup_generation_job(job: object, *, debug: bool = False) -> None:
     click.secho(f"Lookup file generated: {dest}", fg="green", bold=True)
 
 
+@main.command("bot-rule-number")
+@click.option("--client", "-c", required=True, help="Client name.")
+@click.option(
+    "--next",
+    "next_number",
+    is_flag=True,
+    default=False,
+    help="Print the next free number (highest + 1) instead of the highest.",
+)
+@click.option(
+    "--tag",
+    default=None,
+    help="Adobe tag to search (default: the segment_creation candidate tag).",
+)
+def bot_rule_number(client: str, next_number: bool, tag: str | None) -> None:
+    """Print the highest bot rule number among tagged candidate segments.
+
+    Prints only the integer, so it can be piped or pasted into the Bot Rule Compare
+    workbook (SegmentCreationList_Final!B4).
+    """
+    from adobe_downloader.config.schema import DEFAULT_CANDIDATE_TAG
+    from adobe_downloader.core.api_client import AdobeClient
+    from adobe_downloader.segments.bot_rule_numbers import (
+        get_highest_bot_rule_candidate_number,
+    )
+
+    async def _run() -> int:
+        ac = AdobeClient()
+        try:
+            return await get_highest_bot_rule_candidate_number(ac, tag or DEFAULT_CANDIDATE_TAG)
+        finally:
+            await ac.close()
+
+    try:
+        highest = asyncio.run(_run())
+    except Exception as exc:
+        click.secho(f"Error: {exc}", fg="red", bold=True, err=True)
+        sys.exit(1)
+
+    click.echo(highest + 1 if next_number else highest)
+
+
 @main.command("get-segment")
 @click.option("--client", "-c", required=True, help="Client name.")
 @click.option("--segment-id", "-s", required=True, help="Adobe segment ID (e.g. s3938_...).")

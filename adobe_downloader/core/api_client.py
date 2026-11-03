@@ -50,47 +50,22 @@ class AdobeClient:
 
     async def _send(self, method: str, url: str, **kwargs: Any) -> httpx.Response:
         """Issue one rate-limited request, translating connection failures."""
-        send = self._http.get if method == "GET" else self._http.post
         try:
-            return await self._rate_limiter.execute(send, url, **kwargs)
+            return await self._rate_limiter.execute(self._http.request, method, url, **kwargs)
         except httpx.ConnectError as exc:
             raise BrokerUnavailableError(
                 f"Cannot reach the Adobe credential broker at {self._base_url}. "
                 "Start it with `python broker/adobe_broker.py` in a separate terminal."
             ) from exc
 
-    async def _get(self, path: str, **kwargs: Any) -> httpx.Response:
-        """Rate-limited GET with tenacity retry."""
+    async def _request(self, method: str, path: str, **kwargs: Any) -> httpx.Response:
+        """Rate-limited request with tenacity retry."""
         url = self._url(path)
 
         if _log.isEnabledFor(logging.DEBUG):
-            _log.debug("GET  %s", url)
+            _log.debug("%-4s %s", method, url)
             if "params" in kwargs:
                 _log.debug("  params:  %s", kwargs["params"])
-
-        @self._retry
-        async def _call() -> httpx.Response:
-            r = await self._send("GET", url, **kwargs)
-            try:
-                r.raise_for_status()
-            except httpx.HTTPStatusError:
-                _log.debug(
-                    "  response %d %s\n%s",
-                    r.status_code,
-                    r.reason_phrase,
-                    r.text[:_BODY_LOG_LIMIT],
-                )
-                raise
-            return r
-
-        return await _call()
-
-    async def _post(self, path: str, **kwargs: Any) -> httpx.Response:
-        """Rate-limited POST with tenacity retry."""
-        url = self._url(path)
-
-        if _log.isEnabledFor(logging.DEBUG):
-            _log.debug("POST %s", url)
             if "json" in kwargs:
                 _log.debug(
                     "  body:\n%s",
@@ -99,7 +74,7 @@ class AdobeClient:
 
         @self._retry
         async def _call() -> httpx.Response:
-            r = await self._send("POST", url, **kwargs)
+            r = await self._send(method, url, **kwargs)
             try:
                 r.raise_for_status()
             except httpx.HTTPStatusError:
@@ -113,6 +88,18 @@ class AdobeClient:
             return r
 
         return await _call()
+
+    async def _get(self, path: str, **kwargs: Any) -> httpx.Response:
+        """Rate-limited GET with tenacity retry."""
+        return await self._request("GET", path, **kwargs)
+
+    async def _post(self, path: str, **kwargs: Any) -> httpx.Response:
+        """Rate-limited POST with tenacity retry."""
+        return await self._request("POST", path, **kwargs)
+
+    async def _put(self, path: str, **kwargs: Any) -> httpx.Response:
+        """Rate-limited PUT with tenacity retry."""
+        return await self._request("PUT", path, **kwargs)
 
     async def get_users(self) -> list[dict[str, Any]]:
         """Fetch all Analytics users for the company, paginating as needed."""
@@ -171,6 +158,76 @@ class AdobeClient:
                     "shareToType": "user",
                 },
             )
+
+    async def list_segments(
+        self,
+        tag_names: list[str] | None = None,
+        include_type: str | None = None,
+        expansion: str | None = None,
+        limit: int = 1000,
+    ) -> list[dict[str, Any]]:
+        """List segments, optionally filtered by tag, paginating as needed.
+
+        ``include_type`` is passed through as Adobe's ``includeType`` (e.g. ``"all"``
+        needs admin rights; ``"shared"`` adds segments shared with the caller).
+        """
+        params: dict[str, Any] = {"limit": limit}
+        if tag_names:
+            params["tagNames"] = ",".join(tag_names)
+        if include_type:
+            params["includeType"] = include_type
+        if expansion:
+            params["expansion"] = expansion
+
+        items: list[dict[str, Any]] = []
+        page = 0
+        while True:
+            resp = await self._get("segments", params={**params, "page": page})
+            data = resp.json()
+            if isinstance(data, list):
+                items.extend(data)
+                break
+            items.extend(data.get("content", []))
+            if data.get("lastPage", True):
+                break
+            page += 1
+        return items
+
+    async def get_segment_tags(self, segment_id: str) -> list[dict[str, Any]]:
+        """Return the tags currently assigned to a segment."""
+        resp = await self._get(
+            "componentmetadata/tags/search",
+            params={"componentType": "segment", "componentIds": segment_id},
+        )
+        data = resp.json()
+        if isinstance(data, dict):
+            data = data.get("content", [])
+        return list(data)
+
+    async def tag_segment(self, segment_id: str, tags: list[str]) -> list[str]:
+        """Add *tags* to a segment, keeping any tags it already has.
+
+        Adobe's ``PUT componentmetadata/tags/tagitems`` replaces a component's whole
+        tag list, so the current tags are read first and merged. No PUT is sent when
+        every tag is already present. Returns the segment's resulting tag names.
+        """
+        existing = await self.get_segment_tags(segment_id)
+        existing_names = [t["name"] for t in existing if t.get("name")]
+        missing = [t for t in tags if t not in existing_names]
+        if not missing:
+            return existing_names
+        merged = existing_names + missing
+        await self._put(
+            "componentmetadata/tags/tagitems",
+            json=[
+                {
+                    "componentType": "segment",
+                    "componentId": segment_id,
+                    "tags": [{"name": name} for name in merged],
+                }
+            ],
+        )
+        return merged
 
     async def get_dimensions(self, rsid: str) -> list[dict[str, Any]]:
         """Fetch all dimensions for an RSID, including classification dimensions."""

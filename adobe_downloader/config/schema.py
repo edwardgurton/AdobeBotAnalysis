@@ -139,8 +139,15 @@ class ReportDefinitionInline(BaseModel):
     shared: bool = False
 
 
+# Adobe tag carried by every bot rule validate segment. The highest 4-digit number among
+# segments with this tag seeds the next bot rule number. Defined once here; read it from
+# config (segment_creation.candidate_tag) or this constant, never retype it.
+DEFAULT_CANDIDATE_TAG = "BotRuleCandidates"
+
+
 class SegmentCreationConfig(BaseModel):
     input_csv: str
+    candidate_tag: str = DEFAULT_CANDIDATE_TAG
     share_with_users: list[str] = []
     test_mode_row: int | None = None
     compare_list_path: str | None = None
