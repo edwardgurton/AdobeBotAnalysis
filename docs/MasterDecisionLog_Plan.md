@@ -14,10 +14,10 @@
 | Excel logic for the 3 possible parent rules | ✅ Done | `Intermed2!L:N` "Prior Rule ID 1-3" → `Final!P:R`. Tier order: Own Bot Rule - Validate > Combine - Validate > Own Bot Rule - Run Compare |
 | Has Prior Step / Has Following Step | ✅ Done | `Final!N:O`, already present in `LegacyBotRule003B-RoundTwo.csv` |
 | Clean template for sharing | ✅ Mostly | Raw Input is empty; 5 test rules remain in Fill In Sheet / Final |
-| Highest `BotRuleCandidates` number function | ☐ Not started | `Final!B4` is still typed by hand (256) |
-| Tag validate segments `BotRuleCandidates` | ☐ Not started | No tag code in `api_client.py` |
-| Segment naming moved into Python | ☐ Not started | Names still come from `Final!M` |
-| YAML record per segment | ☐ Not started | — |
+| Highest `BotRuleCandidates` number function | ✅ Done (A1) | `bot-rule-number` CLI; `segment_creation` renumbers validates (A3) |
+| Tag validate segments `BotRuleCandidates` | ✅ Done (A2/A3) | Created validates tagged; Specials tagged by hand (D9) |
+| Segment naming moved into Python | ✅ Done (A4) | Rows with a `Rule ID` get Python-built names |
+| YAML record per segment | ✅ Done (A5) | `data/segment_records/{client}/{RuleID}.yaml` |
 | Generated run config from segment creation | ☐ Not started | Run configs are still hand-edited (e.g. `legend_comval_legacybotrule003-roundtwo-ALL-OTHER-STEPS.yaml`) |
 | Segment details CSV → Bot Rule Compare input tab | ☐ Not started | `Final!B5:B10` typed by hand |
 | Master Decision Log workbook + macros | ☐ Not started | `Validate - Decision Log` tab is a stopgap and says so in A1 |

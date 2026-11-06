@@ -15,11 +15,11 @@ Status legend: `☐ todo` · `🔄 in-progress` · `✅ done` · `⚠️ blocked
 
 ## Current State
 
-**Active step:** Master Decision Log plan (`docs/MasterDecisionLog_Plan.md`) — sessions 1 (A1 + A2) and 2 (A3) done; next is session 3 (A4 + A5)
+**Active step:** Master Decision Log plan (`docs/MasterDecisionLog_Plan.md`) — sessions 1 (A1 + A2), 2 (A3) and 3 (A4 + A5) done; next is session 4 (A6 + A7)
 
-**Last commit:** `status: end of session 2026-11-03` — 742 tests passing (plus 2 flaky `test_broker.py` failures, see Session Log)
+**Last commit:** `status: end of session 2026-11-06` — 773 tests passing
 
-**Next concrete action:** Live-check A3 with a real `segment_creation` run: confirm the numbers continue from `bot-rule-number`, and that the technical account can tag segments it created itself. Then session 3: A4 + A5 (Python segment naming from `RuleID` columns, YAML record per segment).
+**Next concrete action:** Live-check A3-A5 with a real `segment_creation` run of a V3 workbook list that has Rule IDs. Confirm the numbers continue from `bot-rule-number`, created validates are tagged, the Rule ID shows as the segment description in Adobe, and records appear in `data/segment_records/Legend/`. Then session 4: A6 + A7 (generated run config, `segment_records` step).
 
 **In-flight (uncommitted) work:** *(none from this session)*
 
@@ -543,3 +543,13 @@ Status legend: `☐ todo` · `🔄 in-progress` · `✅ done` · `⚠️ blocked
 - **Validation:** 742 passed. `ruff format` clean; `ruff check` on touched files matches the HEAD baseline (10 pre-existing findings in `cli.py`, none new). `mypy` 52 errors, unchanged, none in new code. `tests/test_broker.py` rejection-path tests are flaky (`httpx.ReadError`; 2 failures, then 1 on rerun) and unrelated to this change. Not touched, per CLAUDE.md.
 - **Housekeeping:** The user committed the 5 reformatted files, the broker change and the plan doc themselves as `e7605a9` before this session's work.
 - **Next action:** Live run of `segment_creation` on a real round, then session 3 (A4 + A5).
+
+
+### 2026-11-06 (Master Decision Log plan — session 3: A4 + A5)
+- **Worked on:** `docs/MasterDecisionLog_Plan.md` §3 A4 (segment naming in Python) and A5 (YAML record per segment)
+- **Commits:** `Build segment names from Rule IDs and write a YAML record per segment (MDL plan A4+A5)`, `Docs: Rule ID columns, Python-built names and segment records in segment_creation`
+- **Done this session:** New `segments/rule_ids.py` (grammar `{AH|RT}-{FreeText}-IR` / `-R{n}{LETTERS}…`, `parse_rule_id` deriving Round ID, Super-Investigation and parent, and the name builders). `_read_csv` now matches headers with case, spaces and underscores ignored, so the V3 workbook's `Rule ID` / `Prior Rule 1` headers work as they are. It reads the optional MDL columns; `None` counts as empty and Excel error values fail validation. Rows with a Rule ID are validated up front (grammar, consistency of given RoundID/ParentRuleID/SuperInvestigation, prior rule IDs, RSID + dims required even on Specials). `apply_rule_id_names` builds names before renumbering, keeping the CSV number as the backup. Compare `botRuleName` = `BOTCOMPARE_{RuleID}~{compacted}`, built from the conditions rather than regexing the name, with only the description shortened to 95 chars. The Rule ID goes into the Adobe segment description. New `segments/segment_records.py`: one YAML per successful row (Specials and test-mode too) in `segment_creation.segment_records_path`, default `data/segment_records/{client}` (now gitignored). A re-run replaces the file with a warning. 29 new tests, including backwards compatibility against the real LegacyRule003B round one/two lists and their actual outputs (`tests/fixtures/segment_creation/`).
+- **Decisions (user, this session):** Compare names keep Excel's unspaced `AND`. One YAML file per segment, not per round.
+- **Validation:** 773 passed. `ruff format`/`ruff check` clean on touched files. `mypy` 52 errors, unchanged, none in new code.
+- **Note:** Lists without a Rule ID column keep today's compare transform, which strips hyphens. Only Rule ID compares get the fix.
+- **Next action:** Live run, then session 4 (A6 + A7).
