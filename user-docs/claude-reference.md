@@ -125,8 +125,18 @@ Reads a bot rule CSV, creates Adobe segments via API, writes compare/validate/se
 | `segment_creation.compare_list_path` | str | no | Output path for compare list file |
 | `segment_creation.validate_list_path` | str | no | Output path for validate list file |
 | `segment_creation.segment_list_path` | str | no | Output path for segment list JSON |
+| `segment_creation.segment_records_path` | str | no | Folder for the per-segment YAML records. Default `data/segment_records/{client}` (gitignored). File is `{RuleID}.yaml`, or the sanitised segment name when the row has no Rule ID; a re-run replaces the file (warning logged) |
 | `output.base_folder` | str | no | Default `C:/Adobe_Downloads` |
 | `date_range` | `DateRange` | no | |
+
+**Rule ID columns (MDL plan A4).** The input CSV may carry the optional Master Decision Log columns `RuleID`, `RoundID`, `ParentRuleID`, `SuperInvestigation`, `PriorRule1`-`3`, `HasPriorStep`, `HasFollowingStep`, `NextStep`. Headers match with case, spaces and underscores ignored (the V3 workbook's `Rule ID` works). `None` and blank are empty; an Excel error value (`#REF!`, `#N/A`, ...) fails validation. When a row has a `RuleID`:
+
+- It must match `{AH|RT}-{FreeText}-IR` or `{AH|RT}-{FreeText}-R{round}{LETTERS}[{round}{LETTERS}...]` (FreeText alphanumeric). Given `RoundID` / `ParentRuleID` / `SuperInvestigation` must equal the values derived from it; prior rules must be valid Rule IDs. All checked before any API call.
+- `RSIDCleanName` and `Dimension1` are required even on `- Special` rows, because Python builds the name.
+- Validate name: `{NNNN} BOT RULE: {rsid} - Dim=ItemANDDim=Item` (number from the CSV's `SegmentName`, then renumbered). Compare name: `BOTCOMPARE_{RuleID}~ {rsid} - Dim=ItemAND...`; compare `botRuleName`: `BOTCOMPARE_{RuleID}~{compacted description}`, with the Rule ID verbatim and only the description shortened to fit 95 chars.
+- The Rule ID is written to the Adobe segment description.
+
+Rows without a `RuleID` keep `SegmentName` and today's transforms unchanged (covered by `tests/fixtures/segment_creation/`).
 
 ### `lookup_generation`
 

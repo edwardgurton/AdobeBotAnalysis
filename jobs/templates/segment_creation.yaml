@@ -12,6 +12,7 @@ segment_creation:
   compare_list_path: data/bot_compare_lists/
   validate_list_path: data/bot_rule_lists/
   segment_list_path: data/segment_lists/Legend/
+  # segment_records_path: data/segment_records/Legend/  # default; one YAML record per segment
 
 output:
   base_folder: "/Users/edwardgurton/Documents/Work/Adobe Downloads"

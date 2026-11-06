@@ -430,6 +430,24 @@ adobe-downloader add-dimension --name Country --name Countries \
 
 `--name` may repeat to register aliases. The command appends a new entry to `data/segment_creation_dimensions.yaml` (refusing to run if any given name already exists) and, if `--requires-lookup` is set, prints a reminder to populate `data/lookups/<cleaned-variable>/lookup.txt` (via a `lookup_generation` job or by hand).
 
+### Rule ID columns and Python-built names (MDL plan A4)
+
+`_read_csv` normalises headers (lowercase, spaces and underscores removed), so `RuleID` and the workbook's `Rule ID` are the same column. Optional columns: `RuleID`, `RoundID`, `ParentRuleID`, `SuperInvestigation`, `NextStep`, `PriorRule1`-`3`, `HasPriorStep`, `HasFollowingStep` (`TRUE`/`FALSE`). `None` and blank mean empty; an Excel error value in any of them is recorded and reported by `_validate_row`.
+
+Rule ID grammar and naming live in `segments/rule_ids.py`. `parse_rule_id` returns `RuleIdParts(rule_id, round_id, super_investigation, parent_rule_id)`:
+
+| Rule ID | Round ID | Parent |
+|---|---|---|
+| `AH-Oddspedia-IR` | itself | none |
+| `AH-Oddspedia-R1A` | `AH-Oddspedia-R1` | `AH-Oddspedia-IR` |
+| `AH-Oddspedia-R1A2B` | `AH-Oddspedia-R1A2` | `AH-Oddspedia-R1A` |
+
+`apply_rule_id_names` runs after validation and before renumbering. For each row with a Rule ID it replaces `segment_name` with `build_validate_segment_name` (keeping the CSV's leading number as the backup) or `build_compare_segment_name`. `bot_rule_name_for` uses `build_compare_bot_rule_name` for Rule ID compares, which keeps `BOTCOMPARE_{RuleID}~` intact and abbreviates/truncates only the compacted description (UserAgent values are dropped, `[\s:./,\-~_]` stripped). Validate `botRuleName`s and compares without a Rule ID use the existing transforms. The Rule ID is passed to `build_condition_segment(..., description=...)`.
+
+### Segment records (MDL plan A5)
+
+`segments/segment_records.py`. After each successful row (including `- Special` rows and the `test_mode_row` row), `_build_row_record` assembles a record and `write_record` writes it to `segment_records_path` as `{RuleID}.yaml` (`record_filename` falls back to the sanitised segment name). An existing file is replaced with a warning. A write failure is logged and never fails the row. Fields: `rule_id`, `round_id`, `super_investigation`, `parent_rule_id`, `compare_validate`, `next_step`, `segment_name`, `bot_rule_name`, `bot_rule_number` (validates only), `segment_id` (`UPDATE-SEGMENT-ID` for Specials, null in test mode), `rsid`, `rsid_clean_name`, `conditions` (`dimension`, `adobe_variable`, `item`, `resolved_value`, `operator: equals`), `prior_rules`, `has_prior_step`, `has_following_step`, `created_at` (UTC), `created_by_job` (input CSV stem), `visits_last_12_months` and `visits_window` (null until the A7 step). The CLI and composite step default the path to `data/segment_records/{client}`; `run_segment_creation` itself writes nothing when it is `None`. Paths are returned in `SegmentCreationResult.record_files` (composite output key `record_files`).
+
 ### Bot rule renumbering (`renumber_validates`, default on)
 
 Before any row is processed (and never in `test_mode_row`), if the list has at least one `Validate` / `Validate - Special` row, `get_highest_bot_rule_candidate_number(client, candidate_tag)` is called once. Every validate row, in list order, then gets `highest + 1`, `highest + 2`, … via `apply_bot_rule_number`: a name starting with exactly 4 digits has them replaced, any other name gets `NNNN ` prepended. Special validate rows take a number like any other; compare rows are untouched. Numbers are assigned before any segment is created, so a row whose create fails leaves a gap. If the lookup raises anything, a warning is logged and the numbers from the input CSV are kept (the Excel backup). `botRuleName` and the segment list JSON are derived from the renumbered name.
