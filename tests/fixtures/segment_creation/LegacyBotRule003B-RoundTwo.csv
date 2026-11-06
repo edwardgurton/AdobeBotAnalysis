@@ -1,0 +1,5 @@
+CompareValidate,SegmentName,Has Prior Step,Has Following Step,RSIDCleanName,Dimension1,Dimension1Item,Dimension2,Dimension2Item,Dimension3,Dimension3Item,Dimension4,Dimension4Item
+Validate,0253 BOT RULE: coverscom - OperatingSystem=LinuxANDBrowserType=GoogleANDDomain=egihosting.com,TRUE,TRUE,coverscom,OperatingSystem,Linux,BrowserType,Google,Domain,egihosting.com,,
+Validate,0254 BOT RULE: Oddspediacom - OperatingSystem=LinuxANDBrowserType=GoogleANDDomain=myvps.xyz,TRUE,FALSE,Oddspediacom,OperatingSystem,Linux,BrowserType,Google,Domain,myvps.xyz,,
+Validate,0255 BOT RULE: coverscom - OperatingSystem=LinuxANDBrowserType=GoogleANDDomain=rapidseedbox.com,TRUE,FALSE,coverscom,OperatingSystem,Linux,BrowserType,Google,Domain,rapidseedbox.com,,
+Validate,0256 BOT RULE: coverscom - OperatingSystem=LinuxANDBrowserType=GoogleANDDomain=sprious.com,TRUE,FALSE,coverscom,OperatingSystem,Linux,BrowserType,Google,Domain,sprious.com,,

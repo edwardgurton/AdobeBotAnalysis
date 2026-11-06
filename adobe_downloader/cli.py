@@ -576,6 +576,7 @@ def _run_segment_creation_job(job: object, *, debug: bool = False) -> None:
     from adobe_downloader.config.schema import SegmentCreationJobConfig
     from adobe_downloader.core.api_client import AdobeClient
     from adobe_downloader.flows.segment_creation import run_segment_creation
+    from adobe_downloader.segments.segment_records import default_records_path
     from adobe_downloader.utils.logging import setup_logging
     from adobe_downloader.utils.rsid_lookup import find_latest_rsid_file
 
@@ -596,6 +597,11 @@ def _run_segment_creation_job(job: object, *, debug: bool = False) -> None:
     compare_path = Path(sc.compare_list_path) if sc.compare_list_path else None
     validate_path = Path(sc.validate_list_path) if sc.validate_list_path else None
     segment_path = Path(sc.segment_list_path) if sc.segment_list_path else None
+    records_path = (
+        Path(sc.segment_records_path)
+        if sc.segment_records_path
+        else default_records_path(job.client)
+    )
 
     # Lookup files: data/ relative to repo root (discovered from CWD)
     data_root = Path("data")
@@ -625,6 +631,7 @@ def _run_segment_creation_job(job: object, *, debug: bool = False) -> None:
                 test_mode_row=sc.test_mode_row,
                 renumber_validates=sc.renumber_validates,
                 candidate_tag=sc.candidate_tag,
+                segment_records_path=records_path,
             )
         finally:
             await ac.close()
@@ -650,6 +657,8 @@ def _run_segment_creation_job(job: object, *, debug: bool = False) -> None:
             click.echo(f"  Validate -> {result.validate_list_file}")
         if result.segment_list_file:
             click.echo(f"  Segments -> {result.segment_list_file}")
+        if result.record_files:
+            click.echo(f"  Records  -> {records_path} ({len(result.record_files)} file(s))")
         for err in result.errors:
             click.secho(f"  ERR {err}", fg="red")
 

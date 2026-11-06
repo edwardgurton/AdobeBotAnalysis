@@ -154,6 +154,8 @@ class SegmentCreationConfig(BaseModel):
     compare_list_path: str | None = None
     validate_list_path: str | None = None
     segment_list_path: str | None = None
+    # Folder for per-segment YAML records; default data/segment_records/{client}.
+    segment_records_path: str | None = None
 
     @model_validator(mode="after")
     def _require_list_paths(self) -> "SegmentCreationConfig":

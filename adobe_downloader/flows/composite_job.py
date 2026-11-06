@@ -334,6 +334,7 @@ async def _run_segment_creation_step(
 ) -> dict[str, Any]:
     from adobe_downloader.config.schema import DEFAULT_CANDIDATE_TAG
     from adobe_downloader.flows.segment_creation import run_segment_creation
+    from adobe_downloader.segments.segment_records import default_records_path
     from adobe_downloader.utils.rsid_lookup import find_latest_rsid_file
 
     extra = step.extra_fields()
@@ -370,6 +371,11 @@ async def _run_segment_creation_step(
         test_mode_row=test_mode_row,
         renumber_validates=bool(sc_raw.get("renumber_validates", True)),
         candidate_tag=str(sc_raw.get("candidate_tag", DEFAULT_CANDIDATE_TAG)),
+        segment_records_path=(
+            Path(sc_raw["segment_records_path"])
+            if sc_raw.get("segment_records_path")
+            else default_records_path(job.client)
+        ),
     )
 
     if result.error_count:
@@ -385,6 +391,7 @@ async def _run_segment_creation_step(
         "created_count": result.created_count,
         "tag_failures": result.tag_failures,
         "special_validate_names": result.special_validate_names,
+        "record_files": [str(f) for f in result.record_files],
     }
 
 

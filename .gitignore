@@ -9,6 +9,7 @@ credentials/
 .claude/settings.local.json
 data/rsid_lists/archive/
 data/segment_lists
+data/segment_records/
 logs/
 jobs/inputs/bot_compare_lists/
 jobs/inputs/segment_creation_lists/

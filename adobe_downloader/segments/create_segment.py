@@ -155,8 +155,12 @@ def build_condition_segment(
     name: str,
     rsid: str,
     conditions: list[tuple[str, str, bool]],
+    description: str = "",
 ) -> dict:
-    """Return a segment definition dict for 1-4 dimension conditions, AND'ed together."""
+    """Return a segment definition dict for 1-4 dimension conditions, AND'ed together.
+
+    *description* is written to the Adobe segment description (the Rule ID, when known).
+    """
     if not conditions:
         raise ValueError("At least one condition is required")
     if len(conditions) > MAX_SEGMENT_CONDITIONS:
@@ -174,7 +178,7 @@ def build_condition_segment(
     )
     return {
         "name": name,
-        "description": "",
+        "description": description,
         "definition": {
             "container": {
                 "func": "container",
