@@ -15,11 +15,11 @@ Status legend: `☐ todo` · `🔄 in-progress` · `✅ done` · `⚠️ blocked
 
 ## Current State
 
-**Active step:** Master Decision Log plan (`docs/MasterDecisionLog_Plan.md`) — sessions 1 (A1 + A2), 2 (A3) and 3 (A4 + A5) done; next is session 4 (A6 + A7)
+**Active step:** Master Decision Log plan (`docs/MasterDecisionLog_Plan.md`) — sessions 1-4 (Workstream A: A1-A7) done; next is session 5 (B1-B7, Bot Rule Compare workbook + `.bas`)
 
-**Last commit:** `status: end of session 2026-11-06` — 773 tests passing
+**Last commit:** `status: end of session 2026-11-12` — 796 tests passing
 
-**Next concrete action:** Live-check A3-A5 with a real `segment_creation` run of a V3 workbook list that has Rule IDs. Confirm the numbers continue from `bot-rule-number`, created validates are tagged, the Rule ID shows as the segment description in Adobe, and records appear in `data/segment_records/Legend/`. Then session 4: A6 + A7 (generated run config, `segment_records` step).
+**Next concrete action:** Live-check A6 + A7: run `segment_creation` with `run_template: jobs/templates/mdl_run_template.yaml` on a single-round V3 list, check `jobs/generated/{RoundID}_run.yaml`, run it, and confirm `visits_last_12_months` in the records, `{RoundID}_segment_records.csv` and the compare `{RuleID}_segment_details.csv` files. Then session 5: B1-B7.
 
 **In-flight (uncommitted) work:** *(none from this session)*
 
@@ -553,3 +553,13 @@ Status legend: `☐ todo` · `🔄 in-progress` · `✅ done` · `⚠️ blocked
 - **Validation:** 773 passed. `ruff format`/`ruff check` clean on touched files. `mypy` 52 errors, unchanged, none in new code.
 - **Note:** Lists without a Rule ID column keep today's compare transform, which strips hyphens. Only Rule ID compares get the fix.
 - **Next action:** Live run, then session 4 (A6 + A7).
+
+
+### 2026-11-12 (Master Decision Log plan — session 4: A6 + A7)
+- **Worked on:** `docs/MasterDecisionLog_Plan.md` §3 A6 (generated run config) and A7 (`segment_records` step)
+- **Commits:** `Generate the round run config and add the segment_records step (MDL plan A6+A7)`, `Docs: generated run config, run guard and segment_records step`
+- **Done this session:** User live-checked A3-A5 first (numbers continue from `bot-rule-number`, validates tagged, Rule ID in the description). New `segments/run_config.py`: `RunTemplate` (Pydantic, extra keys rejected), `build_run_config` (validation and compare halves, each omitted when its list is empty, then one `segment_records` step; `job_name` = Round ID; job-level `date_range`, `to` defaults to yesterday; validated with `CompositeJobConfig` before writing) and `write_run_config`. `segment_creation.run_template` / `run_config_path` (default `jobs/generated/`, now gitignored); `round_id_for` rejects multi-round lists before any API call. Template `jobs/templates/mdl_run_template.yaml`. Run guard `check_lists_have_segment_ids` runs at the start of every composite job and refuses `bot_rules: source: file` lists still holding `UPDATE-SEGMENT-ID`. New `flows/segment_records.py` + composite step `segment_records` (`SegmentRecordsConfig`) + CLI `segment-records --job/--config [--no-tag-check]`: back-fills Special IDs, warns on untagged validates (via the now-public `list_tagged_segments`), sums 12 calendar months of visits per validate across all RSIDs, writes `{RoundID}_segment_records.csv` and per-compare `{RuleID}_segment_details.csv`. `PLACEHOLDER_SEGMENT_ID` and `DEFAULT_VISITS_REPORT` are now constants. 23 new tests in `tests/test_mdl_run_records.py`. Sanity-checked `sum_visits` read-only on the real `LBR003B-R2` output (rule 0253: 11,113, matching an independent recompute).
+- **Decisions (user, this session):** D10: visits come from `botFilterExcludexBotRuleMetricsByMonth` (what the rule adds on top of the Master Bot Exclusion). D11: compares keep `visits_last_12_months: null`.
+- **As built vs plan:** one `segment_records` step at the end instead of one per half, so one CSV covers the round. The step logic lives in `flows/`, not `segments/segment_records.py`.
+- **Validation:** 796 passed. `ruff format` clean; `ruff check` clean on touched files apart from the 10 pre-existing `cli.py` findings. `mypy` 52 errors, unchanged, none in new code.
+- **Next action:** Live run of a generated run config, then session 5 (B1-B7).
