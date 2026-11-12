@@ -933,7 +933,7 @@ output:
       <p><code>--name</code> may be repeated to register aliases; <code>--requires-lookup</code> marks a dimension whose values are numeric IDs, which then needs a <code>data/lookups/&lt;cleaned-variable&gt;/lookup.txt</code> file (populate one with a <code>lookup_generation</code> job, or by hand). The command refuses to overwrite an existing name — edit <code>data/segment_creation_dimensions.yaml</code> directly to change or remove one.</p>
       <p><code>Compare - Special</code> / <code>Validate - Special</code> rows skip the Adobe API call entirely — the placeholder segment ID <code>UPDATE-SEGMENT-ID</code> is written to the output CSV instead, for cases where the segment already exists and just needs to be added to the compare/validate list by hand.</p>
       <p><strong>Bot rule numbers and tagging.</strong> Unless <code>renumber_validates: false</code> is set, the job looks up the highest bot rule number among segments tagged <code>BotRuleCandidates</code> and numbers every Validate and Validate - Special row from the next one up, in list order. You no longer need to look the number up by hand. Each Validate segment the job creates is tagged <code>BotRuleCandidates</code>. Validate - Special rows get a number too, and the job lists their final names at the end: create each one in Adobe under exactly that name, <strong>tag it <code>BotRuleCandidates</code> yourself</strong> (the API can't tag segments it doesn't own), then put its segment ID in place of <code>UPDATE-SEGMENT-ID</code> in the validate CSV. Any created segment that couldn't be tagged is listed as <code>NOT TAGGED</code>; tag those in Adobe.</p>
-      <p><strong>Segment records.</strong> Each segment also gets a small YAML file in <code>data/segment_records/&lt;client&gt;/</code>, named after its Rule ID (for example <code>AH-Oddspedia-R1A2B.yaml</code>). It records the final name, bot rule number, segment ID, report suite, each condition with its resolved value, and the rule's prior rules. A later step fills in its visits for the last 12 months. Running the same round again replaces the files. Change the folder with <code>segment_records_path</code>.</p>
+      <p><strong>Segment records.</strong> Each segment also gets a small YAML file in <code>data/segment_records/&lt;client&gt;/</code>, named after its Rule ID (for example <code>AH-Oddspedia-R1A2B.yaml</code>). It records the final name, bot rule number, segment ID, report suite, each condition with its resolved value, and the rule's prior rules. After the run, the <a href="#run-round"><code>segment_records</code> step</a> fills in visits for the last 12 months. Running the same round again replaces the files. Change the folder with <code>segment_records_path</code>.</p>
       <p>A ready-to-copy example with both single- and dual-condition rows is checked into the repo at <code>jobs/inputs/segment_creation_lists/segmentCreationTemplate.csv</code>.</p>
 
       <h3>Output files produced</h3>
@@ -971,6 +971,29 @@ adobe-downloader bot-rule-number --client Legend --next   # next free number, e.
         <li>Use <code>--tag NAME</code> to search a different tag. The default comes from <code>segment_creation.candidate_tag</code>.</li>
       </ul>
       <p>Like every Adobe call, this needs the local credential broker to be running.</p>
+
+      <h3 id="run-round">Running the round: the generated run config</h3>
+      <p>Add a run template to the segment creation config and the job also writes the config for the downloads that follow:</p>
+      <pre><code>segment_creation:
+  input_csv: jobs/inputs/segment_creation_lists/AH-Oddspedia-R1A2.csv
+  run_template: jobs/templates/mdl_run_template.yaml
+  # run_config_path: jobs/generated/   # default</code></pre>
+      <p>After creating the segments it writes <code>jobs/generated/&lt;RoundID&gt;_run.yaml</code> and prints the command to run it. The run's <code>job_name</code> is the Round ID, so its output lands in <code>&lt;base_folder&gt;/&lt;client&gt;/&lt;RoundID&gt;/</code>. It runs the validation downloads, the compare downloads (each with its check and transform; a half is left out when its list is empty) and then the <code>segment_records</code> step. Copy <code>jobs/templates/mdl_run_template.yaml</code> to change the report suites, report groups or start date. The end date defaults to yesterday. You can edit the generated file before running it.</p>
+      <ul>
+        <li>The list must be a single round. Rows from two Round IDs stop the job before any segment is created.</li>
+        <li><strong>Special segments:</strong> the run refuses to start while any list it reads still contains <code>UPDATE-SEGMENT-ID</code>, and names the rows. Create the segments in Adobe, tag validates <code>BotRuleCandidates</code>, put the IDs in the list CSV and run again. This check applies to every composite job, including hand-written ones.</li>
+      </ul>
+      <p>The <code>segment_records</code> step then:</p>
+      <ul>
+        <li>copies each Special segment's real ID from the list into its YAML record;</li>
+        <li>warns about any validate segment not tagged <code>BotRuleCandidates</code> (it never tags anything);</li>
+        <li>adds up each validate rule's visits for the 12 whole months ending with the run's end month, across every report suite, and writes it to <code>visits_last_12_months</code>. The visits are from <code>botFilterExcludexBotRuleMetricsByMonth</code>: visits the rule matches that the Master Bot Exclusion still lets through. Compares stay empty, because the compare run has no monthly figures;</li>
+        <li>writes <code>&lt;RoundID&gt;_segment_records.csv</code> in the job folder: one row per rule with its segment ID, final name, bot rule number, dimensions and visits, for the Master Decision Log;</li>
+        <li>writes <code>&lt;RuleID&gt;_segment_details.csv</code> for each compare: key/value rows for the Bot Rule Compare workbook's input tab, including <code>LastBotRuleNumber</code>.</li>
+      </ul>
+      <p>To repeat just this step after a run (for example after fixing a tag in Adobe):</p>
+      <pre><code>adobe-downloader segment-records --job AH-Oddspedia-R1A2
+adobe-downloader segment-records --config jobs/generated/AH-Oddspedia-R1A2_run.yaml --no-tag-check</code></pre>
     </section>
 
     <!-- ============================================================== -->
@@ -1365,6 +1388,8 @@ C:/Adobe_Downloads/Legend/casinoorg_seo_homepage_bot_investigation_90d/INVESTIGA
             <tr><td><code>segment_creation.validate_list_path</code></td><td>string</td><td>null</td><td>Directory to write the Validate bot rules JSON list.</td></tr>
             <tr><td><code>segment_creation.segment_list_path</code></td><td>string</td><td>null</td><td>Directory to write the created segment IDs JSON list.</td></tr>
             <tr><td><code>segment_creation.segment_records_path</code></td><td>string</td><td><code>data/segment_records/&lt;client&gt;</code></td><td>Directory for the per-segment YAML records (one file per Rule ID).</td></tr>
+            <tr><td><code>segment_creation.run_template</code></td><td>string</td><td>null</td><td>Run template. When set, writes <code>&lt;RoundID&gt;_run.yaml</code> after the lists. See <a href="#run-round">Running the round</a>.</td></tr>
+            <tr><td><code>segment_creation.run_config_path</code></td><td>string</td><td><code>jobs/generated/</code></td><td>Directory for the generated run config.</td></tr>
           </tbody>
         </table>
       </div>
@@ -1827,6 +1852,11 @@ adobe-downloader validate-output --config jobs/... --retry --debug</code></pre>
               <td><code>adobe-downloader bot-rule-number</code></td>
               <td><code>-c</code> client, <code>--next</code>, <code>--tag</code></td>
               <td>Print the highest 4-digit bot rule number among segments tagged <code>BotRuleCandidates</code> (or the next free one with <code>--next</code>). See <a href="#bot-rule-number">Finding the next bot rule number</a>.</td>
+            </tr>
+            <tr>
+              <td><code>adobe-downloader segment-records</code></td>
+              <td><code>--job</code> Round ID or <code>-c</code> config, <code>--no-tag-check</code></td>
+              <td>Re-run the <code>segment_records</code> step of a round's run config: back-fill Special IDs, check tags, write visits and the Decision Log / segment details CSVs. See <a href="#run-round">Running the round</a>.</td>
             </tr>
             <tr>
               <td><code>adobe-downloader search-lookup</code></td>

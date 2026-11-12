@@ -18,8 +18,8 @@
 | Tag validate segments `BotRuleCandidates` | ✅ Done (A2/A3) | Created validates tagged; Specials tagged by hand (D9) |
 | Segment naming moved into Python | ✅ Done (A4) | Rows with a `Rule ID` get Python-built names |
 | YAML record per segment | ✅ Done (A5) | `data/segment_records/{client}/{RuleID}.yaml` |
-| Generated run config from segment creation | ☐ Not started | Run configs are still hand-edited (e.g. `legend_comval_legacybotrule003-roundtwo-ALL-OTHER-STEPS.yaml`) |
-| Segment details CSV → Bot Rule Compare input tab | ☐ Not started | `Final!B5:B10` typed by hand |
+| Generated run config from segment creation | ✅ Done (A6) | `segment_creation.run_template` → `jobs/generated/{RoundID}_run.yaml`; run guard on `UPDATE-SEGMENT-ID` |
+| Segment details CSV → Bot Rule Compare input tab | 🔄 Python side done (A7) | `{RuleID}_segment_details.csv` written; workbook import is B1 |
 | Master Decision Log workbook + macros | ☐ Not started | `Validate - Decision Log` tab is a stopgap and says so in A1 |
 
 ### Guiding principle
@@ -170,7 +170,8 @@ visits_window: {from: null, to: null}
 ```
 - `operator` is always `equals` for now. The field exists so that adding other operators later is additive.
 
-### A6. Generate the run config from segment creation
+### A6. Generate the run config from segment creation ✅
+*Built 2026-11-12. As built: one `segment_records` step at the end (depends on the last transform) instead of one per half, so a single `{RoundID}_segment_records.csv` covers the round. The run guard applies to every composite job with a `bot_rules: source: file` list. Template: `jobs/templates/mdl_run_template.yaml`.*
 - After writing the lists, `segment_creation` writes `jobs/generated/{RoundID}_run.yaml`. It's a composite containing:
   - download_validation → validate_output → transform_validation → **segment_records (A7)**
   - download_compare → validate_output → transform_compare → **segment_records (A7)**
@@ -178,7 +179,8 @@ visits_window: {from: null, to: null}
 - It points at the concrete list files (not `step_output`), so it can run on its own after Special segments have been edited in Adobe. `job_name` = Round ID.
 - Defaults (`rsids` file, report groups, `batch_size`, `date_range.from`) come from a `run_template` path in the segment-creation config. Point it at a template in `jobs/templates/`. `date_range.to` defaults to yesterday.
 
-### A7. `segment_records` step (post-run enrichment)
+### A7. `segment_records` step (post-run enrichment) ✅
+*Built 2026-11-12 in `flows/segment_records.py` (D10, D11). The 12 months are whole calendar months ending with `date_to`'s month. `LastBotRuleNumber` is the highest tagged number in Adobe, from the same lookup as the tag check.*
 - **New composite step type:** back-fills Special segment IDs and warns about any validate segment not yet tagged (see A3, D9), then reads the transform output for the job, sums **Visits for the 12 months ending `date_range.to`** per bot rule across all RSIDs in the run, and writes the total into each YAML record.
 - **Outputs, in the job output folder:**
   - `{RoundID}_segment_records.csv`: one row per rule (RuleID, SegmentId, final SegmentName, BotRuleNumber, RSIDCleanName, dims, Visits12m). This is the Decision Log import.
@@ -272,6 +274,8 @@ visits_window: {from: null, to: null}
 | D7 | Which workbook owns the copy into the Decision Log | Bot Rule Compare pushes (`ExportToDL`) |
 | D8 | How the macros reach Excel | Delivered as `.bas` files; you import them into the workbooks afterwards |
 | D9 | Tagging segments the API doesn't own | The technical account stays non-admin (2026-11-03). Python tags only the segments it creates (A3). You tag Special segments in Adobe; A7 warns about any untagged validate segment |
+| D10 | Which visits go in `visits_last_12_months` (2026-11-12) | `botFilterExcludexBotRuleMetricsByMonth`: visits the rule matches that the Master Bot Exclusion still lets through, i.e. what the rule would add. Configurable as `segment_records.visits_report` |
+| D11 | Visits for compares (2026-11-12) | Left `null`. The compare run has no monthly breakdown; revisit if the Decision Log needs it |
 
 **Still open (default in brackets; confirm at the start of the relevant session)**
 

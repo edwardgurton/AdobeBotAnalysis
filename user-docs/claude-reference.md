@@ -20,6 +20,7 @@ Dense reference for answering operational questions. All field names, types, and
 | `adobe-downloader cleanup` | `-c/--client NAME` `-o/--output-base PATH` `--older-than Nd` `--type TYPE` `--confirm` | **Deprecated** — use `clean`. Only scans three fixed folders directly under `<client>/`, so it never sees per-job JSON/CSV |
 | `adobe-downloader get-segment` | `-c/--client NAME` `-s/--segment-id ID` `-o/--output PATH` | Fetch a segment definition from Adobe API and save as JSON |
 | `adobe-downloader bot-rule-number` | `-c/--client NAME` `--next` `--tag NAME` | Print only the highest leading 4-digit number among segments tagged `BotRuleCandidates` (`--next` = +1; 0 if none). Tries `includeType=all`, falls back to `shared` on 400/403. Use it for `SegmentCreationList_Final!B4` instead of a manual Adobe lookup |
+| `adobe-downloader segment-records` | `--job ROUNDID` \| `-c/--config PATH` `--no-tag-check` | Run only the `segment_records` step(s) of a run config (`--job` reads `jobs/generated/{RoundID}_run.yaml`). Re-run after fixing a Special ID or tag; it rewrites the records and CSVs. `--no-tag-check` makes no API call |
 | `adobe-downloader search-lookup` | `-d/--dimension NAME` `-v/--value STR` | Search a local lookup file for a dimension value's numeric ID |
 | `adobe-downloader list-users` | `-c/--client NAME` | List Adobe Analytics users for a client |
 | `adobe-downloader list-rsids` | `-c/--client NAME` `--include-virtual/--no-include-virtual` | Fetch and display all report suites for a client |
@@ -126,8 +127,14 @@ Reads a bot rule CSV, creates Adobe segments via API, writes compare/validate/se
 | `segment_creation.validate_list_path` | str | no | Output path for validate list file |
 | `segment_creation.segment_list_path` | str | no | Output path for segment list JSON |
 | `segment_creation.segment_records_path` | str | no | Folder for the per-segment YAML records. Default `data/segment_records/{client}` (gitignored). File is `{RuleID}.yaml`, or the sanitised segment name when the row has no Rule ID; a re-run replaces the file (warning logged) |
+| `segment_creation.run_template` | str | no | Run template, e.g. `jobs/templates/mdl_run_template.yaml`. When set, writes `{RoundID}_run.yaml` after the lists (MDL plan A6, see below). Not written in `test_mode_row` |
+| `segment_creation.run_config_path` | str | no | Folder for the generated run config. Default `jobs/generated/` (gitignored) |
 | `output.base_folder` | str | no | Default `C:/Adobe_Downloads` |
 | `date_range` | `DateRange` | no | |
+
+**Generated run config (MDL plan A6).** With `run_template` set, `segment_creation` writes `{run_config_path}/{RoundID}_run.yaml` (`segments/run_config.py`): a composite job with `job_name` = Round ID, job-level `date_range` (`from` from the template; `to` from the template or yesterday), and steps `download_validation` → `validate_bot_rules` → `transform_validation`, `download_compare` → `validate_bot_compares` → `transform_compare`, then one `segment_records` step. A half is left out when its list is empty. Steps point at the concrete list files. The Round ID comes from the rows' Rule IDs (the list name when none have one); rows from more than one round fail before any API call. Template keys: `output.base_folder`, `rsids`, `date_range`, `validation.{report_group, interval}`, `compare.{report_group, comparison_round, source_pattern}`, `segment_records.visits_report` (unknown keys rejected). The config is validated before it is written; a write failure counts as a row error, since the segments already exist.
+
+**Run guard.** Every composite job checks its `bot_rules: source: file` lists before any step runs and refuses to start if one still contains `UPDATE-SEGMENT-ID`, naming the rows (`check_lists_have_segment_ids`). `step_output` lists and missing files are not checked.
 
 **Rule ID columns (MDL plan A4).** The input CSV may carry the optional Master Decision Log columns `RuleID`, `RoundID`, `ParentRuleID`, `SuperInvestigation`, `PriorRule1`-`3`, `HasPriorStep`, `HasFollowingStep`, `NextStep`. Headers match with case, spaces and underscores ignored (the V3 workbook's `Rule ID` works). `None` and blank are empty; an Excel error value (`#REF!`, `#N/A`, ...) fails validation. When a row has a `RuleID`:
 
@@ -769,6 +776,7 @@ Default metrics: 4 clickout custom metrics.
 | `rsid_update` | any string | `investigation_list`, `validation_list` | any |
 | `generate_country_matrix` | any string | `matrix_file`, `pair_count`, `segments_created` | any prior step |
 | `country_investigation` | any string | `job_id`, `json_folder`, `downloaded`, `skipped`, `copied` | any prior step |
+| `segment_records` | any string | `records_csv`, `details_files`, `records_updated`, `backfilled`, `untagged`, `missing_records`, `missing_visits` | the last transform of the run |
 
 **`validate_output` step fields:**
 - `config_ref` (required): id of the `report_download` step whose expected outputs to check
@@ -787,6 +795,17 @@ Default metrics: 4 clickout custom metrics.
 - `rsid_lookup_file`: optional explicit path; falls back to latest file in `data/report_suite_lists/`
 - `report_group`: string (default `"bot_rule_compare"`) — override to use an alternate-exclusion-segment report group
 - `include_segment_id_in_filename`: bool (default `false`) — the Segment variant's filename already embeds the rule name, which disambiguates it; set `true` to also embed the raw segment ID as a `DIMSEG{id}` token. Off by default since it's rarely needed and its length is a common contributor to exceeding Windows' 260-char MAX_PATH. When off, the `bot_rule_compare` transform's `segmentId`/`segmentHash` CSV columns are blank for Segment rows, since `DIMSEG` is their only source.
+
+**`segment_records` step fields** (under `segment_records:` key; MDL plan A7, `flows/segment_records.py`):
+- `validate_list`, `compare_list`: the list CSVs the run used (at least one)
+- `records_path`: YAML records folder (default `data/segment_records/{client}`)
+- `visits_report`: default `botFilterExcludexBotRuleMetricsByMonth` (`DEFAULT_VISITS_REPORT`): visits the rule matches that the Master Bot Exclusion still lets through
+- `candidate_tag`: default `BotRuleCandidates`
+- `date_to`: end of the visits window (default the job's `date_range.to`); required when there is a validate list
+- Needs `output.job_name`; reads and writes `{base_folder}/{client}/{job_name}/`
+- Matches list rows to records by `botRuleName`. Then: (1) copies a real `DimSegmentId` over a record's `UPDATE-SEGMENT-ID`; (2) one `list_segments` call by tag, warning about validate segments not tagged (never tags; a lookup failure is a warning); (3) for validates, sums `visits` of `visits_report` rows in `VALIDATION_{job_name}*.csv` (keyed by the sanitised `botRuleName` column) across all RSIDs for the 12 calendar months ending with `date_to`'s month, writing `visits_last_12_months` (int) and `visits_window` (`from` = first of the start month, `to` = `date_to`). Compares stay `null`. Rows still holding the placeholder are skipped. A rule with no rows of the report is reported in `missing_visits` and left `null`; rows present but outside the window give 0
+- Writes `{job_name}_segment_records.csv` (`RuleID, RoundID, CompareValidate, SegmentId, SegmentName, BotRuleName, BotRuleNumber, RSIDCleanName, Dimension1..Dimension4Item, Visits12m, VisitsFrom, VisitsTo`; one row per list row) and, per compare, `{RuleID}_segment_details.csv` (`Key,Value` rows: `RuleID, RoundID, SegmentId, SegmentName, RSIDCleanName, LastBotRuleNumber, Dimension1..Dimension4Item`). `LastBotRuleNumber` is the highest tagged number in Adobe, or the highest in the round's records if the lookup failed or was skipped
+- The tag check, like `bot-rule-number`, is a component-metadata GET and is not tracked in the state DB
 
 **`final_bot_metrics` step fields:**
 - `rsids`: `RsidSource`
