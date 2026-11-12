@@ -111,7 +111,13 @@ async def run_composite_job(
 
     on_progress(step_id, message) is called at key moments for CLI display.
     """
+    from adobe_downloader.segments.run_config import check_lists_have_segment_ids
+
     step_outputs: dict[str, dict[str, Any]] = {}
+
+    # Run guard (MDL plan A6): never start a run whose lists still hold the
+    # UPDATE-SEGMENT-ID placeholder of an uncreated Special segment.
+    check_lists_have_segment_ids(job)
 
     sm.mark_job_started()
 
@@ -215,6 +221,8 @@ async def _dispatch_step(
         return await _run_generate_country_matrix_step(step, job, step_outputs, sm, ac, no_resume)
     if step_type == "country_investigation":
         return await _run_country_investigation_step(step, job, step_outputs, sm, ac, no_resume)
+    if step_type == "segment_records":
+        return await run_segment_records_step(step, job, ac)
     raise ValueError(f"Unknown step type: {step_type!r}")
 
 
@@ -376,6 +384,11 @@ async def _run_segment_creation_step(
             if sc_raw.get("segment_records_path")
             else default_records_path(job.client)
         ),
+        run_template=Path(sc_raw["run_template"]) if sc_raw.get("run_template") else None,
+        run_config_path=(
+            Path(sc_raw["run_config_path"]) if sc_raw.get("run_config_path") else None
+        ),
+        client_name=job.client,
     )
 
     if result.error_count:
@@ -392,6 +405,48 @@ async def _run_segment_creation_step(
         "tag_failures": result.tag_failures,
         "special_validate_names": result.special_validate_names,
         "record_files": [str(f) for f in result.record_files],
+        "run_config_file": str(result.run_config_file) if result.run_config_file else None,
+    }
+
+
+async def run_segment_records_step(
+    step: CompositeStep,
+    job: CompositeJobConfig,
+    ac: Any,
+) -> dict[str, Any]:
+    """Post-run enrichment of the round's segment records (MDL plan A7)."""
+    from adobe_downloader.config.schema import SegmentRecordsConfig
+    from adobe_downloader.flows.segment_records import parse_date_to, run_segment_records
+    from adobe_downloader.segments.segment_records import default_records_path
+
+    raw = step.extra_fields().get("segment_records") or {}
+    cfg = SegmentRecordsConfig.model_validate(raw)
+    if job.output is None or not job.output.job_name:
+        raise ValueError(f"Step {step.id!r}: segment_records requires output.job_name")
+    job_name = job.output.job_name
+
+    date_to_raw = cfg.date_to or (job.date_range.to if job.date_range else None)
+    result = await run_segment_records(
+        client=ac,
+        round_id=job_name,
+        output_folder=Path(job.output.base_folder) / job.client / job_name,
+        records_path=(
+            Path(cfg.records_path) if cfg.records_path else default_records_path(job.client)
+        ),
+        validate_list=Path(cfg.validate_list) if cfg.validate_list else None,
+        compare_list=Path(cfg.compare_list) if cfg.compare_list else None,
+        date_to=parse_date_to(date_to_raw),
+        visits_report=cfg.visits_report,
+        candidate_tag=cfg.candidate_tag,
+    )
+    return {
+        "records_csv": str(result.records_csv) if result.records_csv else None,
+        "details_files": [str(p) for p in result.details_files],
+        "records_updated": result.records_updated,
+        "backfilled": result.backfilled,
+        "untagged": result.untagged,
+        "missing_records": result.missing_records,
+        "missing_visits": result.missing_visits,
     }
 
 

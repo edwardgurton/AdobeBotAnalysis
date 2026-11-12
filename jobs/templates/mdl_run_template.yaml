@@ -1,0 +1,46 @@
+# Run template for the Master Decision Log loop (MDL plan A6).
+#
+# Not a job config. Point segment_creation at it:
+#
+#   segment_creation:
+#     run_template: jobs/templates/mdl_run_template.yaml
+#     # run_config_path: jobs/generated/   # default
+#
+# After creating the segments, segment_creation writes jobs/generated/{RoundID}_run.yaml.
+# The run config is a composite job with job_name = Round ID:
+#   download_validation -> validate_bot_rules -> transform_validation
+#   download_compare    -> validate_bot_compares -> transform_compare
+#   segment_records     (back-fills Special IDs, checks tags, writes visits and the
+#                        Decision Log / Bot Rule Compare CSVs)
+# A half is left out when its list is empty. The run refuses to start while any list
+# still contains UPDATE-SEGMENT-ID.
+#
+# Copy this file and edit the copy if you need different defaults.
+
+output:
+  base_folder: "C:/Adobe_Downloads"
+
+# RSIDs for both the validation and the compare downloads.
+rsids:
+  source: file
+  file: data/rsid_lists/botValidationRsidList.txt
+  batch_size: 12
+
+date_range:
+  from: "2023-09-01"
+  # to: "2026-08-31"   # omit to use yesterday (the day the run config is written)
+
+validation:
+  # Bot identification tier: Master Bot Exclusion Development, or the ALT swap.
+  report_group: bot_validation_altfilters
+  interval: month
+
+compare:
+  report_group: bot_rule_compare_altfilters
+  comparison_round: 1
+  source_pattern: ".*Compare-V1.*\\.json$"
+
+segment_records:
+  # Monthly validation report summed for visits_last_12_months: visits the rule
+  # matches that the Master Bot Exclusion still lets through.
+  visits_report: botFilterExcludexBotRuleMetricsByMonth

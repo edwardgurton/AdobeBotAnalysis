@@ -39,7 +39,8 @@ def highest_bot_rule_number(names: Iterable[str]) -> int:
     return max(numbers, default=0)
 
 
-async def _list_tagged(client: Any, tag: str) -> list[dict[str, Any]]:
+async def list_tagged_segments(client: Any, tag: str) -> list[dict[str, Any]]:
+    """List every segment tagged *tag* that the technical account can see."""
     last_exc: httpx.HTTPStatusError | None = None
     for include_type in _INCLUDE_TYPES:
         try:
@@ -68,5 +69,5 @@ async def get_highest_bot_rule_candidate_number(
     client: Any, tag: str = DEFAULT_CANDIDATE_TAG
 ) -> int:
     """Return the highest bot rule number among segments tagged *tag* (0 if none)."""
-    segments = await _list_tagged(client, tag)
+    segments = await list_tagged_segments(client, tag)
     return highest_bot_rule_number(str(s.get("name", "")) for s in segments)

@@ -3,6 +3,7 @@
 import asyncio
 import sys
 from pathlib import Path
+from typing import Any
 
 import click
 from pydantic import ValidationError
@@ -632,6 +633,9 @@ def _run_segment_creation_job(job: object, *, debug: bool = False) -> None:
                 renumber_validates=sc.renumber_validates,
                 candidate_tag=sc.candidate_tag,
                 segment_records_path=records_path,
+                run_template=Path(sc.run_template) if sc.run_template else None,
+                run_config_path=Path(sc.run_config_path) if sc.run_config_path else None,
+                client_name=job.client,
             )
         finally:
             await ac.close()
@@ -659,6 +663,9 @@ def _run_segment_creation_job(job: object, *, debug: bool = False) -> None:
             click.echo(f"  Segments -> {result.segment_list_file}")
         if result.record_files:
             click.echo(f"  Records  -> {records_path} ({len(result.record_files)} file(s))")
+        if result.run_config_file:
+            click.echo(f"  Run config -> {result.run_config_file}")
+            click.echo(f"     adobe-downloader run --config {result.run_config_file.as_posix()}")
         for err in result.errors:
             click.secho(f"  ERR {err}", fg="red")
 
@@ -762,6 +769,94 @@ def bot_rule_number(client: str, next_number: bool, tag: str | None) -> None:
         sys.exit(1)
 
     click.echo(highest + 1 if next_number else highest)
+
+
+@main.command("segment-records")
+@click.option(
+    "--job",
+    "round_id",
+    default=None,
+    help="Round ID; reads jobs/generated/{RoundID}_run.yaml.",
+)
+@click.option(
+    "--config",
+    "-c",
+    default=None,
+    type=click.Path(exists=True, path_type=Path),
+    help="Run config to read instead of --job.",
+)
+@click.option(
+    "--no-tag-check",
+    is_flag=True,
+    default=False,
+    help="Skip the Adobe lookup that warns about untagged validate segments.",
+)
+def segment_records(round_id: str | None, config: Path | None, no_tag_check: bool) -> None:
+    """Update a round's segment records from its finished run (MDL plan A7).
+
+    Runs the segment_records step(s) of the run config on their own: back-fills
+    Special segment IDs, checks validate tags, writes 12-month visits into the YAML
+    records and rewrites {RoundID}_segment_records.csv and the compare
+    {RuleID}_segment_details.csv files in the job output folder.
+    """
+    from adobe_downloader.config.loader import load_config
+    from adobe_downloader.config.schema import CompositeJobConfig
+    from adobe_downloader.core.api_client import AdobeClient
+    from adobe_downloader.flows.composite_job import run_segment_records_step
+    from adobe_downloader.segments.run_config import DEFAULT_RUN_CONFIG_DIR
+    from adobe_downloader.utils.logging import setup_logging
+
+    if (round_id is None) == (config is None):
+        click.secho("Give exactly one of --job or --config.", fg="red", bold=True)
+        sys.exit(1)
+    if config is None:
+        config = DEFAULT_RUN_CONFIG_DIR / f"{round_id}_run.yaml"
+        if not config.is_file():
+            click.secho(f"Run config not found: {config}", fg="red", bold=True)
+            sys.exit(1)
+
+    try:
+        job = load_config(config)
+    except Exception as exc:
+        click.secho(f"Failed to load config: {exc}", fg="red", bold=True)
+        sys.exit(1)
+    steps = (
+        [s for s in job.steps if s.step == "segment_records"]
+        if isinstance(job, CompositeJobConfig)
+        else []
+    )
+    if not isinstance(job, CompositeJobConfig) or not steps:
+        click.secho(f"{config} has no segment_records step.", fg="red", bold=True)
+        sys.exit(1)
+
+    setup_logging(None, job.client)
+
+    async def _run() -> list[dict[str, Any]]:
+        ac = None if no_tag_check else AdobeClient()
+        try:
+            return [await run_segment_records_step(step, job, ac) for step in steps]
+        finally:
+            if ac is not None:
+                await ac.close()
+
+    try:
+        outputs = asyncio.run(_run())
+    except Exception as exc:
+        click.secho(f"Error: {exc}", fg="red", bold=True)
+        sys.exit(1)
+
+    for out in outputs:
+        click.secho(f"Records updated: {out['records_updated']}", fg="green")
+        if out["records_csv"]:
+            click.echo(f"  Decision Log import -> {out['records_csv']}")
+        for path in out["details_files"]:
+            click.echo(f"  Segment details     -> {path}")
+        for item in out["untagged"]:
+            click.secho(f"  NOT TAGGED: {item}", fg="yellow")
+        for item in out["missing_records"]:
+            click.secho(f"  NO RECORD: {item}", fg="yellow")
+        for item in out["missing_visits"]:
+            click.secho(f"  NO VISITS: {item}", fg="yellow")
 
 
 @main.command("get-segment")

@@ -144,6 +144,10 @@ class ReportDefinitionInline(BaseModel):
 # config (segment_creation.candidate_tag) or this constant, never retype it.
 DEFAULT_CANDIDATE_TAG = "BotRuleCandidates"
 
+# Validation report summed for a validate rule's visits_last_12_months (MDL plan A7):
+# visits the rule matches that the Master Bot Exclusion still lets through.
+DEFAULT_VISITS_REPORT = "botFilterExcludexBotRuleMetricsByMonth"
+
 
 class SegmentCreationConfig(BaseModel):
     input_csv: str
@@ -156,6 +160,10 @@ class SegmentCreationConfig(BaseModel):
     segment_list_path: str | None = None
     # Folder for per-segment YAML records; default data/segment_records/{client}.
     segment_records_path: str | None = None
+    # Run template (e.g. jobs/templates/mdl_run_template.yaml). When set, a run config
+    # {RoundID}_run.yaml is written to run_config_path after the lists (MDL plan A6).
+    run_template: str | None = None
+    run_config_path: str | None = None  # default jobs/generated/
 
     @model_validator(mode="after")
     def _require_list_paths(self) -> "SegmentCreationConfig":
@@ -176,6 +184,28 @@ class SegmentCreationConfig(BaseModel):
                 "('output:' only supports base_folder/job_name) - without them, "
                 "segments are still created via the API but no local list is written."
             )
+        return self
+
+
+class SegmentRecordsConfig(BaseModel):
+    """Config for the post-run ``segment_records`` composite step (MDL plan A7)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    validate_list: str | None = None
+    compare_list: str | None = None
+    # Folder holding the per-segment YAML records; default data/segment_records/{client}.
+    records_path: str | None = None
+    # Validation report whose monthly visits are summed for visits_last_12_months.
+    visits_report: str = DEFAULT_VISITS_REPORT
+    candidate_tag: str = DEFAULT_CANDIDATE_TAG
+    # End of the 12-month visits window; default the job's date_range.to.
+    date_to: str | None = None
+
+    @model_validator(mode="after")
+    def _require_a_list(self) -> "SegmentRecordsConfig":
+        if not self.validate_list and not self.compare_list:
+            raise ValueError("segment_records needs validate_list, compare_list or both")
         return self
 
 
@@ -327,6 +357,7 @@ class CompositeStep(BaseModel):
         "bot_rule_compare",
         "final_bot_metrics",
         "country_investigation",
+        "segment_records",
     ]
     id: str
     depends_on: str | None = None

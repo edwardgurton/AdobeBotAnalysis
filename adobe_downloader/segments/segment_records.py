@@ -19,6 +19,9 @@ logger = logging.getLogger(__name__)
 
 DEFAULT_RECORDS_ROOT = Path("data") / "segment_records"
 
+# Segment ID written for Special rows until the segment is created by hand in Adobe.
+PLACEHOLDER_SEGMENT_ID = "UPDATE-SEGMENT-ID"
+
 
 def default_records_path(client: str) -> Path:
     return DEFAULT_RECORDS_ROOT / client
@@ -85,11 +88,16 @@ def write_record(folder: Path, record: dict[str, Any]) -> Path:
     if path.exists():
         logger.warning("Replacing existing segment record %s", path)
     folder.mkdir(parents=True, exist_ok=True)
+    save_record(path, record)
+    return path
+
+
+def save_record(path: Path, record: dict[str, Any]) -> None:
+    """Write *record* to *path* as YAML, keeping the key order."""
     path.write_text(
         yaml.safe_dump(record, sort_keys=False, allow_unicode=True, width=1000),
         encoding="utf-8",
     )
-    return path
 
 
 def load_record(path: Path) -> dict[str, Any]:

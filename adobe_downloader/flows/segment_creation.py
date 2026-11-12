@@ -18,6 +18,7 @@ from adobe_downloader.segments.rule_ids import (
     build_validate_segment_name,
     parse_rule_id,
 )
+from adobe_downloader.segments.segment_records import PLACEHOLDER_SEGMENT_ID
 
 logger = logging.getLogger(__name__)
 
@@ -86,6 +87,8 @@ class SegmentCreationResult:
     special_validate_names: list[str] = field(default_factory=list)
     # YAML records written to segment_records_path (one per successful row).
     record_files: list[Path] = field(default_factory=list)
+    # Generated {RoundID}_run.yaml (MDL plan A6), when a run template was given.
+    run_config_file: Path | None = None
 
 
 # ---------------------------------------------------------------------------
@@ -497,6 +500,24 @@ def _write_row_record(records_path: Path | None, record: dict[str, Any]) -> Path
         return None
 
 
+def round_id_for(rows: list[_CsvRow], list_name: str) -> str:
+    """The single Round ID of *rows*, or *list_name* when no row has a Rule ID.
+
+    Raises ``ValueError`` when the rows span more than one round: a run config (and
+    its output folder) covers exactly one round.
+    """
+    round_ids = sorted(
+        {row.round_id or parse_rule_id(row.rule_id).round_id for row in rows if row.rule_id}
+    )
+    if len(round_ids) > 1:
+        raise ValueError(
+            "A run config covers one round, but this list has rows from "
+            f"{len(round_ids)}: {', '.join(round_ids)}. Split the list by round, or "
+            "remove run_template from the config."
+        )
+    return round_ids[0] if round_ids else list_name
+
+
 # ---------------------------------------------------------------------------
 # Main flow
 # ---------------------------------------------------------------------------
@@ -515,6 +536,9 @@ async def run_segment_creation(
     renumber_validates: bool = True,
     candidate_tag: str = DEFAULT_CANDIDATE_TAG,
     segment_records_path: Path | None = None,
+    run_template: Path | None = None,
+    run_config_path: Path | None = None,
+    client_name: str = "",
 ) -> SegmentCreationResult:
     """Create segments from *input_csv* and write the 3 output files.
 
@@ -535,6 +559,11 @@ async def run_segment_creation(
             find the highest existing bot rule number.
         segment_records_path: Folder for the per-segment YAML records (or ``None``
             to skip). Rows with a ``RuleID`` are written as ``{RuleID}.yaml``.
+        run_template: Run template YAML. When set, ``{RoundID}_run.yaml`` is written
+            to *run_config_path* after the lists (MDL plan A6). Not in test mode.
+        run_config_path: Folder for the generated run config (default
+            ``jobs/generated``).
+        client_name: Client written into the generated run config.
 
     Returns:
         :class:`SegmentCreationResult` with output paths and counters.
@@ -555,6 +584,18 @@ async def run_segment_creation(
         raise ValueError("CSV validation errors:\n" + "\n".join(all_errors))
 
     list_name = input_csv.stem
+
+    # Check the run template and round before any segment is created.
+    template = None
+    round_id = list_name
+    if run_template is not None and test_mode_row is None:
+        from adobe_downloader.segments.run_config import load_run_template
+
+        round_id = round_id_for(rows, list_name)
+        template = load_run_template(run_template)
+        if not client_name:
+            raise ValueError("client_name is required to write a run config")
+
     built = apply_rule_id_names(rows)
     if built:
         logger.info("Built %d segment name(s) from Rule IDs", built)
@@ -607,7 +648,7 @@ async def run_segment_creation(
 
         try:
             if is_special:
-                seg_id = "UPDATE-SEGMENT-ID"
+                seg_id = PLACEHOLDER_SEGMENT_ID
                 bot_rule_name = bot_rule_name_for(row)
                 report_to_ignore = "|".join(dim for dim, _ in row.dimensions())
                 if row.rsid_clean_name:
@@ -712,8 +753,9 @@ async def run_segment_creation(
     if result.special_validate_names:
         logger.info(
             "Create these Validate - Special segments in Adobe under exactly these names, "
-            "tag each %s, then replace UPDATE-SEGMENT-ID in the validate CSV:",
+            "tag each %s, then replace %s in the validate CSV:",
             candidate_tag,
+            PLACEHOLDER_SEGMENT_ID,
         )
         for name in result.special_validate_names:
             logger.info("  %s", name)
@@ -722,6 +764,35 @@ async def run_segment_creation(
         logger.info(
             "Segment records -> %s (%d file(s))", segment_records_path, len(result.record_files)
         )
+
+    if template is not None and (result.compare_list_file or result.validate_list_file):
+        from adobe_downloader.segments.run_config import (
+            DEFAULT_RUN_CONFIG_DIR,
+            build_run_config,
+            write_run_config,
+        )
+        from adobe_downloader.segments.segment_records import default_records_path
+
+        try:
+            run_config = build_run_config(
+                client=client_name,
+                round_id=round_id,
+                template=template,
+                validate_list=result.validate_list_file,
+                compare_list=result.compare_list_file,
+                records_path=segment_records_path or default_records_path(client_name),
+                candidate_tag=candidate_tag,
+            )
+            result.run_config_file = write_run_config(
+                run_config_path or DEFAULT_RUN_CONFIG_DIR, round_id, run_config
+            )
+            logger.info("Run config -> %s", result.run_config_file)
+        except Exception as exc:
+            # The segments exist already; a missing run config must not hide that.
+            msg = f"Could not write the run config: {exc}"
+            logger.error(msg)
+            result.error_count += 1
+            result.errors.append(msg)
 
     if result.tag_failures:
         logger.warning(
