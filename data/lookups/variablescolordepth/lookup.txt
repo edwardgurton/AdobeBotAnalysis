@@ -1,0 +1,17 @@
+/**
+ * Lookup Table for variables/colordepth
+ *
+ * Maps string values to their numeric IDs for use in Adobe Analytics segments.
+ *
+ * Client: Legend
+ * RSID: tribecasinoorg.test
+ * Date Range: 2026-10-01 to 2026-10-31
+ * Last Updated: 2026-11-09
+ *
+ * Format: stringValue|numericId
+ */
+
+16 million (24-bit)|2
+16 million (32-bit)|1
+65,536 (16-bit)|3
+None|0

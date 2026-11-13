@@ -1,0 +1,20 @@
+/**
+ * Lookup Table for variables/mobiledevicetype
+ *
+ * Maps string values to their numeric IDs for use in Adobe Analytics segments.
+ *
+ * Client: Legend
+ * RSID: tribecasinoorg.test
+ * Date Range: 2026-10-01 to 2026-10-31
+ * Last Updated: 2026-11-09
+ *
+ * Format: stringValue|numericId
+ */
+
+Gaming Console|3909679524
+Media Player|3464263970
+Mobile Phone|2163986270
+Other|0
+Set-top Box|2165704581
+Tablet|1728229488
+Television|2355485956

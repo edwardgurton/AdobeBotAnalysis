@@ -11,3 +11,5 @@ Requires-Dist: tenacity>=8.3
 Provides-Extra: dev
 Requires-Dist: pytest>=8; extra == "dev"
 Requires-Dist: pytest-asyncio>=0.23; extra == "dev"
+Provides-Extra: broker
+Requires-Dist: keyring>=24; extra == "broker"

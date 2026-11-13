@@ -27,16 +27,16 @@ rsids:
   batch_size: 12
 
 date_range:
-  from: "2023-09-01"
+  from: "2024-11-01"
   # to: "2026-08-31"   # omit to use yesterday (the day the run config is written)
 
 validation:
   # Bot identification tier: Master Bot Exclusion Development, or the ALT swap.
-  report_group: bot_validation_altfilters
+  report_group: bot_validation
   interval: month
 
 compare:
-  report_group: bot_rule_compare_altfilters
+  report_group: bot_rule_compare
   comparison_round: 1
   source_pattern: ".*Compare-V1.*\\.json$"
 
